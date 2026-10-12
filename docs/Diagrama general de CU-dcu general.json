@@ -1,0 +1,581 @@
+{
+  "version": "32.4.5",
+  "pages": [
+    {
+      "id": "NhLxg_IJ8QaIOrub7uLi",
+      "name": "dcu general",
+      "cells": [
+        {
+          "id": "pMVabfvRVjbGXIpf-0QE-18",
+          "type": "node",
+          "parent": "1"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-2",
+          "type": "node",
+          "parent": "1",
+          "label": "Cliente"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-4",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 4 - Listar excursiones"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-9",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 7 - Listar paquetes"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-11",
+          "type": "edge",
+          "parent": "1",
+          "source": "jIN-qFrlKAIzcEalDog_-2",
+          "target": "jIN-qFrlKAIzcEalDog_-4"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-16",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 14 - Registrar reserva"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-31",
+          "type": "edge",
+          "parent": "1"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-33",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 25 - Listar equipamientos"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-37",
+          "type": "node",
+          "parent": "1",
+          "label": "Administrativo"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-47",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 20 - Registrar conformidad"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-48",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 15 - Listar reservas"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-53",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 22 - Registrar pago \nde reserva",
+          "html": "CU 22 - Registrar pago&nbsp;<div>de<span style=\"background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));\">&nbsp;reserva</span></div>"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-54",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 16 - Cancelar reserva"
+        },
+        {
+          "id": "jIN-qFrlKAIzcEalDog_-62",
+          "type": "edge",
+          "parent": "1",
+          "source": "jIN-qFrlKAIzcEalDog_-2",
+          "target": "jIN-qFrlKAIzcEalDog_-48"
+        },
+        {
+          "id": "qgFTon3Xbkid2mdta-pV-1",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 4* - Listar excursiones"
+        },
+        {
+          "id": "qgFTon3Xbkid2mdta-pV-9",
+          "type": "edge",
+          "parent": "1",
+          "target": "qgFTon3Xbkid2mdta-pV-1"
+        },
+        {
+          "id": "qgFTon3Xbkid2mdta-pV-10",
+          "type": "edge",
+          "parent": "1",
+          "target": "qgFTon3Xbkid2mdta-pV-13"
+        },
+        {
+          "id": "qgFTon3Xbkid2mdta-pV-13",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 15* - Listar reservas"
+        },
+        {
+          "id": "mzRbs0EhoWhMwaCwB3Ys-1",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 21 - Listar participantes"
+        },
+        {
+          "id": "mzRbs0EhoWhMwaCwB3Ys-5",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 17 - Cargar \ncertificado médico",
+          "html": "CU 17 - Cargar&nbsp;<div>certificado&nbsp;<span style=\"background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));\">médico</span></div>"
+        },
+        {
+          "id": "iLsX9U5qQEFyAtWJmLWd-1",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 18 - Listar Certificados Médicos Pendientes"
+        },
+        {
+          "id": "iLsX9U5qQEFyAtWJmLWd-2",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 19 - Verificar Certificado Médico"
+        },
+        {
+          "id": "iLsX9U5qQEFyAtWJmLWd-6",
+          "type": "edge",
+          "parent": "1",
+          "target": "iLsX9U5qQEFyAtWJmLWd-1"
+        },
+        {
+          "id": "Wdz1wYSKfOFLo9cHDXGn-1",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 9 - Listar salidas programadas"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-1",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 5 - Registrar paquete"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-5",
+          "type": "edge",
+          "parent": "1",
+          "source": "iLsX9U5qQEFyAtWJmLWd-2",
+          "target": "iLsX9U5qQEFyAtWJmLWd-1",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-19",
+          "type": "edge",
+          "parent": "1",
+          "source": "Gdqru-Y4aMWx2zQyZ5Rq-23",
+          "target": "Gdqru-Y4aMWx2zQyZ5Rq-1",
+          "label": "&lt;&lt; extend &gt;&gt;"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-21",
+          "type": "edge",
+          "parent": "1",
+          "source": "wN9aPxk94wJRLY2V0yB_-1",
+          "target": "Gdqru-Y4aMWx2zQyZ5Rq-24",
+          "label": "&lt;&lt; extend &gt;&gt;"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-22",
+          "type": "edge",
+          "parent": "1",
+          "source": "Gdqru-Y4aMWx2zQyZ5Rq-25",
+          "target": "Gdqru-Y4aMWx2zQyZ5Rq-1",
+          "label": "&lt;&lt; extend &gt;&gt;"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-23",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 24 - Listar servicios"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-24",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 25* - Listar equipamientos"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-25",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 26- Listar refugios"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-28",
+          "type": "edge",
+          "parent": "1",
+          "source": "mzRbs0EhoWhMwaCwB3Ys-1",
+          "target": "jIN-qFrlKAIzcEalDog_-48",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-30",
+          "type": "edge",
+          "parent": "1",
+          "source": "jIN-qFrlKAIzcEalDog_-47",
+          "target": "jIN-qFrlKAIzcEalDog_-48",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-31",
+          "type": "edge",
+          "parent": "1",
+          "source": "jIN-qFrlKAIzcEalDog_-53",
+          "target": "jIN-qFrlKAIzcEalDog_-48",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-32",
+          "type": "edge",
+          "parent": "1",
+          "source": "jIN-qFrlKAIzcEalDog_-54",
+          "target": "jIN-qFrlKAIzcEalDog_-48",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-34",
+          "type": "edge",
+          "parent": "1",
+          "source": "mzRbs0EhoWhMwaCwB3Ys-5",
+          "target": "mzRbs0EhoWhMwaCwB3Ys-1",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-37",
+          "type": "edge",
+          "parent": "1",
+          "source": "Wdz1wYSKfOFLo9cHDXGn-1",
+          "target": "jIN-qFrlKAIzcEalDog_-4",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-38",
+          "type": "edge",
+          "parent": "1",
+          "source": "jIN-qFrlKAIzcEalDog_-9",
+          "target": "Wdz1wYSKfOFLo9cHDXGn-1",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-39",
+          "type": "edge",
+          "parent": "1",
+          "source": "jIN-qFrlKAIzcEalDog_-16",
+          "target": "jIN-qFrlKAIzcEalDog_-9",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "Gdqru-Y4aMWx2zQyZ5Rq-40",
+          "type": "edge",
+          "parent": "1",
+          "source": "jIN-qFrlKAIzcEalDog_-33",
+          "target": "jIN-qFrlKAIzcEalDog_-16",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "coDvwob8oplUGq5ELPT8-2",
+          "type": "edge",
+          "parent": "1"
+        },
+        {
+          "id": "wN9aPxk94wJRLY2V0yB_-1",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 8 - Registrar salida programada"
+        },
+        {
+          "id": "wN9aPxk94wJRLY2V0yB_-3",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 23 - Listar empleados"
+        },
+        {
+          "id": "wN9aPxk94wJRLY2V0yB_-4",
+          "type": "edge",
+          "parent": "1",
+          "source": "wN9aPxk94wJRLY2V0yB_-1",
+          "target": "wN9aPxk94wJRLY2V0yB_-3",
+          "label": "&lt;&lt;include&gt;&gt;"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-1",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 1 - Alta de excursión"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-5",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 3 - Modificar excursión"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-6",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 2 - Baja de excursión"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-7",
+          "type": "edge",
+          "parent": "1",
+          "source": "lgl6uLqjL0YRL89QSL2v-5",
+          "target": "qgFTon3Xbkid2mdta-pV-1",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-8",
+          "type": "edge",
+          "parent": "1",
+          "source": "lgl6uLqjL0YRL89QSL2v-6",
+          "target": "qgFTon3Xbkid2mdta-pV-1",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-9",
+          "type": "edge",
+          "parent": "1",
+          "source": "lgl6uLqjL0YRL89QSL2v-6",
+          "target": "lgl6uLqjL0YRL89QSL2v-6"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-12",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 6 - Cancelar Paquete"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-13",
+          "type": "edge",
+          "parent": "1",
+          "source": "lgl6uLqjL0YRL89QSL2v-12",
+          "target": "lgl6uLqjL0YRL89QSL2v-14",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-14",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 7* - Listar Paquetes"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-17",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 9 * - Listar salidas programadas"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-18",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 11 - Cancelar salida programada"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-19",
+          "type": "edge",
+          "parent": "1",
+          "source": "lgl6uLqjL0YRL89QSL2v-18",
+          "target": "lgl6uLqjL0YRL89QSL2v-17",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-20",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 10 - Modificar salida programada"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-21",
+          "type": "edge",
+          "parent": "1",
+          "source": "lgl6uLqjL0YRL89QSL2v-20",
+          "target": "lgl6uLqjL0YRL89QSL2v-17",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-22",
+          "type": "edge",
+          "parent": "1",
+          "target": "lgl6uLqjL0YRL89QSL2v-17"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-24",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 13 - Modificar datos personales"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-25",
+          "type": "edge",
+          "parent": "1",
+          "target": "lgl6uLqjL0YRL89QSL2v-24"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-47",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 27 - Generar reportes periodico"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-50",
+          "type": "edge",
+          "parent": "1",
+          "target": "lgl6uLqjL0YRL89QSL2v-47"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-57",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 28* - Login de Usuario"
+        },
+        {
+          "id": "lgl6uLqjL0YRL89QSL2v-59",
+          "type": "edge",
+          "parent": "1",
+          "target": "lgl6uLqjL0YRL89QSL2v-57"
+        },
+        {
+          "id": "pMVabfvRVjbGXIpf-0QE-2",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 12 - Registrar cliente"
+        },
+        {
+          "id": "pMVabfvRVjbGXIpf-0QE-3",
+          "type": "edge",
+          "parent": "1",
+          "target": "pMVabfvRVjbGXIpf-0QE-2"
+        },
+        {
+          "id": "pMVabfvRVjbGXIpf-0QE-5",
+          "type": "edge",
+          "parent": "1",
+          "source": "lgl6uLqjL0YRL89QSL2v-1",
+          "target": "qgFTon3Xbkid2mdta-pV-1",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "pMVabfvRVjbGXIpf-0QE-6",
+          "type": "edge",
+          "parent": "1",
+          "source": "wN9aPxk94wJRLY2V0yB_-1",
+          "target": "qgFTon3Xbkid2mdta-pV-1",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "pMVabfvRVjbGXIpf-0QE-7",
+          "type": "edge",
+          "parent": "1",
+          "source": "Gdqru-Y4aMWx2zQyZ5Rq-1",
+          "target": "lgl6uLqjL0YRL89QSL2v-17",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "pMVabfvRVjbGXIpf-0QE-9",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 28* - Login de Usuario"
+        },
+        {
+          "id": "pMVabfvRVjbGXIpf-0QE-10",
+          "type": "edge",
+          "parent": "1",
+          "target": "pMVabfvRVjbGXIpf-0QE-9"
+        },
+        {
+          "id": "pMVabfvRVjbGXIpf-0QE-19",
+          "type": "node",
+          "parent": "1",
+          "label": "Diagrama de CU - Trekk",
+          "html": "<b>Diagrama de CU - Trekk</b>"
+        },
+        {
+          "id": "pMVabfvRVjbGXIpf-0QE-20",
+          "type": "edge",
+          "parent": "1"
+        },
+        {
+          "id": "YRhIeqfm6q0UXA-tV3dD-1",
+          "type": "node",
+          "parent": "1",
+          "label": "Pasarela de pagos",
+          "html": "<br><div>Pasarela de pagos</div>"
+        },
+        {
+          "id": "YRhIeqfm6q0UXA-tV3dD-2",
+          "type": "edge",
+          "parent": "1",
+          "source": "jIN-qFrlKAIzcEalDog_-53",
+          "target": "YRhIeqfm6q0UXA-tV3dD-1"
+        },
+        {
+          "id": "3EqlHvCAa2UYQZShNxXS-1",
+          "type": "edge",
+          "parent": "1",
+          "source": "lgl6uLqjL0YRL89QSL2v-14",
+          "target": "lgl6uLqjL0YRL89QSL2v-17",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "VDYhMFCRZRWQMJqm-BAn-1",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 21* - Listar participantes"
+        },
+        {
+          "id": "VDYhMFCRZRWQMJqm-BAn-2",
+          "type": "edge",
+          "parent": "1",
+          "source": "VDYhMFCRZRWQMJqm-BAn-1",
+          "target": "lgl6uLqjL0YRL89QSL2v-17",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "2XS6Kx9Pjn3I35Hbg1FZ-1",
+          "type": "node",
+          "parent": "1",
+          "label": "CU 16* - Cancelar reserva"
+        },
+        {
+          "id": "2XS6Kx9Pjn3I35Hbg1FZ-2",
+          "type": "edge",
+          "parent": "1",
+          "source": "2XS6Kx9Pjn3I35Hbg1FZ-1",
+          "target": "qgFTon3Xbkid2mdta-pV-13",
+          "label": "&lt;&lt;extend&gt;&gt;"
+        },
+        {
+          "id": "vWzo_CmOAQn_gzVSMOUs-1",
+          "type": "edge",
+          "parent": "1",
+          "source": "jIN-qFrlKAIzcEalDog_-53",
+          "target": "jIN-qFrlKAIzcEalDog_-16",
+          "label": "&lt;&lt;include&gt;&gt;"
+        },
+        {
+          "id": "LJFOEjEeqRtnpU_a_iIh-1",
+          "type": "edge",
+          "parent": "1",
+          "source": "lgl6uLqjL0YRL89QSL2v-20",
+          "target": "Gdqru-Y4aMWx2zQyZ5Rq-24",
+          "label": "&lt;&lt; extend &gt;&gt;"
+        },
+        {
+          "id": "LJFOEjEeqRtnpU_a_iIh-2",
+          "type": "edge",
+          "parent": "1",
+          "source": "lgl6uLqjL0YRL89QSL2v-20",
+          "target": "wN9aPxk94wJRLY2V0yB_-3",
+          "label": "&lt;&lt; extend &gt;&gt;"
+        }
+      ]
+    }
+  ]
+}

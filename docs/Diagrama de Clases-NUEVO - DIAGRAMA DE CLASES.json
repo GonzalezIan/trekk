@@ -1,0 +1,1975 @@
+{
+  "version": "31.5.2",
+  "pages": [
+    {
+      "id": "huOPTvcQidO11RnF0KDx",
+      "name": "NUEVO - DIAGRAMA DE CLASES",
+      "cells": [
+        {
+          "id": "lQzkW8sf53OHizJudSCz-14",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-209",
+          "target": "SqVM0nvIEwWP_lFodTa7-177"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-79",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "Excursion"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-80",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "- idExcursion: int"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-81",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "- nombre: string"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-82",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "- descripcion: string"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-83",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "- dificultad: [BAJA | MEDIO | ALTA]"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-84",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "- duracion: time"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-85",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "- recorrido: string"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-86",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "- etapas: string"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-87",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "- experienciaRequerida: boolean"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-88",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "- aceptaMenores: Boolean"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-89",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "- equipamientoObligatorio: string"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-90",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "- requiereCertificadoMedico: boolean"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-91",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "- estado: [ACTIVA | INACTIVA]"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-92",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-5",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "&nbsp;+ buscar(idExcursion): Excursion"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-6",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "&nbsp;+ validarAlta(datosExcursion): boolean"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-7",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "&nbsp;- existeNombre(nombre): boolean"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-8",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "&nbsp;+ crear(datosExcursion)"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-9",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "&nbsp;+ validarDatosSalida(datosSalida): boolean"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-10",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "&nbsp;+ crearSalida(datosSalida, guia, asistentes,&nbsp; &nbsp; &nbsp;eqs):&nbsp;idSalida, cupoMaximo"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-11",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "&nbsp;- agregar(s: SalidaProgramada)"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-12",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "&nbsp;+ getSalidasReservables(): List&lt;SalidaProgramada&gt;"
+        },
+        {
+          "id": "jwh5HnAXODAZtDcUGviF-0",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "&nbsp;+ getDuracion(): int"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-93",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "+ puedeDarseDeBaja(): boolean"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-94",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-79",
+          "label": "+ puedeModificarse(): boolean",
+          "html": "<div align=\"left\">+ puedeModificarse(): boolean</div>"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-18",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-54"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-10",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-32",
+          "target": "SqVM0nvIEwWP_lFodTa7-79"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-12",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "hGYbpL4ZbThKmKnw3Jlb-18",
+          "target": "hGYbpL4ZbThKmKnw3Jlb-52"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-13",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-101",
+          "target": "SqVM0nvIEwWP_lFodTa7-26"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-14",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-101",
+          "target": "SqVM0nvIEwWP_lFodTa7-32"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-15",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-122",
+          "target": "SqVM0nvIEwWP_lFodTa7-112"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-16",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-133",
+          "target": "SqVM0nvIEwWP_lFodTa7-139"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-17",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-162",
+          "target": "SqVM0nvIEwWP_lFodTa7-173"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-19",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-173",
+          "target": "SqVM0nvIEwWP_lFodTa7-155"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-21",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-148",
+          "target": "SqVM0nvIEwWP_lFodTa7-155"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-22",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-133"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-23",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-177",
+          "target": "SqVM0nvIEwWP_lFodTa7-155"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-24",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "WoJncImrA7de4z612SyG-7",
+          "target": "SqVM0nvIEwWP_lFodTa7-122"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-25",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "hGYbpL4ZbThKmKnw3Jlb-52",
+          "target": "SqVM0nvIEwWP_lFodTa7-122"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-26",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "Servicio"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-27",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-26",
+          "label": "- idServicio: int",
+          "html": "- idServicio: int<div><br></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-28",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-26",
+          "label": "- nombre: string",
+          "html": "<div>- nombre: string</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-29",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-26",
+          "label": "- descripcion: string",
+          "html": "<div><div>- descripcion: string</div></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-30",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-26",
+          "label": "- precioServicio: decimal",
+          "html": "<div>- precioServicio: decimal</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-31",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-26"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-41",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-26",
+          "label": "+ listar(): List&lt;Servicio&gt;"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-42",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-26",
+          "label": "+ buscar(idsServicios): List&lt;Servicio&gt;"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-32",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "salidaProgramada"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-33",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- unaExcursion: Excursion"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-34",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- idSalidaProgramada: int"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-35",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- fechaInicio: date"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-36",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- horaDeSalida: time"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-37",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- fechaFin: date"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-38",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- cupoMaximo: int"
+        },
+        {
+          "id": "2DDY9b8bcmx9JKvm8xP7-4",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- guiaResponsable: empleado"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-39",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- asistentes: List[Empleado]"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-40",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- cupoDisponible: int"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-41",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- precioBase: decimal"
+        },
+        {
+          "id": "2DDY9b8bcmx9JKvm8xP7-1",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- motivoCancelacion:&nbsp;"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-42",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- estado: [PROGRAMADA | FINALIZADA | CANCELADA]"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-43",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-17",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ buscar (idSalida): SalidaProgramada"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-18",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ listar (filtros): List&lt;SalidaProgramada&gt;"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-19",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ crear (datosSalida, guia, asistentes, eqs)"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-23",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- calcularCupoMaximo(eqs): int"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-24",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ esReservable(): boolean"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-25",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ crearPaquete(nombre, descripcion, servicios, ref): idPaquete, precio"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-26",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ existePaquete(nombre): boolean"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-27",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ agregar(p: Paquete)"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-30",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ getPaquetes(): List&lt;Paquete&gt;"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-31",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ getPaquetesDisponibles(): List&lt;Paquete&gt;"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-32",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ recalcularPrecioPaquetes(nuevoPrecioBase)"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-17",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+&nbsp; hayCupoDisponible(cantidad)"
+        },
+        {
+          "id": "PSHa7qZDvZZAK3GGDRG7-0",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ getFechas()"
+        },
+        {
+          "id": "Xz5Pioh9I70gBLJZqbhk-3",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ verificarModificacion(datosSalida, guia, asistentes, eqs):cupoMaximo"
+        },
+        {
+          "id": "Xz5Pioh9I70gBLJZqbhk-4",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ modificar(datoSalida, guia, asistentes, eqs)"
+        },
+        {
+          "id": "Xz5Pioh9I70gBLJZqbhk-6",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ getCuposOcupados(): int"
+        },
+        {
+          "id": "Xz5Pioh9I70gBLJZqbhk-7",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "- ajustarReservaEquipamiento(eqs)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-45",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ recalcularPrecioPaquetes()"
+        },
+        {
+          "id": "SIcH93sD-_CBl3OHdCYG-3",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-32",
+          "label": "+ cancelar(motivo)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-47",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "ControladorClientes"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-49",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-47"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-50",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-47",
+          "label": "+ registrarCliente()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-51",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-47",
+          "label": "+ login()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-52",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-47",
+          "label": "+ modificarDatosPersonales()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-54",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "ControladorReservas"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-26",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "- reserva: Reserva"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-56",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-2",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ consultarParticipantes(idSalidaProgramada)"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-4",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ ingresarDatosParticipantes(datosParticipantes[])"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-11",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+&nbsp;ingresarFechaEmision(fechaEmision)"
+        },
+        {
+          "id": "UKaFQW3u0nts_jmRmuPX-5",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ listarEquipamientoDisponible()"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-14",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+&nbsp;confirmarReserva()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-64",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ verificarCertificadoMedico(idReserva, dniParticipante)"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-9",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "- convertirAARS(importe)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-59",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "&nbsp;+ cancelarReserva(idReserva)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-60",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ cancelarReservaAutomatica()&nbsp;"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-15",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ ingresarMotivoCancelacion(motivo)"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-17",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ confirmarCargaParticipantes()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-58",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "&nbsp;+ consultarReservas()"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-10",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ ingresarMotivoInvalidez(motivo)"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-21",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ agregarEquipamiento(idEquipamiento, cantidad)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-62",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ cargarCertificadoMedico(idReserva, dniParticipante)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-61",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ registrarPagoReserva(idReserva)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-63",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ listarCertificadosPendientes()"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-3",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ registrarCertificado(archivo)"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-2",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ consultarParticipantes(idReserva)"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-1",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ ingresarCantidadParticipantes(cantidad)"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-6",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ confirmarPago(medioPago)"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-18",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ cargarConformidad(valoracion, comentario)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-57",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ registrarReserva(idPaquete)"
+        },
+        {
+          "id": "XPmZR7IF4brLL2vdsHlN-4",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-54",
+          "label": "+ registrarConformidad(varolacion, comentario)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-65",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "EquipamientoAlquilado"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-66",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-65",
+          "label": "- cantidad: int",
+          "html": "-&nbsp;<span style=\"text-align: center;\">cantidad: int</span>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-67",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-65"
+        },
+        {
+          "id": "UKaFQW3u0nts_jmRmuPX-4",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-65",
+          "label": "+ crear(r: reserva, eq: Equipamiento, cantidad)",
+          "html": "<span style=\"color: rgb(0, 0, 0); font-family: Helvetica; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;\">+ crear(r: reserva, eq: Equipamiento, cantidad)</span>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-72",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "ControladorReportes"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-74",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-72"
+        },
+        {
+          "id": "vKUkaSSS5wmHTjlhSeX_-2",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-72",
+          "label": "+ generarReportePeriodico(fechaInicio, fechaFin)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-75",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-72",
+          "label": "- calcularClientesFrecuentes(reservas)",
+          "html": "<div>- calcularClientesFrecuentes(reservas)</div>"
+        },
+        {
+          "id": "vKUkaSSS5wmHTjlhSeX_-5",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-72",
+          "label": "- calcularConformidad(reservas)"
+        },
+        {
+          "id": "vKUkaSSS5wmHTjlhSeX_-6",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-72",
+          "label": "- calcularActividadesFrecuentes(reservas)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-76",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "EquipamientoIncluido"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-77",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-76",
+          "label": "- cantidad: int",
+          "html": "-&nbsp;<span style=\"text-align: center;\">cantidad: int</span>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-78",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-76"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-40",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-76",
+          "label": "+ crear(s: SalidaProgramada, eq: Equipamiento, cantidad)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-101",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "Paquete"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-103",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "- idPaquete: int",
+          "html": "- idPaquete: int<div><br></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-104",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "- nombre: string",
+          "html": "<div>- nombre: string</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-102",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "- unaSalidaProgramada: SalidaProgramada"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-105",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "- descripcion: string",
+          "html": "<div><div>- descripcion: string</div></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-106",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "- unRefugio: Refugio | null",
+          "html": "<div><div>- unRefugio: Refugio | null</div></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-107",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "- serviciosIncluidos: List[Servicio] | null",
+          "html": "<div><div>- serviciosIncluidos: List[Servicio] | null</div></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-108",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "- precioCalculado: decimal",
+          "html": "<div>- precioCalculado: decimal</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-109",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "- estado: [ DISPONIBLE | CANCELADO ]",
+          "html": "<div>- estado: [ DISPONIBLE | CANCELADO ]</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-110",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-16",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "+ buscar(idPaquete)"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-34",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "+ crear(nombre, descripcion, servicios, ref)"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-36",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "+ calcularPrecio(): decimal"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-38",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "+ estaDisponible(): boolean"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-39",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "+ getDisponibilidad(): int"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-37",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-101",
+          "label": "+ cantidadReservasActivas(): int"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-112",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "Pago"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-113",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-112",
+          "label": "- idPago: int",
+          "html": "<div>- idPago: int</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-114",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-112",
+          "label": "- monto: decimal",
+          "html": "<div>- monto: decimal</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-115",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-112",
+          "label": "- moneda: tipoMoneda [ARS | USD]",
+          "html": "<div><div>- moneda: tipoMoneda [ARS | USD]</div></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-116",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-112",
+          "label": "- medioPago: string",
+          "html": "<div>- medioPago: string</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-117",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-112",
+          "label": "- fechaHoraPago: date",
+          "html": "<div>- fechaHoraPago: date</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-118",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-112",
+          "label": "- tipoPago: [PARCIAL | TOTAL  |SALDO]",
+          "html": "<div>- tipoPago: [PARCIAL | TOTAL&nbsp; |SALDO]</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-119",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-112",
+          "label": "- resultadoTransaccion: [APROBADO | RECHAZADO]",
+          "html": "<div>- resultadoTransaccion: [APROBADO | RECHAZADO]</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-120",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-112"
+        },
+        {
+          "id": "UKaFQW3u0nts_jmRmuPX-11",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-112",
+          "label": "+ crear(monto, moneda, medioPago, tipoPago)",
+          "html": "<div>+ crear(monto, moneda, medioPago, tipoPago)</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-122",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "Reserva"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-123",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "- idReserva: int",
+          "html": "<div>- idReserva: int</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-124",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "- unCliente: Cliente",
+          "html": "<div>- unCliente: Cliente</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-125",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "- fechaRegistro: date",
+          "html": "<div>- fechaRegistro: date</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-126",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "- estado: [ EN_CURSO | PENDIENTE | CONFIRMADA | CANCELADA | REALIZADA ]",
+          "html": "<div><div>- estado: [ EN_CURSO | PENDIENTE | CONFIRMADA | CANCELADA | REALIZADA ]</div></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-127",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "- situacionPago: [ PENDIENTE_DE_PAGO_TOTAL | PAGO_COMPLETO ]",
+          "html": "<div>- situacionPago: [ PENDIENTE_DE_PAGO_TOTAL | PAGO_COMPLETO ]</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-128",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "- importeTotal: decimal",
+          "html": "<div>- importeTotal: decimal</div>"
+        },
+        {
+          "id": "2DDY9b8bcmx9JKvm8xP7-7",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "- motivoCancelacion: string"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-129",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "- participantes: List[Participante]",
+          "html": "<div>- participantes: List[Participante]</div>"
+        },
+        {
+          "id": "275sk-uA66MBqwhE6S-W-0",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "- fechaHoraVencimiento: datetime"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-130",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-131",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ listarParticipantes()"
+        },
+        {
+          "id": "vKUkaSSS5wmHTjlhSeX_-7",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ listarRealizadas(fechaInicio, fechaFin)"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-3",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ buscarReserva(idReserva)"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-4",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ buscarPorCliente(dniCliente)"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-5",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ buscarTodas()"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-6",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ buscarReservasPorSalida(idSalidaProgramada)"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-7",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ crearReserva(unCliente, unPaquete)"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-8",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ agregarParticipante(dni, nombre, apellido, fechaNacimiento)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-132",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ registrarConformidad(varolacion, comentario)"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-13",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ cancelar(motivo)"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-12",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ temporizadorVigente()"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-11",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ setFechaHoraVencimiento(minutos)"
+        },
+        {
+          "id": "UKaFQW3u0nts_jmRmuPX-6",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ calcularImportePendiente()"
+        },
+        {
+          "id": "UKaFQW3u0nts_jmRmuPX-7",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ calcularSena()"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-10",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ calcularImporteTotal()"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-7",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ confirmarRegistroReserva()"
+        },
+        {
+          "id": "KZ1J2i_-T6nQe4Jm9BZ4-9",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ participantesValidos()"
+        },
+        {
+          "id": "2DDY9b8bcmx9JKvm8xP7-0",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "+ agregarPago(monto, moneda, medioPago, tipoPago)"
+        },
+        {
+          "id": "UKaFQW3u0nts_jmRmuPX-9",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "- actualizarSituacionPago()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-133",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "Refugio"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-134",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-133",
+          "label": "- idRefugio: int",
+          "html": "- idRefugio: int<div><br></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-135",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-133",
+          "label": "- nombre: string",
+          "html": "<div>- nombre: string</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-136",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-133",
+          "label": "- descripcion: string",
+          "html": "<div><div>- descripcion: string</div></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-137",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-133",
+          "label": "- ubicacion: string",
+          "html": "<div>- ubicacion: string</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-138",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-133"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-43",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-133",
+          "label": "+ buscar(idRefugio): Refugio"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-44",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-133",
+          "label": "+ listarAdmisibles(fechaInicio, fechaFin): List&lt;Refugio&gt;"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-46",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-133",
+          "label": "+ esAdmisible(fechaInicio, fechaFin): boolean"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-45",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-133",
+          "label": "- tienePaqueteSolapado(fechaInicio, fechaFin): boolean"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-49",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-133",
+          "label": "+ getPrecioCama(fechaInicio, fechaFin): decimal"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-50",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-133",
+          "label": "+ getCamasDisponibles(fechaInicio, fechaFin): int"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-139",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "Convenio"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-140",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-139",
+          "label": "- idConvenio: int"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-141",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-139",
+          "label": "- nombre: string",
+          "html": "<div>- nombre: string</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-142",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-139",
+          "label": "- fechaInicio: date"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-143",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-139",
+          "label": "- fechaFin: date",
+          "html": "<div><div>- fechaFin: date</div></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-144",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-139",
+          "label": "- camasTotales: int",
+          "html": "<div>- camasTotales: int</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-145",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-139",
+          "label": "- camasDisponibles: int",
+          "html": "<div>- camasDisponibles: int</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-146",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-139",
+          "label": "- precioCama: decimal",
+          "html": "<div>- precioCama: decimal</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-147",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-139"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-47",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-139",
+          "label": "+ cubre(fechaInicio, fechaFin): boolean"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-148",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "Cliente"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-149",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-148",
+          "label": "- telefono",
+          "html": "<div><div>- telefono</div></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-150",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-148",
+          "label": "- email",
+          "html": "<div>- email</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-151",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-148",
+          "label": "- usuario",
+          "html": "<div>- usuario</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-152",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-148",
+          "label": "- contrasenia",
+          "html": "<div>- contrasenia</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-153",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-148"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-155",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "<< abstract >>Persona",
+          "html": "<div>&lt;&lt; abstract &gt;&gt;</div>Persona"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-156",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-155",
+          "label": "- id",
+          "html": "<div>- id</div>"
+        },
+        {
+          "id": "x_pb-eR33uSzMyFLfdbE-0",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-155",
+          "label": "- dni"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-157",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-155",
+          "label": "- nombre",
+          "html": "<div>- nombre</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-158",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-155",
+          "label": "- apellido",
+          "html": "<div><div>- apellido</div></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-159",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-155",
+          "label": "- fechaNacimiento",
+          "html": "<div>- fechaNacimiento</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-160",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-155"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-162",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "CertificadoMedico"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-163",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162",
+          "label": "- idCertificado: int",
+          "html": "<div>- idCertificado: int</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-164",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162",
+          "label": "- fechaEmision: date",
+          "html": "<div>- fechaEmision: date</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-165",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162",
+          "label": "- estado: [PENDIENTE_DE_VERIFICACION | VALIDO | INVALIDO]",
+          "html": "<div>- estado: [PENDIENTE_DE_VERIFICACION | VALIDO | INVALIDO]</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-166",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162",
+          "label": "- archivo: file",
+          "html": "<div><div>- archivo: file</div></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-167",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162",
+          "label": "- fechaCarga: date",
+          "html": "<div>- fechaCarga: date</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-168",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162",
+          "label": "- fechaVencimiento: date",
+          "html": "<div>- fechaVencimiento: date</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-169",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162",
+          "label": "- descripcion: string",
+          "html": "<div>- descripcion: string</div>"
+        },
+        {
+          "id": "2DDY9b8bcmx9JKvm8xP7-5",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162",
+          "label": "- motivoInvalidez: string"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-170",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-171",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162",
+          "label": "+ calcularVigencia(fechaEmision)"
+        },
+        {
+          "id": "WoJncImrA7de4z612SyG-4",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162",
+          "label": "+ crear(archivo)",
+          "html": "<div>+ crear(archivo)</div>"
+        },
+        {
+          "id": "WoJncImrA7de4z612SyG-5",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162",
+          "label": "+ obtenerPendientes()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-172",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-162",
+          "label": "+ cubrePeriodo(salida): boolean"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-173",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "Participante"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-174",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-173",
+          "label": "- unCertificadoMedico: CertificadoMedico"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-175",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-173",
+          "label": "- estadoRequisitoMedico: [ NO_REQUERIDO | PENDIENTE | CUMPLIDO ]"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-176",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-173"
+        },
+        {
+          "id": "WoJncImrA7de4z612SyG-3",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-173",
+          "label": "+ registrarCertificado(archivo)"
+        },
+        {
+          "id": "vQct9Un5GfJ35R2-Z5iQ-22",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-173",
+          "label": "+ crearParticipante(dni, nombre, apellido, fechaNacimiento)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-177",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "Empleado"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-178",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-177",
+          "label": "- categoria",
+          "html": "<div>- categoria</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-179",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-177",
+          "label": "- estado:  [ ACTIVO | INACTIVO ]",
+          "html": "<div><div>- estado:&nbsp; [ ACTIVO | INACTIVO ]</div></div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-180",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-177"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-58",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-177",
+          "label": "+ buscar(idEmpleado): Empleado"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-59",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-177",
+          "label": "+ buscar(idsEmpleados): List&lt;Empleado&gt;)"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-61",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-177",
+          "label": "+ listarDisponibles(categoria, fechaInicio, fechaFin): List&lt;Empleado&gt;"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-60",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-177",
+          "label": "+ estaDisponible(fechaInicio, fechaFin): boolean"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-187",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-54",
+          "target": "SqVM0nvIEwWP_lFodTa7-122"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-188",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-54",
+          "target": "SqVM0nvIEwWP_lFodTa7-172"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-200",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "target": "SqVM0nvIEwWP_lFodTa7-76"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-201",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-65"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-202",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "ControladorExcursiones"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-3",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-202",
+          "label": "- excursion: Excursion"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-204",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-202"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-205",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-202",
+          "label": "+ registrarExcursion(datosExcursion)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-206",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-202",
+          "label": "+ actualizarDatosExcursion(datosModificados)"
+        },
+        {
+          "id": "x_pb-eR33uSzMyFLfdbE-1",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-202",
+          "label": "+ modificarExcursion(idExcursion)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-207",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-202",
+          "label": "+ bajaExcursion()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-208",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-202",
+          "label": "+ listarExcursiones()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-209",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "ControladorSalidas"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-210",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "- datosSalida"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-8",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "- salida; salidaProgramada"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-6",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "- excursion: Excursion"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-211",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-0",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "&nbsp;+ listarEmpleadosDisponibles(categoria, fechaInicio,&nbsp; &nbsp; &nbsp;fechaFin): List&lt;Empleado&gt;"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-212",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "+ ingresarDatosSalida(idExcursion, datosSalida): boolean"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-213",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "+ listarEquipamientoDisponible()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-214",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "+ registrarSalida(idGuia, idsAsistentes, idsEquipamiento): idSalida, cupoMaximo"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-215",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "+ listarSalidas(idExcursion)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-216",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "+ modificarSalidaProgramada(idSalidaProgramada)"
+        },
+        {
+          "id": "Xz5Pioh9I70gBLJZqbhk-0",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "+ ingresarDatosModificados(datosSalida)"
+        },
+        {
+          "id": "Xz5Pioh9I70gBLJZqbhk-1",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "+ modificarAsignaciones(idGuia, idsAsistentes, idsEquipamiento)"
+        },
+        {
+          "id": "Xz5Pioh9I70gBLJZqbhk-2",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "+ confirmarModificacion()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-217",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "+ cancelarSalidaProgramada(idSalidaProgramada)"
+        },
+        {
+          "id": "WoJncImrA7de4z612SyG-0",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "+ confirmarCancelacion(motivo)"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-218",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-209",
+          "label": "+ finalizarSalidaProgramada()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-219",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "ControladorPaquetes"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-9",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-219",
+          "label": "- salida: salidaProgramada"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-221",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-219"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-222",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-219",
+          "label": "+ solicitarRegistroPaquete(idSalida): datosSalida"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-1",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-219",
+          "label": "+ listarServicios(): List&lt;Servicio&gt;"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-223",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-219",
+          "label": "+ listarRefugiosAdmisibles(): List&lt;Refugio&gt;"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-3",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-219",
+          "label": "+ registrarPaquete(nombre, descripcion, idsServicios, idRefugio): idPaquete, precio"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-225",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-219",
+          "label": "+ listarPaquetes(idSalida): List&lt;Paquete&gt;"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-226",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-219",
+          "label": "+ cancelarPaquete()"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-229",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-209",
+          "target": "SqVM0nvIEwWP_lFodTa7-79"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-233",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-54",
+          "target": "hGYbpL4ZbThKmKnw3Jlb-52"
+        },
+        {
+          "id": "iK33jpSZwUneq8fF5HKL-3",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-219",
+          "target": "SqVM0nvIEwWP_lFodTa7-101"
+        },
+        {
+          "id": "iK33jpSZwUneq8fF5HKL-4",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-219",
+          "target": "SqVM0nvIEwWP_lFodTa7-32"
+        },
+        {
+          "id": "vKUkaSSS5wmHTjlhSeX_-0",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-72",
+          "target": "SqVM0nvIEwWP_lFodTa7-122"
+        },
+        {
+          "id": "WoJncImrA7de4z612SyG-7",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "Conformidad"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-182",
+          "type": "node",
+          "parent": "WoJncImrA7de4z612SyG-7",
+          "label": "- valoracion"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-183",
+          "type": "node",
+          "parent": "WoJncImrA7de4z612SyG-7",
+          "label": "- comentario"
+        },
+        {
+          "id": "WoJncImrA7de4z612SyG-8",
+          "type": "node",
+          "parent": "WoJncImrA7de4z612SyG-7"
+        },
+        {
+          "id": "WoJncImrA7de4z612SyG-9",
+          "type": "node",
+          "parent": "WoJncImrA7de4z612SyG-7",
+          "label": "+ crear(valoracion, comentario)"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-0",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-122",
+          "target": "SqVM0nvIEwWP_lFodTa7-173"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-1",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-148",
+          "target": "SqVM0nvIEwWP_lFodTa7-122"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-2",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-177",
+          "target": "SqVM0nvIEwWP_lFodTa7-32"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-5",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-79",
+          "target": "SqVM0nvIEwWP_lFodTa7-202"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-7",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-209",
+          "target": "SqVM0nvIEwWP_lFodTa7-32"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-13",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-47",
+          "target": "SqVM0nvIEwWP_lFodTa7-148"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-15",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-209",
+          "target": "hGYbpL4ZbThKmKnw3Jlb-57"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-16",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-219",
+          "target": "SqVM0nvIEwWP_lFodTa7-26"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-17",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-219",
+          "target": "SqVM0nvIEwWP_lFodTa7-133"
+        },
+        {
+          "id": "lQzkW8sf53OHizJudSCz-20",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-54",
+          "target": "SqVM0nvIEwWP_lFodTa7-32"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-52",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "Equipamiento"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-53",
+          "type": "node",
+          "parent": "hGYbpL4ZbThKmKnw3Jlb-52",
+          "label": "- idEquipamiento: int",
+          "html": "<div>- idEquipamiento: int</div>"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-97",
+          "type": "node",
+          "parent": "hGYbpL4ZbThKmKnw3Jlb-52",
+          "label": "- nombre: string"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-98",
+          "type": "node",
+          "parent": "hGYbpL4ZbThKmKnw3Jlb-52",
+          "label": "- descripcion: string"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-99",
+          "type": "node",
+          "parent": "hGYbpL4ZbThKmKnw3Jlb-52",
+          "label": "- precioAlquiler: decimal"
+        },
+        {
+          "id": "SqVM0nvIEwWP_lFodTa7-100",
+          "type": "node",
+          "parent": "hGYbpL4ZbThKmKnw3Jlb-52",
+          "label": "- stockTotal: natural"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-54",
+          "type": "node",
+          "parent": "hGYbpL4ZbThKmKnw3Jlb-52"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-55",
+          "type": "node",
+          "parent": "hGYbpL4ZbThKmKnw3Jlb-52",
+          "label": "+ buscar (idsEquipamiento): List&lt;Equipamiento&gt;"
+        },
+        {
+          "id": "WoJncImrA7de4z612SyG-13",
+          "type": "node",
+          "parent": "hGYbpL4ZbThKmKnw3Jlb-52",
+          "label": "+ buscar(idEquipamiento)"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-56",
+          "type": "node",
+          "parent": "hGYbpL4ZbThKmKnw3Jlb-52",
+          "label": "+ listarConStock(fechaInicio, fechaFin): List&lt;Equipamiento&gt;"
+        },
+        {
+          "id": "hGYbpL4ZbThKmKnw3Jlb-57",
+          "type": "node",
+          "parent": "hGYbpL4ZbThKmKnw3Jlb-52",
+          "label": "+ stockDisponible(fechaInicio, fechaFin): int"
+        },
+        {
+          "id": "WbF1-Aku8PvvKeuypTUn-3",
+          "type": "edge",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "source": "SqVM0nvIEwWP_lFodTa7-101",
+          "target": "SqVM0nvIEwWP_lFodTa7-122"
+        }
+      ]
+    }
+  ]
+}

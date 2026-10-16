@@ -5,7 +5,7 @@ namespace App\Models;
 use DateTime;
 use Illuminate\Database\Eloquent\Model;
 
-class certificadoMedico extends Model
+class CertificadoMedico extends Model
 {
     protected $table = 'certificados_medicos';
 

@@ -11,7 +11,7 @@ class SalidaProgramada extends Model
     protected $fillable = [
         'excursion_id',
         'fecha_inicio',
-        'hora_salida',
+        'hora_de_salida',
         'fecha_fin',
         'cupo_maximo',
         'cupo_disponible',

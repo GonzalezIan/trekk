@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class conformidad extends Model
+class Conformidad extends Model
 {
     protected $table = 'conformidades';
 

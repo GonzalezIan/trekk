@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class equipamiento extends Model
+class Equipamiento extends Model
 {
     protected $table = 'equipamientos';
 
@@ -12,11 +12,11 @@ class equipamiento extends Model
         'nombre',
         'descripcion',
         'precio_alquiler',
-        'stock_total',
+        'stock',
     ];
 
     protected $casts = [
         'precio_alquiler' => 'decimal:2',
-        'stock_total' => 'integer',
+        'stock' => 'integer',
     ];
 }

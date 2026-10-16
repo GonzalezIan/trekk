@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('nombre', 100);
             $table->text('descripcion')->nullable();
             $table->decimal('precio_calculado', 10, 2);
-            $table->string('estado', 20)->default('activo');
+            $table->string('estado', 20)->default('activo'); //en el UML figura como 'DISPONIBLE' o 'CANCELADO'
             $table->timestamps();
         });
     }

@@ -3,27 +3,33 @@
 namespace App\Models;
 
 use App\Abstracts\Persona;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Cliente extends Persona
 {
     protected $table = 'clientes';
 
     protected $fillable = [
+        'user_id',
         'dni',
         'nombre',
         'apellido',
         'fecha_nacimiento',
         'telefono',
-        'email',
-        'usuario',
-        'contrasenia',
     ];
-
-    protected $hidden = ['contrasenia'];
 
     protected $casts = [
         'fecha_nacimiento' => 'date',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function reservas(): HasMany
+    {
+        return $this->hasMany(Reserva::class);
+    }
 }

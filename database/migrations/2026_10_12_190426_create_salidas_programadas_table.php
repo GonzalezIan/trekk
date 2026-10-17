@@ -21,6 +21,7 @@ return new class extends Migration
             $table->unsignedInteger('cupo_disponible');
             $table->decimal('precio_base', 10, 2);
             $table->text('motivo_cancelacion')->nullable();
+            $table->string('estado',20)->default('programada');
             $table->timestamps();
         });
     }

@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Convenio extends Model
 {
     protected $table = 'convenios';
 
     protected $fillable = [
-        'nombre',
+        'refugio_id',
+        'nombre_convenio',
         'fecha_inicio',
         'fecha_fin',
         'camas_totales',
@@ -24,4 +26,9 @@ class Convenio extends Model
         'camas_disponibles' => 'integer',
         'precio_cama' => 'decimal:2',
     ];
+    // ========== RELACIONES ==========
+
+    public function refugio(): BelongsTo {
+        return $this->belongsTo(Refugio::class);
+    }
 }

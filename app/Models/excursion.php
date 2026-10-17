@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Excursion extends Model
 {
@@ -25,9 +26,14 @@ class Excursion extends Model
     protected $casts = [
         'dificultad' => 'string',
         'duracion' => 'string',
-        'experiencia_requerida' => 'boolean',
+        'experiencia_requerida' => 'string',
         'acepta_menores' => 'boolean',
         'requiere_certificado_medico' => 'boolean',
         'estado' => 'string',
     ];
+    // ========== RELACIONES ==========
+    
+    public function salidasProgramadas():HasMany{
+        return $this->hasMany(SalidaProgramada::class);
+    }
 }

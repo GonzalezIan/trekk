@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Pago extends Model
 {
@@ -25,4 +26,10 @@ class Pago extends Model
         'tipo_pago' => 'string',
         'resultado_transaccion' => 'string',
     ];
+
+    // =========== RELACIONES ==========
+
+    public function reserva():BelongsTo{
+        return $this->belongsTo(Reserva::class);
+    }
 }

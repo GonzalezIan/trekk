@@ -12,10 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('equipos_prestados', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('salida_programada_id')->constrained('salidas_programadas')->cascadeOnDelete();
             $table->foreignId('equipamiento_id')->constrained('equipamientos');
             $table->unsignedInteger('cantidad');
-            $table->primary(['salida_programada_id', 'equipamiento_id']);
+            $table->unique(['salida_programada_id', 'equipamiento_id']);
         });
     }
 

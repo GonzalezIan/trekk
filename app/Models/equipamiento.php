@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Equipamiento extends Model
 {
@@ -19,4 +20,13 @@ class Equipamiento extends Model
         'precio_alquiler' => 'decimal:2',
         'stock' => 'integer',
     ];
+
+    // =========== RELACIONES ==========
+
+    public function salidasProgramadas():BelongsToMany{
+    return $this->belongsToMany(SalidaProgramada::class,'equipos_prestados')->withPivot('cantidad');
+    }
+    public function reservas():BelongsToMany{
+        return $this->belongsToMany(Reserva::class,'equipos_alquilados')->withPivot('cantidad');
+    }
 }

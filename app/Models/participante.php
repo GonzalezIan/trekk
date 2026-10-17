@@ -2,19 +2,20 @@
 
 namespace App\Models;
 
-use App\Abstracts\Persona;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use illuminate\Database\Eloquent\Relations\HasOne;
 
-class Participante extends Persona
+class Participante extends Model
 {
     protected $table = 'participantes';
 
     protected $fillable = [
+        'reserva_id',
         'dni',
         'nombre',
         'apellido',
         'fecha_nacimiento',
-        'certificado_medico_id',
         'estado_requisito_medico',
     ];
 
@@ -22,4 +23,14 @@ class Participante extends Persona
         'fecha_nacimiento' => 'date',
         'estado_requisito_medico' => 'string',
     ];
+
+    // =========== RELACIONES ==========
+
+    public function reserva():BelongsTo{
+        return $this->belongsTo(Reserva::class);
+    }
+
+    public function certificadoMedico():HasOne{
+        return $this->hasOne(CertificadoMedico::class,'participante_id');
+    }
 }

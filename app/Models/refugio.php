@@ -3,21 +3,28 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Refugio extends Model
 {
-protected $table = 'refugios';
+    protected $table = 'refugios';
 
     protected $fillable = [
         'nombre',
         'descripcion',
         'ubicacion',
-        'capacidad_total',
-        'precio_base',
     ];
 
-    protected $casts = [
-        'capacidad_total' => 'integer',
-        'precio_base' => 'decimal:2',
-    ];
+    // ========== RELACIONES ==========
+
+    public function convenios(): HasMany
+    {
+        return $this->hasMany(Convenio::class);
+    }
+
+    
+    public function paquetes(): HasMany
+    {
+        return $this->hasMany(Paquete::class);
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Conformidad extends Model
 {
@@ -10,7 +11,6 @@ class Conformidad extends Model
 
     protected $fillable = [
         'reserva_id',
-        'cliente_id',
         'valoracion',
         'comentario',
     ];
@@ -19,4 +19,10 @@ class Conformidad extends Model
         'valoracion' => 'integer',
         'comentario' => 'string',
     ];
+
+    // =========== RELACIONES ==========
+
+    public function reserva():BelongsTo{
+        return $this->belongsTo(Reserva::class);
+    }
 }

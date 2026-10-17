@@ -12,10 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('empleados_asignados', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('salida_programada_id')->constrained('salidas_programadas')->cascadeOnDelete();
             $table->foreignId('empleado_id')->constrained('empleados');
             $table->string('rol', 50);
-            $table->primary(['salida_programada_id', 'empleado_id']);
+            $table->unique(['salida_programada_id', 'empleado_id']);
         });
     }
 

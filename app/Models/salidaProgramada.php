@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SalidaProgramada extends Model
 {
@@ -15,7 +18,6 @@ class SalidaProgramada extends Model
         'fecha_fin',
         'cupo_maximo',
         'cupo_disponible',
-        'guia_responsable_id',
         'precio_base',
         'estado',
         'motivo_cancelacion',
@@ -23,11 +25,29 @@ class SalidaProgramada extends Model
 
     protected $casts = [
         'fecha_inicio' => 'date',
-        'hora_salida' => 'datetime:H:i',
+        'hora_de_salida' => 'datetime:H:i',
         'fecha_fin' => 'date',
         'cupo_maximo' => 'integer',
         'cupo_disponible' => 'integer',
         'precio_base' => 'decimal:2',
         'estado' => 'string',
     ];
+
+    // ========== RELACIONES ==========
+
+    public function excursion():BelongsTo{
+        return $this->belongsTo(Excursion::class);
+    }
+
+    public function empleados():BelongsToMany{
+        return $this->belongsToMany(Empleado::class,'empleados_asignados')->withPivot('rol');
+    }
+
+    public function paquetes():HasMany{
+        return $this->hasMany(Paquete::class);
+    }
+
+    public function equipoPrestado():BelongsToMany{
+        return $this->belongsToMany(Equipamiento::class,'equipos_prestados')->withPivot('cantidad');
+    }
 }

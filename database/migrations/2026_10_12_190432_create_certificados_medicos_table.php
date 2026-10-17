@@ -20,6 +20,7 @@ return new class extends Migration
             $table->dateTime('fecha_de_carga')->nullable();
             $table->date('fecha_de_vencimiento')->nullable();
             $table->text('descripcion')->nullable();
+            $table->text('motivo_de_invalidez')->nullable();
             $table->timestamps();
         });
     }

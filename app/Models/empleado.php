@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Abstracts\Persona;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Empleado extends Persona
 {
@@ -22,4 +23,11 @@ class Empleado extends Persona
         'categoria' => 'string',
         'estado' => 'string',
     ];
+
+    // ========== RELACIONES ==========
+
+    public function SalidasProgramadas(): BelongsToMany{
+        return $this->belongsToMany(SalidaProgramada::class,'empleados_asignados')
+        ->withPivot('rol');
+    }
 }

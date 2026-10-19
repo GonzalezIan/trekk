@@ -14,6 +14,11 @@ use Tests\TestCase;
 class AltaExcursionTest extends TestCase
 {
     use RefreshDatabase;
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutVite(); // las pruebas no necesitan el frontend compilado
+    }
 
     private function administrativo(): User
     {

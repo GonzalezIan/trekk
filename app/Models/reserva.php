@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Reserva extends Model
 {
+    use HasFactory;
     protected $table = 'reservas';
 
     protected $fillable = [
@@ -50,7 +52,7 @@ class Reserva extends Model
     }
 
     public function equipos_alquilados():BelongsToMany{
-        return $this->belongsToMany(Equipamiento::class,'equipos_aqluilados')->withPivot('cantidad');
+        return $this->belongsToMany(Equipamiento::class,'equipos_alquilados')->withPivot('cantidad');
     }
 
     public function conformidad():HasOne{

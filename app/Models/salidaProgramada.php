@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SalidaProgramada extends Model
 {
+    use HasFactory;
     protected $table = 'salidas_programadas';
 
     protected $fillable = [
@@ -42,6 +44,7 @@ class SalidaProgramada extends Model
     public function empleados():BelongsToMany{
         return $this->belongsToMany(Empleado::class,'empleados_asignados')->withPivot('rol');
     }
+
 
     public function paquetes():HasMany{
         return $this->hasMany(Paquete::class);

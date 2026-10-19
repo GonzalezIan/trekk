@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('paquete_id')->constrained('paquetes');
             $table->dateTime('fecha_hora_registro')->useCurrent();
             $table->string('estado', 20);
-            $table->string('situacion_de_pago', 20);
+            $table->string('situacion_de_pago', 30);
             $table->decimal('importe_total', 10, 2);
             $table->text('motivo_cancelacion')->nullable();
             $table->dateTime('fecha_hora_vencimiento')->nullable();

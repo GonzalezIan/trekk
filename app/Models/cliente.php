@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Models;
-
-use App\Abstracts\Persona;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Abstract\Persona;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Cliente extends Persona
 {
+    use HasFactory;
     protected $table = 'clientes';
 
     protected $fillable = [

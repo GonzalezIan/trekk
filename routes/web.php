@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ControladorExcursiones;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// ---------- Excursiones (CU 1 y CU 4) ----------
+Route::middleware('auth')->group(function () {
+    // CU 4 - Listar excursiones (Cliente y Administrativo)
+    Route::get('/excursiones', [ControladorExcursiones::class, 'listarExcursiones'])
+        ->name('excursiones.listar');
+
+    // Solo Administrativo
+    Route::middleware('administrativo')->group(function () {
+        // CU 1 - Alta de excursión
+        Route::get('/excursiones/alta', [ControladorExcursiones::class, 'mostrarFormularioAlta'])
+            ->name('excursiones.alta');
+        Route::post('/excursiones', [ControladorExcursiones::class, 'registrarExcursion'])
+            ->name('excursiones.registrar');
+    });
 });
 
 require __DIR__.'/auth.php';

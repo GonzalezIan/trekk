@@ -1,4 +1,5 @@
 import EstadoBadge, { etiquetaEstado } from '@/Components/EstadoBadge';
+import ParticipantesReserva from '@/Components/ParticipantesReserva';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
@@ -92,6 +93,8 @@ function ReservasCliente({ reservas }) {
 }
 
 function TarjetaReserva({ reserva: r }) {
+    const [verParticipantes, setVerParticipantes] = useState(false);
+
     return (
         <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
             <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
@@ -114,7 +117,18 @@ function TarjetaReserva({ reserva: r }) {
             </div>
 
             <div className="flex flex-wrap gap-2 border-t border-gray-200 px-5 py-3">
-                <BotonAccion cu="CU 21">Participantes</BotonAccion>
+                {/* 4.1 - CU 21 Listar participantes */}
+                <button
+                    type="button"
+                    aria-expanded={verParticipantes}
+                    onClick={() => setVerParticipantes(!verParticipantes)}
+                    className={
+                        'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 ' +
+                        (verParticipantes ? 'bg-gray-100' : '')
+                    }
+                >
+                    Participantes
+                </button>
                 {r.estado === 'PENDIENTE' && <BotonAccion cu="CU 22">Registrar pago</BotonAccion>}
                 {r.estado === 'REALIZADA' && !r.tiene_conformidad && (
                     <BotonAccion cu="CU 20">Registrar conformidad</BotonAccion>
@@ -125,6 +139,12 @@ function TarjetaReserva({ reserva: r }) {
                     </BotonAccion>
                 )}
             </div>
+
+            {verParticipantes && (
+                <div className="border-t border-gray-200 bg-gray-50 p-5">
+                    <ParticipantesReserva reserva={r} />
+                </div>
+            )}
 
             {r.motivo_cancelacion && (
                 <p className="border-t border-gray-200 px-5 py-3 text-sm text-gray-500">

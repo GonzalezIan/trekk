@@ -118,4 +118,24 @@ class Reserva extends Model
             'tiene_conformidad' => $this->conformidad !== null,
         ];
     }
+
+    /**
+     * Indica si la reserva está a nombre del cliente del usuario autenticado.
+     */
+    public function perteneceA(User $usuario): bool
+    {
+        return $this->cliente->user_id === $usuario->id;
+    }
+
+    /**
+     * CU 21 - RN-01. Solo se puede cargar un certificado médico si faltan
+     * más de 24 horas para el inicio de la Salida Programada.
+     */
+    public function faltanMasDe24HorasParaLaSalida(): bool
+    {
+        $salida = $this->paquete->salidaProgramada;
+        $inicio = $salida->fecha_inicio->copy()->setTimeFrom($salida->hora_de_salida);
+
+        return now()->addHours(24)->lt($inicio);
+    }
 }

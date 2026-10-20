@@ -30,6 +30,12 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Dashboard
                                 </NavLink>
+                                <NavLink
+                                    href={route('reservas.listar')}
+                                    active={route().current('reservas.*')}
+                                >
+                                    {user.rol === 'admin' ? 'Reservas' : 'Mis reservas'}
+                                </NavLink>
                             </div>
                         </div>
 
@@ -133,6 +139,12 @@ export default function AuthenticatedLayout({ header, children }) {
                             active={route().current('dashboard')}
                         >
                             Dashboard
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('reservas.listar')}
+                            active={route().current('reservas.*')}
+                        >
+                            {user.rol === 'admin' ? 'Reservas' : 'Mis reservas'}
                         </ResponsiveNavLink>
                     </div>
 

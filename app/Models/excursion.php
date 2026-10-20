@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Collection;
 
 class Excursion extends Model
 {
@@ -38,6 +39,29 @@ class Excursion extends Model
     
     public function salidasProgramadas():HasMany{
         return $this->hasMany(SalidaProgramada::class);
+    }
+
+    /** DS CU 9 (Cliente): buscar(idExcursion). */
+    public static function buscar(int $idExcursion): self
+    {
+        return self::findOrFail($idExcursion);
+    }
+
+    /**
+     * DS CU 9 (Cliente): getSalidasReservables().
+     * Recorre las salidas de la excursión y devuelve los datos de las reservables.
+     */
+    public function getSalidasReservables(): Collection
+    {
+        return $this->salidasProgramadas()
+            ->with(['excursion:id,nombre', 'empleados', 'equipoPrestado'])
+            ->withCount('paquetes')
+            ->orderBy('fecha_inicio')
+            ->orderBy('hora_de_salida')
+            ->get()
+            ->filter(fn (SalidaProgramada $salida) => $salida->esReservable())
+            ->map(fn (SalidaProgramada $salida) => $salida->getDatos())
+            ->values();
     }
 
     // Estados y dificultades según el diagrama de clases

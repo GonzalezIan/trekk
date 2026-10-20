@@ -47,6 +47,7 @@ export default function Listar({ excursiones, esAdministrativo }) {
                                         <th className="px-4 py-3">Dificultad</th>
                                         <th className="px-4 py-3">Duración</th>
                                         <th className="px-4 py-3">Estado</th>
+                                        {!esAdministrativo && <th className="px-4 py-3"></th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -74,6 +75,17 @@ export default function Listar({ excursiones, esAdministrativo }) {
                                                     {e.estado}
                                                 </span>
                                             </td>
+                                            {!esAdministrativo && (
+                                                // CU 4 - alternativo 4.1: el Cliente elige la excursión -> CU 9
+                                                <td className="px-4 py-3 text-right">
+                                                    <Link
+                                                        href={route('salidas.listar', { excursion: e.id })}
+                                                        className="text-indigo-600 hover:underline"
+                                                    >
+                                                        Ver salidas
+                                                    </Link>
+                                                </td>
+                                            )}
                                         </tr>
                                     ))}
                                 </tbody>

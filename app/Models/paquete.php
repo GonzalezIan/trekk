@@ -49,4 +49,62 @@ class Paquete extends Model
         return $this->belongsToMany(Servicio::class, 'servicios_incluidos')
                     ->withPivot('cantidad');
     }
+
+    // ========== CU 7 - LISTAR PAQUETES ==========
+
+    // Estados según el diagrama de clases
+    public const ESTADO_DISPONIBLE = 'DISPONIBLE';
+    public const ESTADO_CANCELADO = 'CANCELADO';
+
+    // Reservas que siguen vigentes (no canceladas, realizadas ni en curso de registro)
+    public const ESTADOS_RESERVA_ACTIVA = ['PENDIENTE', 'CONFIRMADA'];
+
+    /** DS CU 7 (Cliente): estaDisponible(). */
+    public function estaDisponible(): bool
+    {
+        return $this->estado === self::ESTADO_DISPONIBLE;
+    }
+
+    /** DS CU 7: getDatos(). Datos del paquete para el listado. */
+    public function getDatos(): array
+    {
+        return [
+            'id' => $this->id,
+            'nombre' => $this->nombre,
+            'descripcion' => $this->descripcion,
+            'refugio' => $this->refugio?->nombre,
+            'servicios' => $this->servicios
+                ->map(fn ($servicio) => $servicio->nombre . ' x' . $servicio->pivot->cantidad)
+                ->values(),
+            'precio' => $this->precio_calculado,
+            'estado' => $this->estado,
+        ];
+    }
+
+    /**
+     * DS CU 7 (Cliente): getDisponibilidad().
+     * Cupo disponible de la salida y, si el paquete tiene refugio, las camas
+     * disponibles para las fechas de la salida. Los lugares son el menor de los dos.
+     */
+    public function getDisponibilidad(): array
+    {
+        $salida = $this->salidaProgramada;
+        $cupoDisponible = $salida->getCupoDisponible();
+
+        $camasDisponibles = $this->refugio?->getCamasDisponibles($salida->fecha_inicio, $salida->fecha_fin);
+
+        return [
+            'cupo_disponible' => $cupoDisponible,
+            'camas_disponibles' => $camasDisponibles,
+            'lugares_disponibles' => $camasDisponibles === null
+                ? $cupoDisponible
+                : min($cupoDisponible, $camasDisponibles),
+        ];
+    }
+
+    /** DS CU 7 (Administrativo): cantidadReservasActivas(). */
+    public function cantidadReservasActivas(): int
+    {
+        return $this->reservas()->whereIn('estado', self::ESTADOS_RESERVA_ACTIVA)->count();
+    }
 }

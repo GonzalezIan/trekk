@@ -18,6 +18,11 @@ class ControladorPaquetes extends Controller
         $esAdministrativo = $request->user()->esAdministrativo();
         $salida = SalidaProgramada::buscar($idSalida);
 
+         // Precondición: el Cliente eligió una salida reservable en el CU 9 (RN-01 del CU 9)
+        if (! $esAdministrativo && ! $salida->esReservable()) {
+            abort(404);
+        }
+
         return Inertia::render('Paquetes/Listar', [
             'paquetes' => $esAdministrativo
                 ? $salida->getPaquetes()

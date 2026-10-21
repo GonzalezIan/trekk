@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ControladorSalidas;
 use App\Http\Controllers\ControladorExcursiones;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -39,6 +40,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/excursiones', [ControladorExcursiones::class, 'registrarExcursion'])
             ->name('excursiones.registrar');
     });
+});
+
+// ---------- Salidas Programadas (CU 9) ----------
+Route::middleware('auth')->group(function () {
+    // CU 9 - Listar Salidas Programadas (Cliente y Administrativo)
+    Route::get('/salidas', [ControladorSalidas::class, 'listarSalidas'])
+        ->name('salidas.listar');
 });
 
 require __DIR__.'/auth.php';

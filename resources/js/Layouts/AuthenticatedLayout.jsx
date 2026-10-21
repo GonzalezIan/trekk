@@ -36,6 +36,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Excursiones
                                 </NavLink>
+                                {user.rol === 'admin' && (
+                                    <NavLink
+                                        href={route('salidas.listar')}
+                                        active={route().current('salidas.*')}
+                                    >
+                                        Salidas
+                                    </NavLink>
+                                )}
                             </div>
                         </div>
 
@@ -146,6 +154,14 @@ export default function AuthenticatedLayout({ header, children }) {
                         >
                             Excursiones
                         </ResponsiveNavLink>
+                        {user.rol === 'admin' && (
+                            <ResponsiveNavLink
+                                href={route('salidas.listar')}
+                                active={route().current('salidas.*')}
+                            >
+                                Salidas
+                            </ResponsiveNavLink>
+                        )}
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4">

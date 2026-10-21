@@ -26,6 +26,15 @@ Route::middleware('auth')->group(function () {
     // CU 15 - Listar reservas (Cliente y Administrativo)
     Route::get('/reservas', [ControladorReservas::class, 'listarReservas'])
         ->name('reservas.listar');
+
+    // CU 21 - Listar participantes de una reserva propia (Cliente)
+    Route::get('/reservas/{reserva}/participantes', [ControladorReservas::class, 'listarParticipantesDeReserva'])
+        ->name('reservas.participantes');
+
+    // CU 21 - Listar participantes de una Salida Programada (solo Administrativo)
+    Route::get('/salidas/{salida}/participantes', [ControladorReservas::class, 'listarParticipantesDeSalida'])
+        ->middleware('administrativo')
+        ->name('salidas.participantes');
 });
 
 Route::middleware('auth')->group(function () {

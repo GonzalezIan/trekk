@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'rol',
     ];
 
     /**
@@ -45,5 +46,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * El Administrativo es el usuario con rol 'admin' (ver UserSeeder).
+     */
+    public function esAdministrativo(): bool
+    {
+        return $this->rol === 'admin';
     }
 }

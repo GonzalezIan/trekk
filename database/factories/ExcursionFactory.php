@@ -14,7 +14,7 @@ class ExcursionFactory extends Factory
             'nombre' => 'Excursión ' . $this->faker->unique()->word(),
             'descripcion' => $this->faker->sentence(15),
             'dificultad' => $this->faker->randomElement(['BAJA', 'MEDIO', 'ALTA']),
-            'duracion' => $this->faker->numberBetween(2, 8) . ' horas',
+            'duracion' => $this->faker->numberBetween(1, 7), // en días (RN-02 del CU 1)
             'recorrido' => $this->faker->sentence(),
             'etapas' => $this->faker->sentence(),
             'experiencia_requerida' => $this->faker->randomElement(['SI', 'NO']), // Lo dejamos string como pediste

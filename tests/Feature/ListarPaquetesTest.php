@@ -87,6 +87,28 @@ class ListarPaquetesTest extends TestCase
 
     // ---------- Cliente ----------
 
+
+    public function test_cliente_no_puede_ver_paquetes_de_una_salida_no_reservable(): void
+    {
+        // A menos de 48 hs: el CU 9 no se la muestra al Cliente
+        $proxima = SalidaProgramada::factory()->create([
+            'excursion_id' => $this->salida->excursion_id,
+            'fecha_inicio' => '2026-10-21',
+            'fecha_fin' => '2026-10-21',
+            'hora_de_salida' => '08:00:00',
+        ]);
+        $this->paquete('Paquete de salida próxima', 'DISPONIBLE', $proxima);
+
+        $this->actingAs($this->cliente())
+            ->get(route('paquetes.listar', $proxima->id))
+            ->assertNotFound();
+
+        // El Administrativo sí la puede consultar
+        $this->actingAs($this->administrativo())
+            ->get(route('paquetes.listar', $proxima->id))
+            ->assertOk();
+    }
+
     public function test_cliente_ve_solo_los_paquetes_disponibles_de_la_salida(): void
     {
         $paquete = $this->paquete('A - Con refugio');

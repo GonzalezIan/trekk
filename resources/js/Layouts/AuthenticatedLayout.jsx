@@ -30,6 +30,20 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Dashboard
                                 </NavLink>
+                                                                <NavLink
+                                    href={route('excursiones.listar')}
+                                    active={route().current('excursiones.*')}
+                                >
+                                    Excursiones
+                                </NavLink>
+                                {user.rol === 'admin' && (
+                                    <NavLink
+                                        href={route('salidas.listar')}
+                                        active={route().current('salidas.*')}
+                                    >
+                                        Salidas
+                                    </NavLink>
+                                )}
                                 <NavLink
                                     href={route('reservas.listar')}
                                     active={route().current('reservas.*')}
@@ -140,6 +154,20 @@ export default function AuthenticatedLayout({ header, children }) {
                         >
                             Dashboard
                         </ResponsiveNavLink>
+                                                <ResponsiveNavLink
+                            href={route('excursiones.listar')}
+                            active={route().current('excursiones.*')}
+                        >
+                            Excursiones
+                        </ResponsiveNavLink>
+                        {user.rol === 'admin' && (
+                            <ResponsiveNavLink
+                                href={route('salidas.listar')}
+                                active={route().current('salidas.*')}
+                            >
+                                Salidas
+                            </ResponsiveNavLink>
+                        )}
                         <ResponsiveNavLink
                             href={route('reservas.listar')}
                             active={route().current('reservas.*')}

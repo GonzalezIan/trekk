@@ -115,7 +115,56 @@ class SalidaProgramada extends Model
             'estado' => $this->estado,
         ];
     }
+    // ========== CU 7 - LISTAR PAQUETES ==========
 
+    /** DS CU 7: buscar(idSalida). */
+    public static function buscar(int $idSalida): self
+    {
+        return self::findOrFail($idSalida);
+    }
+
+    /**
+     * DS CU 7 (Administrativo): getPaquetes().
+     * Todos los paquetes, cualquiera sea su estado, con la cantidad de reservas activas.
+     */
+    public function getPaquetes(): Collection
+    {
+        return $this->paquetes()
+            ->with(['refugio:id,nombre', 'servicios'])
+            ->orderBy('nombre')
+            ->get()
+            ->map(fn (Paquete $paquete) => [
+                ...$paquete->getDatos(),
+                'reservas_activas' => $paquete->cantidadReservasActivas(),
+            ]);
+    }
+
+    /**
+     * DS CU 7 (Cliente): getPaquetesDisponibles().
+     * Solo los paquetes en estado DISPONIBLE, con su precio y disponibilidad.
+     */
+    public function getPaquetesDisponibles(): Collection
+    {
+        return $this->paquetes()
+            ->with(['refugio.convenios', 'servicios'])
+            ->orderBy('nombre')
+            ->get()
+            ->filter(fn (Paquete $paquete) => $paquete->estaDisponible())
+            ->each(fn (Paquete $paquete) => $paquete->setRelation('salidaProgramada', $this))
+            ->map(fn (Paquete $paquete) => [
+                ...$paquete->getDatos(),
+                ...$paquete->getDisponibilidad(),
+            ])
+            ->values();
+    }
+
+    /** DS CU 7: getCupoDisponible(). */
+    public function getCupoDisponible(): int
+    {
+        return $this->cupo_disponible;
+    }
+
+    
     /** Fecha de inicio + hora de salida, en un solo momento. */
     private function momentoDeSalida(): Carbon
     {

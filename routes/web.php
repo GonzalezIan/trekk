@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ControladorPaquetes;
 use App\Http\Controllers\ControladorSalidas;
 use App\Http\Controllers\ControladorExcursiones;
 use App\Http\Controllers\ProfileController;
@@ -47,6 +48,14 @@ Route::middleware('auth')->group(function () {
     // CU 9 - Listar Salidas Programadas (Cliente y Administrativo)
     Route::get('/salidas', [ControladorSalidas::class, 'listarSalidas'])
         ->name('salidas.listar');
+});
+
+// ---------- Paquetes (CU 7) ----------
+Route::middleware('auth')->group(function () {
+    // CU 7 - Listar paquetes de una Salida Programada (Cliente y Administrativo)
+    Route::get('/salidas/{idSalida}/paquetes', [ControladorPaquetes::class, 'listarPaquetes'])
+        ->whereNumber('idSalida')
+        ->name('paquetes.listar');
 });
 
 require __DIR__.'/auth.php';

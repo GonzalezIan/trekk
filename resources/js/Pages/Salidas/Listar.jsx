@@ -16,6 +16,9 @@ export default function Listar({
     estados = [],
     filtros = {},
 }) {
+     // Salida elegida por el Administrativo para operar sobre ella
+    const [seleccionada, setSeleccionada] = useState(null);
+    const salidaSeleccionada = salidas.find((s) => s.id === seleccionada);
     return (
         <AuthenticatedLayout
             header={
@@ -48,6 +51,10 @@ export default function Listar({
                         />
                     )}
 
+                    {esAdministrativo && salidas.length > 0 && (
+                        <BarraAcciones salida={salidaSeleccionada} />
+                    )}
+
                     <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
                         {salidas.length === 0 ? (
                             // Alternativo 3.3
@@ -57,7 +64,11 @@ export default function Listar({
                                     : 'No existen Salidas Programadas para la excursión seleccionada.'}
                             </p>
                         ) : esAdministrativo ? (
-                            <TablaAdministrativo salidas={salidas} />
+                            <TablaAdministrativo
+                                salidas={salidas}
+                                seleccionada={seleccionada}
+                                onSeleccionar={setSeleccionada}
+                            />
                         ) : (
                             <TablaCliente salidas={salidas} />
                         )}
@@ -150,6 +161,33 @@ function Filtros({ filtros, excursiones, estados }) {
     );
 }
 
+// Operaciones que habilita la salida seleccionada por el Administrativo
+function BarraAcciones({ salida }) {
+    return (
+        <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-3 text-sm shadow-sm sm:rounded-lg">
+            {salida ? (
+                <>
+                    <span className="text-gray-600">Seleccionada:</span>
+                    <span className="font-medium text-gray-900">
+                        {salida.excursion} · {fecha(salida.fecha_inicio)}
+                    </span>
+                    {/* CU 7 - Listar paquetes de la salida */}
+                    <Link
+                        href={route('paquetes.listar', salida.id)}
+                        className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700"
+                    >
+                        Listar paquetes
+                    </Link>
+                </>
+            ) : (
+                <span className="text-gray-600">
+                    Seleccioná una salida para ver las operaciones disponibles.
+                </span>
+            )}
+        </div>
+    );
+}
+
 // Alternativo 4.1 - lo que ve el Cliente
 function TablaCliente({ salidas }) {
     return (
@@ -162,6 +200,7 @@ function TablaCliente({ salidas }) {
                     <th className="px-4 py-3">Equipamiento incluido</th>
                     <th className="px-4 py-3">Precio base</th>
                     <th className="px-4 py-3">Cupo disponible</th>
+                    <th className="px-4 py-3"></th>
                 </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -173,6 +212,15 @@ function TablaCliente({ salidas }) {
                         <td className="px-4 py-3">{s.equipamiento.join(', ') || '—'}</td>
                         <td className="px-4 py-3">{precio(s.precio_base)}</td>
                         <td className="px-4 py-3">{s.cupo_disponible}</td>
+                        {/* El Cliente elige la salida -> CU 7 */}
+                        <td className="px-4 py-3 text-right">
+                            <Link
+                                href={route('paquetes.listar', s.id)}
+                                className="text-indigo-600 hover:underline"
+                            >
+                                Ver paquetes
+                            </Link>
+                        </td>
                     </tr>
                 ))}
             </tbody>
@@ -181,11 +229,12 @@ function TablaCliente({ salidas }) {
 }
 
 // Alternativo 4.2 - lo que ve el Administrativo
-function TablaAdministrativo({ salidas }) {
+function TablaAdministrativo({ salidas, seleccionada, onSeleccionar }) {
     return (
         <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50 text-left text-gray-600">
                 <tr>
+                    <th className="w-8 px-4 py-3"></th>
                     <th className="px-4 py-3">Excursión</th>
                     <th className="px-4 py-3">Inicio</th>
                     <th className="px-4 py-3">Fin</th>
@@ -202,7 +251,24 @@ function TablaAdministrativo({ salidas }) {
             </thead>
             <tbody className="divide-y divide-gray-100">
                 {salidas.map((s) => (
-                    <tr key={s.id}>
+                     <tr
+                        key={s.id}
+                        onClick={() => onSeleccionar(s.id)}
+                        className={
+                            'cursor-pointer ' +
+                            (s.id === seleccionada ? 'bg-indigo-50' : 'hover:bg-gray-50')
+                        }
+                    >
+                        <td className="px-4 py-3">
+                            <input
+                                type="radio"
+                                name="salida"
+                                checked={s.id === seleccionada}
+                                onChange={() => onSeleccionar(s.id)}
+                                aria-label={`Seleccionar salida de ${s.excursion} del ${fecha(s.fecha_inicio)}`}
+                                className="text-indigo-600 focus:ring-indigo-500"
+                            />
+                        </td>
                         <td className="px-4 py-3 font-medium text-gray-900">{s.excursion}</td>
                         <td className="px-4 py-3">{fecha(s.fecha_inicio)}</td>
                         <td className="px-4 py-3">{fecha(s.fecha_fin)}</td>

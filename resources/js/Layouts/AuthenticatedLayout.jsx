@@ -30,7 +30,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Dashboard
                                 </NavLink>
-                                <NavLink
+                                                                <NavLink
                                     href={route('excursiones.listar')}
                                     active={route().current('excursiones.*')}
                                 >
@@ -44,6 +44,12 @@ export default function AuthenticatedLayout({ header, children }) {
                                         Salidas
                                     </NavLink>
                                 )}
+                                <NavLink
+                                    href={route('reservas.listar')}
+                                    active={route().current('reservas.*')}
+                                >
+                                    {user.rol === 'admin' ? 'Reservas' : 'Mis reservas'}
+                                </NavLink>
                             </div>
                         </div>
 
@@ -148,7 +154,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         >
                             Dashboard
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink
+                                                <ResponsiveNavLink
                             href={route('excursiones.listar')}
                             active={route().current('excursiones.*')}
                         >
@@ -162,6 +168,12 @@ export default function AuthenticatedLayout({ header, children }) {
                                 Salidas
                             </ResponsiveNavLink>
                         )}
+                        <ResponsiveNavLink
+                            href={route('reservas.listar')}
+                            active={route().current('reservas.*')}
+                        >
+                            {user.rol === 'admin' ? 'Reservas' : 'Mis reservas'}
+                        </ResponsiveNavLink>
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4">

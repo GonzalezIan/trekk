@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ParticipantesSalidaModal from '@/Components/ParticipantesSalidaModal';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -230,7 +231,10 @@ function TablaCliente({ salidas }) {
 
 // Alternativo 4.2 - lo que ve el Administrativo
 function TablaAdministrativo({ salidas, seleccionada, onSeleccionar }) {
+    // Alternativo 4.8: salida elegida para ver sus participantes (CU 21)
+    const [salidaElegida, setSalidaElegida] = useState(null);
     return (
+        <>
         <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50 text-left text-gray-600">
                 <tr>
@@ -247,6 +251,7 @@ function TablaAdministrativo({ salidas, seleccionada, onSeleccionar }) {
                     <th className="px-4 py-3">Precio base</th>
                     <th className="px-4 py-3">Paquetes</th>
                     <th className="px-4 py-3">Estado</th>
+                    <th className="px-4 py-3"></th>
                 </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -292,9 +297,25 @@ function TablaAdministrativo({ salidas, seleccionada, onSeleccionar }) {
                                 {s.estado}
                             </span>
                         </td>
+                        <td className="px-4 py-3 text-right">
+                            <button
+                                type="button"
+                                onClick={() => setSalidaElegida(s)}
+                                className="text-indigo-600 hover:underline"
+                            >
+                                Participantes
+                            </button>
+                        </td>
                     </tr>
                 ))}
             </tbody>
         </table>
+        {salidaElegida && (
+            <ParticipantesSalidaModal
+                salida={{ ...salidaElegida, fecha_inicio: fecha(salidaElegida.fecha_inicio) }}
+                onCerrar={() => setSalidaElegida(null)}
+            />
+        )}
+        </>
     );
 }

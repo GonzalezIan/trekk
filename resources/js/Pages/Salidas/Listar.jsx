@@ -17,9 +17,13 @@ export default function Listar({
     estados = [],
     filtros = {},
 }) {
-     // Salida elegida por el Administrativo para operar sobre ella
+    // Salida elegida por el Administrativo para operar sobre ella
     const [seleccionada, setSeleccionada] = useState(null);
     const salidaSeleccionada = salidas.find((s) => s.id === seleccionada);
+
+    // Alternativo 4.8: ver los participantes de la salida seleccionada (CU 21)
+    const [verParticipantes, setVerParticipantes] = useState(false);
+
     return (
         <AuthenticatedLayout
             header={
@@ -53,7 +57,10 @@ export default function Listar({
                     )}
 
                     {esAdministrativo && salidas.length > 0 && (
-                        <BarraAcciones salida={salidaSeleccionada} />
+                        <BarraAcciones
+                            salida={salidaSeleccionada}
+                            onListarParticipantes={() => setVerParticipantes(true)}
+                        />                    
                     )}
 
                     <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
@@ -76,6 +83,15 @@ export default function Listar({
                     </div>
                 </div>
             </div>
+            {verParticipantes && salidaSeleccionada && (
+                <ParticipantesSalidaModal
+                    salida={{
+                        ...salidaSeleccionada,
+                        fecha_inicio: fecha(salidaSeleccionada.fecha_inicio),
+                    }}
+                    onCerrar={() => setVerParticipantes(false)}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }
@@ -163,7 +179,7 @@ function Filtros({ filtros, excursiones, estados }) {
 }
 
 // Operaciones que habilita la salida seleccionada por el Administrativo
-function BarraAcciones({ salida }) {
+function BarraAcciones({ salida, onListarParticipantes }) {
     return (
         <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-3 text-sm shadow-sm sm:rounded-lg">
             {salida ? (
@@ -179,6 +195,14 @@ function BarraAcciones({ salida }) {
                     >
                         Listar paquetes
                     </Link>
+                    {/* CU 21 - Listar participantes de la salida */}
+                    <button
+                        type="button"
+                        onClick={onListarParticipantes}
+                        className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                    >
+                        Listar participantes
+                    </button>
                 </>
             ) : (
                 <span className="text-gray-600">
@@ -231,10 +255,7 @@ function TablaCliente({ salidas }) {
 
 // Alternativo 4.2 - lo que ve el Administrativo
 function TablaAdministrativo({ salidas, seleccionada, onSeleccionar }) {
-    // Alternativo 4.8: salida elegida para ver sus participantes (CU 21)
-    const [salidaElegida, setSalidaElegida] = useState(null);
     return (
-        <>
         <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50 text-left text-gray-600">
                 <tr>
@@ -251,7 +272,6 @@ function TablaAdministrativo({ salidas, seleccionada, onSeleccionar }) {
                     <th className="px-4 py-3">Precio base</th>
                     <th className="px-4 py-3">Paquetes</th>
                     <th className="px-4 py-3">Estado</th>
-                    <th className="px-4 py-3"></th>
                 </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -297,25 +317,9 @@ function TablaAdministrativo({ salidas, seleccionada, onSeleccionar }) {
                                 {s.estado}
                             </span>
                         </td>
-                        <td className="px-4 py-3 text-right">
-                            <button
-                                type="button"
-                                onClick={() => setSalidaElegida(s)}
-                                className="text-indigo-600 hover:underline"
-                            >
-                                Participantes
-                            </button>
-                        </td>
                     </tr>
                 ))}
             </tbody>
         </table>
-        {salidaElegida && (
-            <ParticipantesSalidaModal
-                salida={{ ...salidaElegida, fecha_inicio: fecha(salidaElegida.fecha_inicio) }}
-                onCerrar={() => setSalidaElegida(null)}
-            />
-        )}
-        </>
     );
 }

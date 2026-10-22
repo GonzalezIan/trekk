@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CertificadoMedico;
 use App\Models\Participante;
 use App\Models\Reserva;
 use App\Models\SalidaProgramada;
@@ -38,12 +39,13 @@ class ControladorReservas extends Controller
 
         return response()->json([
             'participantes' => $reserva->participantes()
+                ->with('certificadoMedico')
                 ->orderBy('apellido')
                 ->orderBy('nombre')
                 ->get()
                 ->map(fn (Participante $participante) => $participante->datosParaListado()),
             // 4.1: habilita la carga del certificado médico (CU 17)
-            'puedeCargarCertificado' => $reserva->faltanMasDe24HorasParaLaSalida(),
+            'puedeCargarCertificado' => $reserva->admiteCargaDeCertificados(),
         ]);
     }
 
@@ -57,5 +59,61 @@ class ControladorReservas extends Controller
             'participantes' => Participante::listarConfirmadosDeSalida($salida->id)
                 ->map(fn (Participante $participante) => $participante->datosParaListado()),
         ]);
+    }
+
+    /**
+     * CU 17 - Cargar certificado médico, pasos 1 y 2. Se invoca desde el CU 21.
+     * DS: cargarCertificadoMedico(idReserva, dniParticipante) -> buscarReserva(idReserva)
+     *     -> getParticipante(dniParticipante) -> solicitarArchivoCertificado().
+     */
+    public function cargarCertificadoMedico(Request $request, Reserva $reserva, string $dniParticipante)
+    {
+        $participante = $this->participanteQueAdmiteCertificado($request, $reserva, $dniParticipante);
+
+        // solicitarArchivoCertificado(): pide el archivo en los formatos de la RN-01
+        return response()->json([
+            'participante' => $participante->datosParaListado(),
+            'formatos' => CertificadoMedico::FORMATOS_PERMITIDOS,
+        ]);
+    }
+
+    /**
+     * CU 17 - pasos 3 a 5. DS: registrarCertificado(archivo) -> unParticipante.registrarCertificado(archivo)
+     *     -> confirmarCargaCertificado().
+     * Si el archivo falta o no tiene un formato permitido, responde 422 con el
+     * mensaje para el cliente (flujos alternativos 3.1 y 3.2).
+     */
+    public function registrarCertificado(Request $request, Reserva $reserva, string $dniParticipante)
+    {
+        $participante = $this->participanteQueAdmiteCertificado($request, $reserva, $dniParticipante);
+        $archivo = CertificadoMedico::validarArchivo($request->all())['archivo'];
+
+        $participante->registrarCertificado($archivo);
+
+        // confirmarCargaCertificado()
+        return response()->json([
+            'mensaje' => 'El certificado fue cargado correctamente y se encuentra a la espera de verificación por parte del administrativo.',
+            'participante' => $participante->load('certificadoMedico')->datosParaListado(),
+        ]);
+    }
+
+    /**
+     * CU 17 - Precondición: participante de una reserva propia, con el requisito
+     * médico "Pendiente" y a más de 24 horas del inicio de la salida.
+     * La reserva ya llega buscada por su id (buscarReserva) gracias al route model binding.
+     */
+    private function participanteQueAdmiteCertificado(Request $request, Reserva $reserva, string $dniParticipante): Participante
+    {
+        if (! $reserva->perteneceA($request->user())) {
+            abort(403, 'Solo podés cargar certificados de los participantes de tus propias reservas.');
+        }
+
+        $participante = $reserva->getParticipante($dniParticipante);
+
+        if (! $participante->admiteCargaDeCertificado()) {
+            abort(403, 'Ya no es posible cargar el certificado médico de este participante.');
+        }
+
+        return $participante;
     }
 }

@@ -32,6 +32,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/reservas/{reserva}/participantes', [ControladorReservas::class, 'listarParticipantesDeReserva'])
         ->name('reservas.participantes');
 
+    // CU 17 - Cargar certificado médico de un participante (Cliente)
+    Route::get('/reservas/{reserva}/participantes/{dniParticipante}/certificado', [ControladorReservas::class, 'cargarCertificadoMedico'])
+        ->name('reservas.certificado.cargar');
+    Route::post('/reservas/{reserva}/participantes/{dniParticipante}/certificado', [ControladorReservas::class, 'registrarCertificado'])
+        ->name('reservas.certificado.registrar');
+
     // CU 21 - Listar participantes de una Salida Programada (solo Administrativo)
     Route::get('/salidas/{salida}/participantes', [ControladorReservas::class, 'listarParticipantesDeSalida'])
         ->middleware('administrativo')

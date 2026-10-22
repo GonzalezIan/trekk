@@ -128,6 +128,27 @@ class Reserva extends Model
     }
 
     /**
+     * CU 17 - DS paso 3. Participante de la reserva con ese DNI.
+     * Si no pertenece a la reserva, responde 404.
+     */
+    public function getParticipante(string $dniParticipante): Participante
+    {
+        return $this->participantes()->where('dni', $dniParticipante)->firstOrFail();
+    }
+
+    /**
+     * CU 17 - Precondición. Solo se cargan certificados en reservas "Pendiente"
+     * y si faltan más de 24 horas para la salida (RN-03).
+     * Una reserva "Confirmada" ya tiene todos los requisitos médicos cumplidos
+     * (o no requeridos) y el pago completo, así que no le falta ningún certificado.
+     */
+    public function admiteCargaDeCertificados(): bool
+    {
+        return $this->estado === self::ESTADO_PENDIENTE
+            && $this->faltanMasDe24HorasParaLaSalida();
+    }
+
+    /**
      * CU 21 - RN-01. Solo se puede cargar un certificado médico si faltan
      * más de 24 horas para el inicio de la Salida Programada.
      */

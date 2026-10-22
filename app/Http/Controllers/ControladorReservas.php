@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\CertificadoMedico;
 use App\Models\Participante;
 use App\Models\Reserva;
+use App\Models\Equipamiento;
 use App\Models\SalidaProgramada;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use illuminate\Http\Requests;
 
 class ControladorReservas extends Controller
 {
@@ -300,4 +302,27 @@ class ControladorReservas extends Controller
 
         return $participante;
     }
+
+
+// CU 25 - Listar equipamientos
+public function listarEquipamientos(Request $request)
+{
+    $equipamientos = Equipamiento::where('stock', '>', 0)->get();
+    $esAdministrativo = $request->user()->esAdministrativo();
+
+    if ($esAdministrativo) {
+        $salidas = SalidaProgramada::where('estado', 'PROGRAMADA')->get();
+        return Inertia::render('Equipamiento/Listar', [
+            'equipamientos' => $equipamientos,
+            'salidas' => $salidas,
+            'esAdministrativo' => true,
+        ]);
+    }
+
+    return Inertia::render('Equipamiento/Listar', [
+        'equipamientos' => $equipamientos,
+        'esAdministrativo' => false,
+    ]);
 }
+}
+

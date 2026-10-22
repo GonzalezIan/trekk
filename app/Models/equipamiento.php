@@ -31,4 +31,5 @@ class Equipamiento extends Model
     public function reservas():BelongsToMany{
         return $this->belongsToMany(Reserva::class,'equipos_alquilados')->withPivot('cantidad');
     }
+    
 }

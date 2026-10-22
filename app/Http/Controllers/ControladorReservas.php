@@ -7,7 +7,9 @@ use App\Models\Participante;
 use App\Models\Reserva;
 use App\Models\SalidaProgramada;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ControladorReservas extends Controller
@@ -165,6 +167,118 @@ class ControladorReservas extends Controller
         if (! $reserva->sePuedeCancelar()) {
             abort(403, 'Solo pueden cancelarse reservas en estado "Pendiente" o "Confirmada".');
         }
+    }
+
+    /**
+     * CU 19 - Verificar certificado médico, pasos 1 y 2. Se invoca desde el CU 18 (Administrativo).
+     * DS: verificarCertificadoMedico(idReserva, dniParticipante, unCertificado) -> buscarReserva(idReserva)
+     *     -> getParticipante(dniParticipante) -> getCertificadoMedico() -> getArchivo() -> mostrarDatosCertificado().
+     */
+    public function verificarCertificadoMedico(Reserva $reserva, string $dniParticipante)
+    {
+        $certificado = $this->certificadoQueAdmiteVerificacion($reserva, $dniParticipante);
+
+        return response()->json([
+            'certificado' => [
+                ...$certificado->datosParaVerificar(),
+                'url_archivo' => route('reservas.certificado.archivo', [$reserva, $dniParticipante]),
+            ],
+        ]);
+    }
+
+    /**
+     * CU 19 - DS paso 7: getArchivo(). Devuelve el archivo adjunto para verlo en el navegador.
+     * Los certificados se guardan en el disco privado: solo los ve el Administrativo.
+     */
+    public function mostrarArchivoCertificado(Reserva $reserva, string $dniParticipante)
+    {
+        $certificado = $reserva->getParticipante($dniParticipante)->certificadoMedico;
+
+        abort_if(! $certificado || ! Storage::exists($certificado->archivo), 404);
+
+        return Storage::response($certificado->archivo);
+    }
+
+    /**
+     * CU 19 - pasos 3 a 9, cuando el archivo corresponde a un certificado válido.
+     * DS: ingresarFechaEmision(fechaEmision) -> calcularVigencia(fechaEmision) -> getSalidaProgramada()
+     *     -> cubrePeriodo(unaSalidaProgramada) -> setRequisitoMedico(CUMPLIDO) + setEstado(VALIDO)
+     *     -> confirmarVerificacionCertificado(); si no cubre, setEstado(INVALIDO) (7.1).
+     * Si la fecha es futura o no válida, responde 422 (5.1).
+     */
+    public function ingresarFechaEmision(Request $request, Reserva $reserva, string $dniParticipante)
+    {
+        $certificado = $this->certificadoQueAdmiteVerificacion($reserva, $dniParticipante);
+        $fechaEmision = Carbon::parse(CertificadoMedico::validarFechaEmision($request->all())['fecha_emision']);
+
+        $mensaje = DB::transaction(function () use ($reserva, $certificado, $fechaEmision) {
+            $certificado->calcularVigencia($fechaEmision);
+            $salida = $reserva->getSalidaProgramada();
+
+            // 7.1: la vigencia no cubre el período de la Salida Programada
+            if (! $certificado->cubrePeriodo($salida)) {
+                $certificado->setEstado(
+                    CertificadoMedico::ESTADO_INVALIDO,
+                    'El certificado no cubre el período de la salida programada.',
+                );
+                // ref RF-29 Notificar eventualidades: la notificación al cliente queda a cargo del RF-29.
+
+                return 'La vigencia del certificado no cubre el período de la salida: quedó inválido. El requisito médico sigue pendiente.';
+            }
+
+            $certificado->participante->setRequisitoMedico(Participante::REQUISITO_CUMPLIDO);
+            $certificado->setEstado(CertificadoMedico::ESTADO_VALIDO);
+
+            // Con el pago completo y todos los requisitos cumplidos, la reserva queda "Confirmada"
+            $confirmada = $reserva->confirmarSiCorresponde();
+
+            return 'El certificado fue verificado correctamente. El requisito médico del participante quedó cumplido.'
+                .($confirmada ? ' La reserva quedó confirmada.' : '');
+        });
+
+        // confirmarVerificacionCertificado()
+        return response()->json([
+            'mensaje' => $mensaje,
+            'estado' => $certificado->estado,
+        ]);
+    }
+
+    /**
+     * CU 19 - 3.1: el archivo no corresponde a un certificado médico válido.
+     * DS: solicitarMotivoInvalidez() -> ingresarMotivoInvalidez(motivo) -> setEstado(INVALIDO).
+     * El requisito médico del participante sigue "Pendiente" y no se pide fecha de emisión (RN-03).
+     */
+    public function ingresarMotivoInvalidez(Request $request, Reserva $reserva, string $dniParticipante)
+    {
+        $certificado = $this->certificadoQueAdmiteVerificacion($reserva, $dniParticipante);
+        $motivo = CertificadoMedico::validarMotivoInvalidez($request->all())['motivo'];
+
+        $certificado->setEstado(CertificadoMedico::ESTADO_INVALIDO, $motivo);
+        // ref RF-29 Notificar eventualidades (motivo = motivo de invalidez): queda a cargo del RF-29.
+
+        return response()->json([
+            'mensaje' => 'El certificado fue marcado como inválido. El requisito médico sigue pendiente.',
+            'estado' => $certificado->estado,
+        ]);
+    }
+
+    /**
+     * CU 19 - Precondición: el certificado del participante está "Pendiente de verificación",
+     * la reserva está "Pendiente" y faltan más de 12 horas para la salida (RN-02).
+     * La reserva ya llega buscada por su id (buscarReserva) gracias al route model binding.
+     */
+    private function certificadoQueAdmiteVerificacion(Reserva $reserva, string $dniParticipante): CertificadoMedico
+    {
+        // getParticipante(dniParticipante) -> getCertificadoMedico()
+        $certificado = $reserva->getParticipante($dniParticipante)->certificadoMedico;
+
+        abort_if(! $certificado, 404);
+
+        if (! $certificado->estaPendienteDeVerificacion() || ! $reserva->admiteVerificacionDeCertificados()) {
+            abort(403, 'Este certificado ya no puede verificarse.');
+        }
+
+        return $certificado;
     }
 
     /**

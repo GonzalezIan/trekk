@@ -44,6 +44,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/reservas/{reserva}/participantes/{dniParticipante}/certificado', [ControladorReservas::class, 'registrarCertificado'])
         ->name('reservas.certificado.registrar');
 
+    // CU 19 - Verificar certificado médico de un participante (solo Administrativo)
+    Route::middleware('administrativo')
+        ->prefix('/reservas/{reserva}/participantes/{dniParticipante}/certificado')
+        ->group(function () {
+            Route::get('/verificar', [ControladorReservas::class, 'verificarCertificadoMedico'])
+                ->name('reservas.certificado.verificar');
+            Route::get('/archivo', [ControladorReservas::class, 'mostrarArchivoCertificado'])
+                ->name('reservas.certificado.archivo');
+            Route::post('/fecha-emision', [ControladorReservas::class, 'ingresarFechaEmision'])
+                ->name('reservas.certificado.fecha-emision');
+            Route::post('/invalidez', [ControladorReservas::class, 'ingresarMotivoInvalidez'])
+                ->name('reservas.certificado.invalidez');
+        });
+
     // CU 21 - Listar participantes de una Salida Programada (solo Administrativo)
     Route::get('/salidas/{salida}/participantes', [ControladorReservas::class, 'listarParticipantesDeSalida'])
         ->middleware('administrativo')

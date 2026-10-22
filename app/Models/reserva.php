@@ -189,9 +189,57 @@ class Reserva extends Model
      */
     public function faltanMasDe24HorasParaLaSalida(): bool
     {
-        $salida = $this->paquete->salidaProgramada;
+        return $this->faltanMasDeHorasParaLaSalida(24);
+    }
+
+    /**
+     * ¿Faltan más de esas horas para el inicio (fecha + hora) de la Salida Programada?
+     */
+    public function faltanMasDeHorasParaLaSalida(int $horas): bool
+    {
+        $salida = $this->getSalidaProgramada();
         $inicio = $salida->fecha_inicio->copy()->setTimeFrom($salida->hora_de_salida);
 
-        return now()->addHours(24)->lt($inicio);
+        return now()->addHours($horas)->lt($inicio);
+    }
+
+    /**
+     * CU 19 - DS paso 12. Salida Programada de la reserva (Reserva -> Paquete -> SalidaProgramada).
+     */
+    public function getSalidaProgramada(): SalidaProgramada
+    {
+        return $this->paquete->salidaProgramada;
+    }
+
+    /**
+     * CU 19 - Precondición. Solo se verifican certificados de reservas "Pendiente"
+     * y si faltan más de 12 horas para el inicio de la salida (RN-02).
+     */
+    public function admiteVerificacionDeCertificados(): bool
+    {
+        return $this->estado === self::ESTADO_PENDIENTE
+            && $this->faltanMasDeHorasParaLaSalida(12);
+    }
+
+    /**
+     * CU 19 - Confirma la reserva si ya tiene el pago completo y ningún participante
+     * con el requisito médico "Pendiente" (todos "Cumplido" o "No requerido").
+     * Devuelve true si la reserva quedó "Confirmada".
+     */
+    public function confirmarSiCorresponde(): bool
+    {
+        $requisitosCumplidos = ! $this->participantes()
+            ->where('estado_requisito_medico', Participante::REQUISITO_PENDIENTE)
+            ->exists();
+
+        if ($this->estado !== self::ESTADO_PENDIENTE
+            || $this->situacion_de_pago !== self::PAGO_COMPLETO
+            || ! $requisitosCumplidos) {
+            return false;
+        }
+
+        $this->update(['estado' => self::ESTADO_CONFIRMADA]);
+
+        return true;
     }
 }

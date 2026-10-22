@@ -76,6 +76,14 @@ class Participante extends Model
     }
 
     /**
+     * CU 19 - DS paso 16: setRequisitoMedico(CUMPLIDO).
+     */
+    public function setRequisitoMedico(string $estado): void
+    {
+        $this->update(['estado_requisito_medico' => $estado]);
+    }
+
+    /**
      * CU 17 - Precondición. Se puede cargar el certificado si el requisito médico
      * está "Pendiente" y la reserva admite la carga ("Pendiente" y a más de 24 hs de la salida).
      */

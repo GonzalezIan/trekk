@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class Participante extends Model
 {
@@ -51,6 +53,7 @@ class Participante extends Model
                 ->where('estado', Reserva::ESTADO_CONFIRMADA)
                 ->whereHas('paquete', fn ($paquete) => $paquete
                     ->where('salida_programada_id', $idSalidaProgramada)))
+            ->with('certificadoMedico')
             ->orderBy('apellido')
             ->orderBy('nombre')
             ->get();
@@ -58,6 +61,7 @@ class Participante extends Model
 
     /**
      * CU 21 - paso 4. Datos que se muestran de cada participante.
+     * Incluye el estado del certificado cargado (CU 17), si lo hay.
      */
     public function datosParaListado(): array
     {
@@ -67,6 +71,38 @@ class Participante extends Model
             'nombre' => $this->nombre,
             'apellido' => $this->apellido,
             'estado_requisito_medico' => $this->estado_requisito_medico,
+            'estado_certificado' => $this->certificadoMedico?->estado,
         ];
+    }
+
+    /**
+     * CU 17 - Precondición. Se puede cargar el certificado si el requisito médico
+     * está "Pendiente" y la reserva admite la carga ("Pendiente" y a más de 24 hs de la salida).
+     */
+    public function admiteCargaDeCertificado(): bool
+    {
+        return $this->estado_requisito_medico === self::REQUISITO_PENDIENTE
+            && $this->reserva->admiteCargaDeCertificados();
+    }
+
+    /**
+     * CU 17 - DS pasos 7 y 8. Registra el certificado en estado "Pendiente de verificación".
+     * El requisito médico del participante sigue "Pendiente" hasta el CU 19.
+     *  RN-04: si ya tenía un certificado cargado, el nuevo lo reemplaza sin conservar el anterior.
+     */
+    public function registrarCertificado(UploadedFile $archivo): CertificadoMedico
+    {
+        $rutaArchivo = $archivo->store('certificados');
+
+        if ($anterior = $this->certificadoMedico) {
+            Storage::delete($anterior->archivo);
+            $anterior->delete();
+        }
+
+        return $this->certificadoMedico()->create([
+            'archivo' => $rutaArchivo,
+            'fecha_de_carga' => now(),
+            'estado' => CertificadoMedico::ESTADO_PENDIENTE_DE_VERIFICACION,
+        ]);
     }
 }

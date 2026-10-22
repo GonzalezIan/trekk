@@ -124,6 +124,17 @@ class ListarParticipantesTest extends TestCase
             ->assertJsonPath('puedeCargarCertificado', false);
     }
 
+    public function test_solo_se_puede_cargar_certificado_en_reservas_pendientes(): void
+    {
+        $cliente = Cliente::factory()->create();
+
+        foreach ([Reserva::ESTADO_CONFIRMADA, Reserva::ESTADO_CANCELADA, Reserva::ESTADO_REALIZADA] as $estado) {
+            $this->actingAs($cliente->user)
+                ->getJson(route('reservas.participantes', $this->reserva($cliente, $estado)))
+                ->assertJsonPath('puedeCargarCertificado', false);
+        }
+    }
+
     // ---------- Administrativo (3.2) ----------
 
     public function test_3_2_el_administrativo_ve_solo_participantes_de_reservas_confirmadas_de_la_salida(): void

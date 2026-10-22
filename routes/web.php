@@ -28,6 +28,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/reservas', [ControladorReservas::class, 'listarReservas'])
         ->name('reservas.listar');
 
+    // CU 16 - Cancelar reserva (Cliente: propias; Administrativo: cualquiera)
+    Route::get('/reservas/{reserva}/cancelar', [ControladorReservas::class, 'cancelarReserva'])
+        ->name('reservas.cancelar');
+    Route::post('/reservas/{reserva}/cancelar', [ControladorReservas::class, 'ingresarMotivoCancelacion'])
+        ->name('reservas.cancelar.confirmar');
+
     // CU 21 - Listar participantes de una reserva propia (Cliente)
     Route::get('/reservas/{reserva}/participantes', [ControladorReservas::class, 'listarParticipantesDeReserva'])
         ->name('reservas.participantes');

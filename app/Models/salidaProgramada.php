@@ -164,6 +164,19 @@ class SalidaProgramada extends Model
         return $this->cupo_disponible;
     }
 
+    // ========== CU 16 - CANCELAR RESERVA ==========
+
+    /**
+     * DS CU 16: liberarCupo(cantidadParticipantes).
+     * Suma la cantidad liberada a su propio cupo disponible, sin superar el cupo máximo.
+     */
+    public function liberarCupo(int $cantidad): void
+    {
+        $this->update([
+            'cupo_disponible' => min($this->cupo_maximo, $this->cupo_disponible + $cantidad),
+        ]);
+    }
+
     
     /** Fecha de inicio + hora de salida, en un solo momento. */
     private function momentoDeSalida(): Carbon

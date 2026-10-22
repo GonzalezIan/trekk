@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Validator;
 
 class Reserva extends Model
 {
@@ -116,7 +117,41 @@ class Reserva extends Model
                 'apellido' => $this->cliente->apellido,
             ],
             'tiene_conformidad' => $this->conformidad !== null,
+            'se_puede_cancelar' => $this->sePuedeCancelar(),
         ];
+    }
+
+    /**
+     * CU 16 - Precondición y RN-01 del CU 15: solo se cancelan reservas
+     * en estado "Pendiente" o "Confirmada".
+     */
+    public function sePuedeCancelar(): bool
+    {
+        return in_array($this->estado, [self::ESTADO_PENDIENTE, self::ESTADO_CONFIRMADA]);
+    }
+
+    /**
+     * CU 16 - paso 4. Valida el motivo ingresado y lo devuelve.
+     *  4.1: el motivo de la cancelación es obligatorio.
+     */
+    public static function validarMotivoCancelacion(array $datos): array
+    {
+        return Validator::make($datos, [
+            'motivo' => ['required', 'string'],
+        ], [
+            'motivo.required' => 'El motivo de la cancelación es obligatorio.',
+        ])->validate();
+    }
+
+    /**
+     * CU 16 - DS pasos 5 y 6. Registra el motivo y pasa la reserva a "Cancelada".
+     */
+    public function cancelar(string $motivo): void
+    {
+        $this->update([
+            'estado' => self::ESTADO_CANCELADA,
+            'motivo_cancelacion' => trim($motivo),
+        ]);
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Models\Participante;
 use App\Models\Reserva;
 use App\Models\SalidaProgramada;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ControladorReservas extends Controller
@@ -95,6 +96,75 @@ class ControladorReservas extends Controller
             'mensaje' => 'El certificado fue cargado correctamente y se encuentra a la espera de verificación por parte del administrativo.',
             'participante' => $participante->load('certificadoMedico')->datosParaListado(),
         ]);
+    }
+
+    /**
+     * CU 16 - Cancelar reserva, pasos 1 a 3. Se invoca desde el CU 15 (Cliente o Administrativo).
+     * DS: cancelarReserva(idReserva) -> buscarReserva(idReserva) -> solicitarMotivoCancelacion().
+     */
+    public function cancelarReserva(Request $request, Reserva $reserva)
+    {
+        $this->verificarQueSePuedeCancelar($request, $reserva);
+
+        // solicitarMotivoCancelacion(): datos de la reserva para pedir el motivo
+        return response()->json([
+            'reserva' => $reserva->loadCount('participantes')->datosParaListado(),
+        ]);
+    }
+
+    /**
+     * CU 16 - pasos 4 a 7. DS: ingresarMotivoCancelacion(motivo) -> reserva.cancelar(motivo)
+     *     -> getPaquete() -> getSalidaProgramada() -> liberarCupo(cantidadParticipantes)
+     *     -> confirmarCancelacionReserva().
+     * Si falta el motivo, responde 422 con el mensaje para el usuario (4.1).
+     */
+    public function ingresarMotivoCancelacion(Request $request, Reserva $reserva)
+    {
+        $this->verificarQueSePuedeCancelar($request, $reserva);
+        $motivo = Reserva::validarMotivoCancelacion($request->all())['motivo'];
+
+        DB::transaction(function () use ($reserva, $motivo) {
+            // Se vuelve a leer bloqueada, para no liberar dos veces si se cancela en simultáneo
+            $reserva = Reserva::lockForUpdate()->findOrFail($reserva->id);
+            if (! $reserva->sePuedeCancelar()) {
+                abort(403, 'Solo pueden cancelarse reservas en estado "Pendiente" o "Confirmada".');
+            }
+
+            $cantidadParticipantes = $reserva->participantes()->count();
+
+            $reserva->cancelar($motivo);
+            $paquete = $reserva->paquete;
+            $salida = $paquete->salidaProgramada;
+            $salida->liberarCupo($cantidadParticipantes);
+
+            // 6.1 / RN-02: si el paquete incluye alojamiento, se liberan las camas del convenio.
+            // El equipamiento alquilado (EquipamientoAlquilado) no se toca: su stock por período
+            // se calcula con las reservas activas, así que se libera al quedar "Cancelada".
+            $paquete->refugio?->liberarCamas($salida->fecha_inicio, $salida->fecha_fin, $cantidadParticipantes);
+        });
+
+        // ref RF-29 Notificar eventualidades: la notificación al cliente (paso 7) queda a cargo del RF-29.
+
+        // confirmarCancelacionReserva()
+        return response()->json([
+            'mensaje' => 'La reserva fue cancelada. No corresponde reintegro de los importes abonados.',
+        ]);
+    }
+
+    /**
+     * CU 16 - Precondición: la reserva está "Pendiente" o "Confirmada". El Cliente
+     * solo puede cancelar sus propias reservas; el Administrativo, cualquiera.
+     * La reserva ya llega buscada por su id (buscarReserva) gracias al route model binding.
+     */
+    private function verificarQueSePuedeCancelar(Request $request, Reserva $reserva): void
+    {
+        if (! $request->user()->esAdministrativo() && ! $reserva->perteneceA($request->user())) {
+            abort(403, 'Solo podés cancelar tus propias reservas.');
+        }
+
+        if (! $reserva->sePuedeCancelar()) {
+            abort(403, 'Solo pueden cancelarse reservas en estado "Pendiente" o "Confirmada".');
+        }
     }
 
     /**

@@ -1,10 +1,11 @@
+import { CancelarReservaModal, PanelCancelarReserva } from '@/Components/CancelarReserva';
 import EstadoBadge, { etiquetaEstado } from '@/Components/EstadoBadge';
 import ParticipantesReserva from '@/Components/ParticipantesReserva';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 
-// CU 15 - Listar reservas
+// CU 15 - Listar reservas, extendido por el CU 16 - Cancelar reserva
 
 const codigo = (id) => `R-${String(id).padStart(4, '0')}`;
 
@@ -16,9 +17,6 @@ const formatFecha = (fecha) =>
         month: 'short',
         year: 'numeric',
     });
-
-// RN-01: la reserva podrá cancelarse si y sólo si se encuentra pendiente o confirmada
-const sePuedeCancelar = (r) => r.estado === 'PENDIENTE' || r.estado === 'CONFIRMADA';
 
 export default function Listar({ reservas, esAdministrativo }) {
     return (
@@ -48,18 +46,36 @@ function Encabezado({ eyebrow, titulo, descripcion }) {
     );
 }
 
+// Mensaje que informa el sistema al terminar un caso de uso (igual al prototipo)
+function AvisoExito({ mensaje, onCerrar }) {
+    if (!mensaje) return null;
+    return (
+        <div
+            role="status"
+            className="mb-4 flex items-start gap-2 rounded-xl border border-emerald-300/50 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+        >
+            <span className="flex-1">{mensaje}</span>
+            <button
+                type="button"
+                aria-label="Cerrar aviso"
+                onClick={onCerrar}
+                className="rounded-md px-1.5 text-emerald-900/70 hover:bg-emerald-100"
+            >
+                ×
+            </button>
+        </div>
+    );
+}
+
 // Botón de una operación que habilita la reserva según su estado.
 // Quedan deshabilitados hasta que se implemente el CU correspondiente.
-function BotonAccion({ children, cu, peligro = false }) {
+function BotonAccion({ children, cu }) {
     return (
         <button
             type="button"
             disabled
             title={`Se habilita con el ${cu}`}
-            className={
-                'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 ' +
-                (peligro ? 'text-red-600' : 'text-gray-700')
-            }
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
             {children}
         </button>
@@ -69,6 +85,8 @@ function BotonAccion({ children, cu, peligro = false }) {
 // ---------- Vista del Cliente (3.1) ----------
 
 function ReservasCliente({ reservas }) {
+    const [aviso, setAviso] = useState('');
+
     return (
         <>
             <Encabezado
@@ -77,6 +95,8 @@ function ReservasCliente({ reservas }) {
                 descripcion="Consultá el estado de tus reservas, aboná saldos pendientes, cargá certificados médicos y calificá tus excursiones."
             />
 
+            <AvisoExito mensaje={aviso} onCerrar={() => setAviso('')} />
+
             {reservas.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-gray-300 p-10 text-center">
                     <p className="text-gray-500">No existen reservas todavía.</p>
@@ -84,7 +104,7 @@ function ReservasCliente({ reservas }) {
             ) : (
                 <div className="flex flex-col gap-4">
                     {reservas.map((r) => (
-                        <TarjetaReserva key={r.id} reserva={r} />
+                        <TarjetaReserva key={r.id} reserva={r} onAviso={setAviso} />
                     ))}
                 </div>
             )}
@@ -92,8 +112,14 @@ function ReservasCliente({ reservas }) {
     );
 }
 
-function TarjetaReserva({ reserva: r }) {
-    const [verParticipantes, setVerParticipantes] = useState(false);
+function TarjetaReserva({ reserva: r, onAviso }) {
+    // Panel desplegado debajo de la tarjeta: null | 'participantes' | 'cancelar'
+    const [panel, setPanel] = useState(null);
+
+    const alternar = (p) => {
+        onAviso('');
+        setPanel(panel === p ? null : p);
+    };
 
     return (
         <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
@@ -120,11 +146,11 @@ function TarjetaReserva({ reserva: r }) {
                 {/* 4.1 - CU 21 Listar participantes */}
                 <button
                     type="button"
-                    aria-expanded={verParticipantes}
-                    onClick={() => setVerParticipantes(!verParticipantes)}
+                    aria-expanded={panel === 'participantes'}
+                    onClick={() => alternar('participantes')}
                     className={
                         'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 ' +
-                        (verParticipantes ? 'bg-gray-100' : '')
+                        (panel === 'participantes' ? 'bg-gray-100' : '')
                     }
                 >
                     Participantes
@@ -133,17 +159,33 @@ function TarjetaReserva({ reserva: r }) {
                 {r.estado === 'REALIZADA' && !r.tiene_conformidad && (
                     <BotonAccion cu="CU 20">Registrar conformidad</BotonAccion>
                 )}
-                {sePuedeCancelar(r) && (
-                    <BotonAccion cu="CU 16" peligro>
+                {/* CU 16 - Cancelar reserva (solo "Pendiente" o "Confirmada", lo decide el servidor) */}
+                {r.se_puede_cancelar && (
+                    <button
+                        type="button"
+                        aria-expanded={panel === 'cancelar'}
+                        onClick={() => alternar('cancelar')}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-gray-100"
+                    >
                         Cancelar reserva
-                    </BotonAccion>
+                    </button>
                 )}
             </div>
 
-            {verParticipantes && (
+            {panel === 'participantes' && (
                 <div className="border-t border-gray-200 bg-gray-50 p-5">
                     <ParticipantesReserva reserva={r} />
                 </div>
+            )}
+
+            {panel === 'cancelar' && (
+                <PanelCancelarReserva
+                    reserva={r}
+                    onCancelada={(mensaje) => {
+                        setPanel(null);
+                        onAviso(mensaje);
+                    }}
+                />
             )}
 
             {r.motivo_cancelacion && (
@@ -163,6 +205,8 @@ function ReservasAdministrativo({ reservas }) {
     const [filtro, setFiltro] = useState('TODAS');
     const [busqueda, setBusqueda] = useState('');
     const [seleccionada, setSeleccionada] = useState(null);
+    const [cancelando, setCancelando] = useState(false);
+    const [aviso, setAviso] = useState('');
 
     const lista = reservas.filter((r) => {
         if (filtro !== 'TODAS' && r.estado !== filtro) return false;
@@ -210,17 +254,31 @@ function ReservasAdministrativo({ reservas }) {
                 />
             </div>
 
+            <AvisoExito mensaje={aviso} onCerrar={() => setAviso('')} />
+
             <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
                     {reserva ? (
                         <>
                             <span className="text-sm text-gray-500">Seleccionado:</span>
                             <span className="mr-2 text-sm font-medium">{codigo(reserva.id)}</span>
-                            {sePuedeCancelar(reserva) && (
-                                <BotonAccion cu="CU 16" peligro>
-                                    Cancelar reserva
-                                </BotonAccion>
-                            )}
+                            {/* CU 16 - Cancelar reserva (solo "Pendiente" o "Confirmada") */}
+                            <button
+                                type="button"
+                                disabled={!reserva.se_puede_cancelar}
+                                title={
+                                    reserva.se_puede_cancelar
+                                        ? undefined
+                                        : 'Solo pueden cancelarse reservas “Pendiente” o “Confirmada”'
+                                }
+                                onClick={() => {
+                                    setAviso('');
+                                    setCancelando(true);
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                Cancelar reserva
+                            </button>
                         </>
                     ) : (
                         <span className="text-sm text-gray-500">
@@ -302,6 +360,17 @@ function ReservasAdministrativo({ reservas }) {
                     </div>
                 )}
             </div>
+
+            {cancelando && reserva && (
+                <CancelarReservaModal
+                    reserva={reserva}
+                    onCerrar={() => setCancelando(false)}
+                    onCancelada={(mensaje) => {
+                        setCancelando(false);
+                        setAviso(`${codigo(reserva.id)}: ${mensaje}`);
+                    }}
+                />
+            )}
         </>
     );
 }

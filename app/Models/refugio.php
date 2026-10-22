@@ -41,4 +41,17 @@ class Refugio extends Model
                 && $convenio->fecha_fin->gte($fechaFin))
             ->sum('camas_disponibles');
     }
+
+    /**
+     * CU 16 - 6.1. Libera las camas comprometidas por una reserva, sumándolas a
+     * las camas disponibles de los convenios que cubren el período de la salida.
+     */
+    public function liberarCamas(DateTimeInterface $fechaInicio, DateTimeInterface $fechaFin, int $cantidad): void
+    {
+        foreach ($this->convenios as $convenio) {
+            if ($cantidad > 0 && $convenio->cubre($fechaInicio, $fechaFin)) {
+                $cantidad -= $convenio->liberarCamas($cantidad);
+            }
+        }
+    }
 }

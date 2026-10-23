@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class Excursion extends Model
 {
@@ -69,7 +70,7 @@ class Excursion extends Model
     public const ESTADO_INACTIVA = 'INACTIVA';
     public const DIFICULTADES = ['BAJA', 'MEDIO', 'ALTA'];
 
-    /**
+     /**
      * CU 1 - paso 4. Valida los datos del alta y devuelve los datos limpios.
      * Si algo falla, lanza una ValidationException y Laravel vuelve al formulario.
      *  RN-01: todo es obligatorio salvo el equipamiento obligatorio.
@@ -78,11 +79,26 @@ class Excursion extends Model
      */
     public static function validarAlta(array $datosExcursion): array
     {
+        return self::validar($datosExcursion);
+    }
+
+    /**
+     * CU 3 - paso 5. Mismas reglas que el alta, pero el nombre actual
+     * de la excursión no cuenta como repetido (flujo alternativo 5.1).
+     */
+    public function validarModificacion(array $datosExcursion): array
+    {
+        return self::validar($datosExcursion, $this->id);
+    }
+
+    /** Reglas comunes al alta (CU 1) y a la modificación (CU 3). */
+    private static function validar(array $datosExcursion, ?int $idExcluido = null): array
+    {
         return Validator::make($datosExcursion, [
             'nombre' => [
                 'required', 'string', 'max:120',
-                function ($atributo, $valor, $fallar) {
-                    if (self::existeNombre($valor)) {
+                function ($atributo, $valor, $fallar) use ($idExcluido) {
+                    if (self::existeNombre($valor, $idExcluido)) {
                         $fallar('Ya existe una excursión registrada con ese nombre.');
                     }
                 },
@@ -107,11 +123,13 @@ class Excursion extends Model
     }
 
     /**
-     * RN-03: ¿ya hay una excursión registrada con ese nombre? (sin distinguir mayúsculas)
+     * RN-03: ¿ya hay otra excursión registrada con ese nombre? (sin distinguir mayúsculas)
      */
-    private static function existeNombre(?string $nombre): bool
+    private static function existeNombre(?string $nombre, ?int $idExcluido = null): bool
     {
-        return self::whereRaw('LOWER(nombre) = ?', [mb_strtolower(trim((string) $nombre))])->exists();
+        return self::whereRaw('LOWER(nombre) = ?', [mb_strtolower(trim((string) $nombre))])
+            ->when($idExcluido, fn ($consulta) => $consulta->where('id', '!=', $idExcluido))
+            ->exists();
     }
 
     /**
@@ -124,5 +142,52 @@ class Excursion extends Model
             'nombre' => trim($datosExcursion['nombre']),
             'estado' => self::ESTADO_ACTIVA,
         ]);
+    }
+
+    // ========== CU 3 - MODIFICAR EXCURSIÓN y CU 2 - BAJA DE EXCURSIÓN >:3 ==========
+ 
+    public const MOTIVO_BAJA = 'Baja de la excursión';
+
+    /** CU 3 (RN-03) y CU 2: solo se opera sobre excursiones activas. */
+    public function estaActiva(): bool
+    {
+        return $this->estado === self::ESTADO_ACTIVA;
+    }
+
+    /**
+     * CU 3 (RN-01) y CU 2: ¿alguna de sus salidas tiene paquetes con reservas activas
+     * (PENDIENTE o CONFIRMADA) 7u7?
+     */
+    public function tieneReservasActivas(): bool
+    {
+        return Reserva::whereIn('estado', Paquete::ESTADOS_RESERVA_ACTIVA)
+            ->whereHas('paquete.salidaProgramada',
+                fn ($consulta) => $consulta->where('excursion_id', $this->id))
+            ->exists();
+    }
+
+    /** CU 3 - paso 6. Guarda los datos actualizados de la excursión uwu. */
+    public function modificar(array $datosExcursion): void
+    {
+        $this->update([
+            ...$datosExcursion,
+            'nombre' => trim($datosExcursion['nombre']),
+        ]);
+    }
+
+    /**
+     * CU 2. La excursión pasa a INACTIVA y se cancelan sus salidas PROGRAMADAS
+     * junto con los paquetes de esas salidas. Todo o nada (transacción) owo.
+     */
+    public function darDeBaja(): void
+    {
+        DB::transaction(function () {
+            $this->salidasProgramadas()
+                ->where('estado', SalidaProgramada::ESTADO_PROGRAMADA)
+                ->get()
+                ->each(fn (SalidaProgramada $salida) => $salida->cancelar(self::MOTIVO_BAJA));
+
+            $this->update(['estado' => self::ESTADO_INACTIVA]);
+        });
     }
 }

@@ -1,5 +1,6 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
+import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -61,8 +62,11 @@ export default function Registrar({ salida }) {
         if (servicios.activo) setData('ids_servicios', []);
         servicios.alternar();
     };
+    // CU 26 se muestra en una ventana emergente al activar el alojamiento
+    const [verRefugios, setVerRefugios] = useState(false);
     const alternarAlojamiento = () => {
         if (refugios.activo) setData('id_refugio', null);
+        setVerRefugios(!refugios.activo);
         refugios.alternar();
     };
 
@@ -133,21 +137,11 @@ export default function Registrar({ salida }) {
                         onActivar={alternarAlojamiento}
                         textoActivar="Incluir alojamiento"
                     >
-                        {refugios.items?.length === 0 ? (
-                            // Alternativo 3.2.1
-                            <p className="text-sm text-gray-600">
-                                No hay refugios con convenio admisible para el período del{' '}
-                                {fecha(salida.fecha_inicio)} al {fecha(salida.fecha_fin)}. Podés
-                                registrar el paquete sin alojamiento o cancelar la operación.
-                            </p>
-                        ) : (
-                            <ListaRefugios
-                                listado={refugios}
-                                noches={salida.noches}
-                                seleccion={data.id_refugio}
-                                onElegir={(id) => setData('id_refugio', id)}
-                            />
-                        )}
+                        <RefugioElegido
+                            refugio={refugioElegido}
+                            noches={salida.noches}
+                            onCambiar={() => setVerRefugios(true)}
+                        />
                     </Seccion>
 
                     <div className="flex flex-wrap items-center justify-between gap-4 bg-white px-6 py-4 shadow-sm sm:rounded-lg">
@@ -179,6 +173,19 @@ export default function Registrar({ salida }) {
                     </div>
                 </form>
             </div>
+
+            {verRefugios && (
+                <ListarRefugiosModal
+                    listado={refugios}
+                    salida={salida}
+                    seleccion={data.id_refugio}
+                    onElegir={(id) => {
+                        setData('id_refugio', id);
+                        setVerRefugios(false);
+                    }}
+                    onCerrar={() => setVerRefugios(false)}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }
@@ -307,53 +314,134 @@ function ListaServicios({ listado, seleccion, onElegir }) {
     );
 }
 
-// CU 26: refugios con convenio admisible para el período de la salida
+// Refugio elegido en el CU 26, con el botón para volver a abrir el listado
+function RefugioElegido({ refugio, noches, onCambiar }) {
+    const boton =
+        'rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50';
+
+    if (!refugio) {
+        return (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-gray-600">Todavía no elegiste un refugio.</p>
+                <button type="button" onClick={onCambiar} className={boton}>
+                    Elegir refugio
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm">
+            <div>
+                <span className="font-medium text-gray-900">{refugio.nombre}</span>
+                <span className="block text-xs text-gray-600">
+                    {refugio.ubicacion} · {precio(refugio.precio_cama)} por cama ×{' '}
+                    {noches} {noches === 1 ? 'noche' : 'noches'} = {precio(refugio.precio_cama * noches)}
+                </span>
+            </div>
+            <button type="button" onClick={onCambiar} className={boton}>
+                Cambiar refugio
+            </button>
+        </div>
+    );
+}
+
+// CU 26 - Listar refugios, en una ventana emergente
+function ListarRefugiosModal({ listado, salida, seleccion, onElegir, onCerrar }) {
+    // Se confirma con "Seleccionar refugio"; cerrar la ventana no cambia lo elegido
+    const [marcado, setMarcado] = useState(seleccion);
+
+    return (
+        <Modal show onClose={onCerrar} maxWidth="5xl">
+            <div className="border-b border-gray-200 px-5 py-4">
+                <h2 className="text-xl font-semibold text-gray-900">Elegir refugio</h2>
+                <p className="text-sm text-gray-500">
+                    Refugios con convenio vigente del {fecha(salida.fecha_inicio)} al{' '}
+                    {fecha(salida.fecha_fin)}
+                </p>
+            </div>
+
+            <div className="px-5 py-4">
+                {listado.items?.length === 0 ? (
+                    // Alternativo 2.1
+                    <p className="text-sm text-gray-600">
+                        No existen refugios con convenio vigente para el período de la salida. Podés
+                        registrar el paquete sin alojamiento o cancelar la operación.
+                    </p>
+                ) : (
+                    <ListaRefugios
+                        listado={listado}
+                        noches={salida.noches}
+                        seleccion={marcado}
+                        onElegir={setMarcado}
+                    />
+                )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t border-gray-200 px-5 py-4">
+                <button
+                    type="button"
+                    onClick={onCerrar}
+                    className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                >
+                    Volver
+                </button>
+                <PrimaryButton type="button" disabled={!marcado} onClick={() => onElegir(marcado)}>
+                    Seleccionar refugio
+                </PrimaryButton>
+            </div>
+        </Modal>
+    );
+}
+
+// CU 26: refugios con convenio admisible para el período de la salida, en tarjetas
+// (como el listado de equipamientos), con scroll cuando son muchos
 function ListaRefugios({ listado, noches, seleccion, onElegir }) {
     if (!listado.items) return <Cargando listado={listado} />;
 
     return (
-        <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50 text-left text-gray-600">
-                    <tr>
-                        <th className="w-8 px-3 py-2"></th>
-                        <th className="px-3 py-2">Refugio</th>
-                        <th className="px-3 py-2">Precio por cama</th>
-                        <th className="px-3 py-2">Camas disponibles</th>
-                        <th className="px-3 py-2">Alojamiento ({noches} {noches === 1 ? 'noche' : 'noches'})</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                    {listado.items.map((r) => (
-                        <tr
-                            key={r.id}
-                            onClick={() => onElegir(r.id)}
-                            className={
-                                'cursor-pointer ' + (seleccion === r.id ? 'bg-indigo-50' : 'hover:bg-gray-50')
-                            }
-                        >
-                            <td className="px-3 py-2">
-                                <input
-                                    type="radio"
-                                    name="refugio"
-                                    checked={seleccion === r.id}
-                                    onChange={() => onElegir(r.id)}
-                                    onClick={(e) => e.stopPropagation()}
-                                    aria-label={`Elegir ${r.nombre}`}
-                                    className="text-indigo-600 focus:ring-indigo-500"
-                                />
-                            </td>
-                            <td className="px-3 py-2">
-                                <span className="font-medium text-gray-900">{r.nombre}</span>
-                                {r.ubicacion && <span className="block text-xs text-gray-500">{r.ubicacion}</span>}
-                            </td>
-                            <td className="px-3 py-2">{precio(r.precio_cama)}</td>
-                            <td className="px-3 py-2">{r.camas_disponibles}</td>
-                            <td className="px-3 py-2">{precio(r.precio_cama * noches)}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+        <div className="grid max-h-[60vh] grid-cols-1 gap-3 overflow-y-auto p-1 md:grid-cols-2">
+            {listado.items.map((r) => (
+                <label
+                    key={r.id}
+                    className={
+                        'flex cursor-pointer flex-col gap-2 rounded-xl border p-4 text-sm transition-colors ' +
+                        (seleccion === r.id
+                            ? 'border-indigo-400 bg-indigo-50'
+                            : 'border-gray-200 bg-white hover:bg-gray-50')
+                    }
+                >
+                    <div className="flex items-start gap-3">
+                        <input
+                            type="radio"
+                            name="refugio"
+                            checked={seleccion === r.id}
+                            onChange={() => onElegir(r.id)}
+                            className="mt-1 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <div className="min-w-0 flex-1">
+                            <span className="font-semibold text-gray-900">{r.nombre}</span>
+                            {r.ubicacion && <span className="block text-xs text-gray-500">{r.ubicacion}</span>}
+                        </div>
+                        <span className="shrink-0 text-right font-semibold text-gray-900">
+                            {precio(r.precio_cama)}
+                            <span className="block text-xs font-normal text-gray-500">por cama</span>
+                        </span>
+                    </div>
+                    {r.descripcion && <p className="text-xs text-gray-600">{r.descripcion}</p>}
+                    <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 border-t border-gray-100 pt-2 text-xs text-gray-500">
+                        <span>
+                            {r.camas_disponibles} / {r.camas_totales} camas libres
+                        </span>
+                        <span>
+                            Convenio {fecha(r.vigencia_desde)} al {fecha(r.vigencia_hasta)}
+                        </span>
+                        <span className="font-medium text-gray-700">
+                            Alojamiento ({noches} {noches === 1 ? 'noche' : 'noches'}): {precio(r.precio_cama * noches)}
+                        </span>
+                    </div>
+                </label>
+            ))}
         </div>
     );
 }

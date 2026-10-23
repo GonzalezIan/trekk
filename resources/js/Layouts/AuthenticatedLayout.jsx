@@ -50,6 +50,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     {user.rol === 'admin' ? 'Reservas' : 'Mis reservas'}
                                 </NavLink>
+                                {user.rol === 'admin' && (
+                                    <NavLink
+                                        href={route('certificados.pendientes')}
+                                        active={route().current('certificados.pendientes')}
+                                    >
+                                        Certificados
+                                    </NavLink>
+                                )}
                             </div>
                         </div>
 
@@ -174,6 +182,14 @@ export default function AuthenticatedLayout({ header, children }) {
                         >
                             {user.rol === 'admin' ? 'Reservas' : 'Mis reservas'}
                         </ResponsiveNavLink>
+                        {user.rol === 'admin' && (
+                            <ResponsiveNavLink
+                                href={route('certificados.pendientes')}
+                                active={route().current('certificados.pendientes')}
+                            >
+                                Certificados
+                            </ResponsiveNavLink>
+                        )}
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4">

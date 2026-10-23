@@ -30,6 +30,7 @@ class ModificarBajaExcursionTest extends TestCase
         $this->excursion = Excursion::factory()->create([
             'nombre' => 'Laguna de los Témpanos',
             'estado' => 'ACTIVA',
+            'duracion' => 3, // fija: la factory la elige al azar y el 2.1 la intenta cambiar a 5
         ]);
     }
 

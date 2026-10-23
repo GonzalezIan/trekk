@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class Excursion extends Model
 {
@@ -189,5 +190,75 @@ class Excursion extends Model
 
             $this->update(['estado' => self::ESTADO_INACTIVA]);
         });
+    }
+
+    // ========== CU 8 - REGISTRAR SALIDA PROGRAMADA ==========
+
+    /**
+     * DS CU 8: validarDatosSalida(datosSalida). Paso 4.
+     * Si algo falla, lanza una ValidationException con el mensaje del alternativo que corresponda.
+     *  RN-01 (4.1 y 4.2): período futuro, fin >= inicio y cantidad de días = duración de la excursión.
+     *  RN-02 (4.3): cupo máximo y precio base mayores a cero.
+     */
+    public function validarDatosSalida(array $datosSalida): array
+    {
+        $periodoInvalido = 'El período ingresado no es válido.';
+        $noPositivos = 'El cupo máximo y el precio base deben ser mayores a cero.';
+
+        return Validator::make($datosSalida, [
+            'fecha_inicio' => ['required', 'date_format:Y-m-d', 'after:today'],
+            'fecha_fin' => ['required', 'date_format:Y-m-d', 'after_or_equal:fecha_inicio'],
+            'hora_de_salida' => ['required', 'date_format:H:i'],
+            'cupo_maximo' => ['required', 'integer', 'min:1', 'max:1000'],
+            'precio_base' => ['required', 'numeric', 'gt:0', 'max:99999999'],
+        ], [
+            'required' => 'Este campo es obligatorio.',
+            'date_format' => 'El formato ingresado no es válido.',
+            'fecha_inicio.after' => $periodoInvalido . ' La fecha de inicio debe ser futura.',
+            'fecha_fin.after_or_equal' => $periodoInvalido . ' La fecha de fin no puede ser anterior a la de inicio.',
+            'cupo_maximo.integer' => 'El cupo máximo debe ser un número entero.',
+            'cupo_maximo.min' => $noPositivos,
+            'cupo_maximo.max' => 'El cupo máximo no puede superar las 1000 personas.',
+            'precio_base.numeric' => 'El precio base debe ser un número.',
+            'precio_base.gt' => $noPositivos,
+            'precio_base.max' => 'El precio base ingresado es demasiado alto.',
+        ])->after(function ($validator) use ($datosSalida) {
+            // Alternativo 4.2: solo tiene sentido si el período ya es válido (4.1)
+            if ($validator->errors()->hasAny(['fecha_inicio', 'fecha_fin'])) {
+                return;
+            }
+
+            // Se cuentan ambos extremos: una excursión de 1 día empieza y termina el mismo día
+            $dias = (int) Carbon::parse($datosSalida['fecha_inicio'])
+                ->diffInDays(Carbon::parse($datosSalida['fecha_fin'])) + 1;
+
+            if ($dias !== $this->duracion) {
+                $validator->errors()->add('fecha_fin',
+                    "El período debe corresponderse con la duración de la excursión ({$this->duracion} "
+                    . ($this->duracion === 1 ? 'día' : 'días') . ').');
+            }
+        })->validate();
+    }
+
+    /**
+     * DS CU 8: crearSalida(datosSalida, guia, asistentes, eqs): idSalida, cupoMaximo.
+     * Todo o nada: la salida, el personal asignado y el equipamiento incluido.
+     */
+    public function crearSalida(array $datosSalida, Empleado $guia, Collection $asistentes, Collection $equipamientos): array
+    {
+        return DB::transaction(function () use ($datosSalida, $guia, $asistentes, $equipamientos) {
+            $salida = SalidaProgramada::crear(
+                [...$datosSalida, 'excursion_id' => $this->id], $guia, $asistentes, $equipamientos);
+
+            $this->agregar($salida);
+
+            return ['idSalida' => $salida->id, 'cupoMaximo' => $salida->cupo_maximo];
+        });
+    }
+
+    /** DS CU 8: agregar(s). La salida queda asociada a la excursión. */
+    private function agregar(SalidaProgramada $salida): void
+    {
+        $this->salidasProgramadas()->save($salida);
     }
 }

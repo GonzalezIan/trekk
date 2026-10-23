@@ -151,7 +151,7 @@ function BarraAcciones({ excursion, onDarDeBaja }) {
     if (!excursion) {
         return (
             <div className="bg-white px-4 py-3 text-sm text-gray-600 shadow-sm sm:rounded-lg">
-                Seleccioná una excursión para modificarla o darla de baja.
+                Seleccioná una excursión para modificarla, darla de baja o programar una salida.
             </div>
         );
     }
@@ -172,13 +172,22 @@ function BarraAcciones({ excursion, onDarDeBaja }) {
             >
                 Modificar
             </button>
+            {/* CU 8 - Registrar Salida Programada (RN-03: solo sobre excursiones activas) */}
+            <button
+                type="button"
+                disabled={!activa}
+                onClick={() => router.get(route('salidas.registrar', excursion.id))}
+                className={botonOscuro}
+            >
+                Programar salida
+            </button>
             {/* Alternativo 4.3 -> CU 2 - Baja de excursión */}
             <button type="button" disabled={!activa} onClick={onDarDeBaja} className={botonClaro}>
                 Dar de baja
             </button>
             {!activa && (
                 <span className="text-xs text-gray-500">
-                    Solo pueden modificarse o darse de baja excursiones activas.
+                    Solo pueden modificarse, darse de baja o programarse salidas de excursiones activas.
                 </span>
             )}
         </div>

@@ -105,11 +105,29 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// ---------- Salidas Programadas (CU 9) ----------
+// ---------- Salidas Programadas (CU 8 y CU 9) ----------
 Route::middleware('auth')->group(function () {
     // CU 9 - Listar Salidas Programadas (Cliente y Administrativo)
     Route::get('/salidas', [ControladorSalidas::class, 'listarSalidas'])
         ->name('salidas.listar');
+
+    // CU 8 - Registrar Salida Programada (solo Administrativo)
+    Route::middleware('administrativo')->group(function () {
+        Route::get('/excursiones/{excursion}/salidas/registrar', [ControladorSalidas::class, 'mostrarFormularioSalida'])
+            ->whereNumber('excursion')
+            ->name('salidas.registrar');
+        Route::post('/excursiones/{excursion}/salidas/datos', [ControladorSalidas::class, 'ingresarDatosSalida'])
+            ->whereNumber('excursion')
+            ->name('salidas.registrar.datos');
+        // CU 23 - Listar empleados disponibles en el período de la salida
+        Route::get('/salidas/registrar/empleados', [ControladorSalidas::class, 'listarEmpleadosDisponibles'])
+            ->name('salidas.registrar.empleados');
+        // CU 25 - Listar equipamientos con stock en el período de la salida
+        Route::get('/salidas/registrar/equipamiento', [ControladorSalidas::class, 'listarEquipamientoDisponible'])
+            ->name('salidas.registrar.equipamiento');
+        Route::post('/salidas', [ControladorSalidas::class, 'registrarSalida'])
+            ->name('salidas.registrar.confirmar');
+    });
 });
 
 // ---------- Paquetes (CU 7) ----------

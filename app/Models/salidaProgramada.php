@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -195,6 +196,64 @@ class SalidaProgramada extends Model
         $this->paquetes()
             ->where('estado', Paquete::ESTADO_DISPONIBLE)
             ->update(['estado' => Paquete::ESTADO_CANCELADO]);
+    }
+
+    // ========== CU 8 - REGISTRAR SALIDA PROGRAMADA ==========
+
+    public const ROL_GUIA = 'GUIA';
+    public const ROL_ASISTENTE = 'ASISTENTE';
+
+    /**
+     * DS CU 8: crear(datosSalida, guia, asistentes, eqs).
+     * RN-07: el cupo máximo es el menor entre el ingresado y el stock de cada equipo incluido.
+     * RN-10: queda PROGRAMADA, con su cupo disponible igual a su cupo máximo.
+     * RN-08 (DS Reserva de equipamiento): de cada equipo se reserva una cantidad igual al cupo máximo.
+     */
+    public static function crear(array $datosSalida, Empleado $guia, Collection $asistentes, Collection $equipamientos): self
+    {
+        $salida = new self($datosSalida);
+        $salida->cupo_maximo = $salida->calcularCupoMaximo($equipamientos);
+        $salida->cupo_disponible = $salida->cupo_maximo;
+        $salida->estado = self::ESTADO_PROGRAMADA;
+        $salida->save();
+
+        $salida->empleados()->attach($guia->id, ['rol' => self::ROL_GUIA]);
+        $asistentes->each(fn (Empleado $asistente) =>
+            $salida->empleados()->attach($asistente->id, ['rol' => self::ROL_ASISTENTE]));
+
+        // EquipamientoIncluido: crear(s, eq, cupoMaximo)
+        $equipamientos->each(fn (Equipamiento $equipamiento) =>
+            $salida->equipoPrestado()->attach($equipamiento->id, ['cantidad' => $salida->cupo_maximo]));
+
+        return $salida;
+    }
+
+    /** DS CU 8 (Reserva de equipamiento): calcularCupoMaximo(eqs). */
+    public function calcularCupoMaximo(Collection $equipamientos): int
+    {
+        [$fechaInicio, $fechaFin] = $this->getFechas();
+
+        return $equipamientos
+            ->map(fn (Equipamiento $equipamiento) => $equipamiento->stockDisponible($fechaInicio, $fechaFin))
+            ->push($this->cupo_maximo)
+            ->min();
+    }
+
+    /** DS CU 25: getFechas(). Período de la salida como 'Y-m-d'. */
+    public function getFechas(): array
+    {
+        return [$this->fecha_inicio->format('Y-m-d'), $this->fecha_fin->format('Y-m-d')];
+    }
+
+    /**
+     * Salidas PROGRAMADAS cuyo período se superpone con [fechaInicio, fechaFin].
+     * Las usan el CU 23 (empleados disponibles) y el CU 25 (stock disponible).
+     */
+    public function scopeSuperpuestasCon(Builder $consulta, string $fechaInicio, string $fechaFin): void
+    {
+        $consulta->where('salidas_programadas.estado', self::ESTADO_PROGRAMADA)
+            ->whereDate('salidas_programadas.fecha_inicio', '<=', $fechaFin)
+            ->whereDate('salidas_programadas.fecha_fin', '>=', $fechaInicio);
     }
 
     /** Fecha de inicio + hora de salida, en un solo momento. */

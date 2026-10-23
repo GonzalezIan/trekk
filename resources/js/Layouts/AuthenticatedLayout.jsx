@@ -50,6 +50,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     {user.rol === 'admin' ? 'Reservas' : 'Mis reservas'}
                                 </NavLink>
+                                {user.rol !== 'admin' && (
+                                    <NavLink
+                                        href={route('perfil.edit')}
+                                        active={route().current('perfil.*')}
+                                    >
+                                        Mis datos
+                                    </NavLink>
+                                )}
                                 {user.rol === 'admin' && (
                                     <NavLink
                                         href={route('certificados.pendientes')}
@@ -182,6 +190,14 @@ export default function AuthenticatedLayout({ header, children }) {
                         >
                             {user.rol === 'admin' ? 'Reservas' : 'Mis reservas'}
                         </ResponsiveNavLink>
+                        {user.rol !== 'admin' && (
+                            <ResponsiveNavLink
+                                href={route('perfil.edit')}
+                                active={route().current('perfil.*')}
+                            >
+                                Mis datos
+                            </ResponsiveNavLink>
+                        )}
                         {user.rol === 'admin' && (
                             <ResponsiveNavLink
                                 href={route('certificados.pendientes')}

@@ -3,6 +3,7 @@
 use App\Http\Controllers\ControladorPaquetes;
 use App\Http\Controllers\ControladorSalidas;
 use App\Http\Controllers\ControladorExcursiones;
+use App\Http\Controllers\controladorClientes;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ControladorReservas;
 use Illuminate\Foundation\Application;
@@ -21,6 +22,15 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+// ---------- Datos personales (CU 13) ----------
+Route::middleware('auth')->group(function () {
+    // CU 13 - Modificar datos personales: pantalla «Mis datos» (Cliente)
+    Route::get('/perfil', [controladorClientes::class, 'edit'])
+        ->name('perfil.edit');
+    Route::patch('/perfil', [controladorClientes::class, 'update'])
+        ->name('perfil.update');
+});
 
 // ---------- Reservas ----------
 Route::middleware('auth')->group(function () {

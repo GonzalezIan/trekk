@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -35,11 +36,6 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -48,11 +44,13 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * El Administrativo es el usuario con rol 'admin' (ver UserSeeder).
-     */
     public function esAdministrativo(): bool
     {
         return $this->rol === 'admin';
+    }
+
+    public function cliente(): HasOne
+    {
+        return $this->hasOne(Cliente::class);
     }
 }

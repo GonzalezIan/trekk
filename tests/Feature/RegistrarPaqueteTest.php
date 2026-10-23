@@ -237,6 +237,46 @@ class RegistrarPaqueteTest extends TestCase
         $this->assertSame(20, $datos['camas_disponibles']);
     }
 
+    public function test_el_listado_de_refugios_muestra_los_datos_del_paso_3(): void
+    {
+        $refugio = Refugio::factory()->create([
+            'descripcion' => 'Refugio de montaña con cocina compartida',
+            'ubicacion' => 'El Chaltén',
+        ]);
+        // Convenio que cubre el período, con camas ya ocupadas
+        Convenio::create([
+            'refugio_id' => $refugio->id,
+            'nombre_convenio' => 'Temporada',
+            'fecha_inicio' => '2026-11-01',
+            'fecha_fin' => '2026-11-30',
+            'camas_totales' => 20,
+            'camas_disponibles' => 12,
+            'precio_cama' => 5000,
+        ]);
+        // Otro convenio que no cubre el período: no suma camas
+        Convenio::create([
+            'refugio_id' => $refugio->id,
+            'nombre_convenio' => 'Invierno',
+            'fecha_inicio' => '2026-06-01',
+            'fecha_fin' => '2026-08-31',
+            'camas_totales' => 50,
+            'camas_disponibles' => 50,
+            'precio_cama' => 3000,
+        ]);
+
+        $this->actingAs($this->administrativo)
+            ->getJson(route('paquetes.registrar.refugios', $this->salida->id))
+            ->assertOk()
+            ->assertJsonCount(1, 'refugios')
+            ->assertJsonPath('refugios.0.nombre', $refugio->nombre)
+            ->assertJsonPath('refugios.0.descripcion', 'Refugio de montaña con cocina compartida')
+            ->assertJsonPath('refugios.0.ubicacion', 'El Chaltén')
+            ->assertJsonPath('refugios.0.camas_totales', 20)
+            ->assertJsonPath('refugios.0.camas_disponibles', 12)
+            ->assertJsonPath('refugios.0.vigencia_desde', '2026-11-01')
+            ->assertJsonPath('refugios.0.vigencia_hasta', '2026-11-30');
+    }
+
     public function test_sin_refugios_admisibles_el_listado_viene_vacio(): void
     {
         // Alternativo 3.2.1

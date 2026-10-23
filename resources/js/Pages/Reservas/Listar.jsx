@@ -1,4 +1,5 @@
 import { CancelarReservaModal, PanelCancelarReserva } from '@/Components/CancelarReserva';
+import { PanelRegistrarPago } from '@/Components/RegistrarPago';
 import EstadoBadge, { etiquetaEstado } from '@/Components/EstadoBadge';
 import ParticipantesReserva from '@/Components/ParticipantesReserva';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -113,7 +114,7 @@ function ReservasCliente({ reservas }) {
 }
 
 function TarjetaReserva({ reserva: r, onAviso }) {
-    // Panel desplegado debajo de la tarjeta: null | 'participantes' | 'cancelar'
+    // Panel desplegado debajo de la tarjeta: null | 'participantes' | 'cancelar' | 'pagar'
     const [panel, setPanel] = useState(null);
 
     const alternar = (p) => {
@@ -155,7 +156,20 @@ function TarjetaReserva({ reserva: r, onAviso }) {
                 >
                     Participantes
                 </button>
-                {r.estado === 'PENDIENTE' && <BotonAccion cu="CU 22">Registrar pago</BotonAccion>}
+                {/* 4.2 - CU 22 Registrar pago (solo si la reserva tiene un importe pendiente) */}
+                {r.se_puede_pagar && (
+                    <button
+                        type="button"
+                        aria-expanded={panel === 'pagar'}
+                        onClick={() => alternar('pagar')}
+                        className={
+                            'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 ' +
+                            (panel === 'pagar' ? 'bg-gray-100' : '')
+                        }
+                    >
+                        Registrar pago
+                    </button>
+                )}
                 {r.estado === 'REALIZADA' && !r.tiene_conformidad && (
                     <BotonAccion cu="CU 20">Registrar conformidad</BotonAccion>
                 )}
@@ -176,6 +190,16 @@ function TarjetaReserva({ reserva: r, onAviso }) {
                 <div className="border-t border-gray-200 bg-gray-50 p-5">
                     <ParticipantesReserva reserva={r} />
                 </div>
+            )}
+
+            {panel === 'pagar' && (
+                <PanelRegistrarPago
+                    reserva={r}
+                    onPagado={(mensaje) => {
+                        setPanel(null);
+                        onAviso(mensaje);
+                    }}
+                />
             )}
 
             {panel === 'cancelar' && (

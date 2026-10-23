@@ -32,4 +32,15 @@ class Pago extends Model
     public function reserva():BelongsTo{
         return $this->belongsTo(Reserva::class);
     }
+
+     // ========== CU 22 - REGISTRAR PAGO DE RESERVA ==========
+
+    public const TIPO_SENA = 'SEÑA';
+    public const TIPO_TOTAL = 'TOTAL';
+    public const TIPO_SALDO_RESTANTE = 'SALDO_RESTANTE';
+
+    public const MONEDAS = ['USD', 'ARS'];
+    public const MEDIOS_PAGO = ['Tarjeta de crédito', 'Tarjeta de débito', 'Mercado Pago'];
+
+    public const RESULTADO_APROBADA = 'APROBADA';
 }

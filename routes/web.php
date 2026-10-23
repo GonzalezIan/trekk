@@ -34,6 +34,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/reservas/{reserva}/cancelar', [ControladorReservas::class, 'ingresarMotivoCancelacion'])
         ->name('reservas.cancelar.confirmar');
 
+    // CU 22 - Registrar pago de reserva (Cliente: reservas propias)
+    Route::get('/reservas/{reserva}/pago', [ControladorReservas::class, 'registrarPagoReserva'])
+        ->name('reservas.pago');
+    Route::post('/reservas/{reserva}/pago', [ControladorReservas::class, 'confirmarPago'])
+        ->name('reservas.pago.confirmar');
+    
     // CU 21 - Listar participantes de una reserva propia (Cliente)
     Route::get('/reservas/{reserva}/participantes', [ControladorReservas::class, 'listarParticipantesDeReserva'])
         ->name('reservas.participantes');

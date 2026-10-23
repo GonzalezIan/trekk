@@ -177,7 +177,26 @@ class SalidaProgramada extends Model
         ]);
     }
 
-    
+     // ========== CU 2 - BAJA DE EXCURSIÓN ==========
+
+    public const ESTADO_CANCELADA = 'CANCELADA';
+
+    /**
+     * Cancela la salida (guardando el motivo) y sus paquetes que seguían disponibles.
+     * La usa la baja de la excursión (CU 2).
+     */
+    public function cancelar(string $motivo): void
+    {
+        $this->update([
+            'estado' => self::ESTADO_CANCELADA,
+            'motivo_cancelacion' => $motivo,
+        ]);
+
+        $this->paquetes()
+            ->where('estado', Paquete::ESTADO_DISPONIBLE)
+            ->update(['estado' => Paquete::ESTADO_CANCELADO]);
+    }
+
     /** Fecha de inicio + hora de salida, en un solo momento. */
     private function momentoDeSalida(): Carbon
     {

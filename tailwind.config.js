@@ -12,8 +12,57 @@ export default {
 
     theme: {
         extend: {
+            colors: {
+                background: '#f9f6f1',
+                foreground: '#0f1e18',
+                primary: { DEFAULT: '#1f533f', foreground: '#fbf8f2' },
+                muted: { foreground: '#596760' },
+                card: {
+                    DEFAULT: '#fffdfa',
+                    foreground: '#0f1e18',
+                },
+                popover: {
+                    DEFAULT: '#fffdfa',
+                    foreground: '#0f1e18',
+                },
+                primary: {
+                    DEFAULT: '#1f533f',
+                    foreground: '#fbf8f2',
+                },
+                secondary: {
+                    DEFAULT: '#e1ebe3',
+                    foreground: '#193429',
+                },
+                muted: {
+                    DEFAULT: '#f0ece5',
+                    foreground: '#596760',
+                },
+                accent: {
+                    DEFAULT: '#da7134',
+                    foreground: '#fdfcf8',
+                },
+                destructive: {
+                    DEFAULT: '#d02c2a',
+                    foreground: '#fdfcf8',
+                },
+                success: '#258651',
+                warning: '#d79628',
+                border: '#dedad2',
+                input: '#dedad2',
+                ring: '#1f533f',
+            },
+            borderRadius: {
+                sm: '0.45rem',
+                md: '0.6rem',
+                lg: '0.75rem',
+                xl: '1.05rem',
+                '2xl': '1.35rem',
+            },
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
+                display: ['Fraunces', ...defaultTheme.fontFamily.serif],
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
+                display: ['Fraunces', ...defaultTheme.fontFamily.serif],
             },
         },
     },

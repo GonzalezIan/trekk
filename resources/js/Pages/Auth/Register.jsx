@@ -1,120 +1,85 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import Boton from '@/Components/Boton';
+import Campo from '@/Components/Campo';
+import Etiqueta from '@/Components/Etiqueta';
+import ErrorCampo from '@/Components/ErrorCampo';
+import LayoutInvitado from '@/Layouts/LayoutInvitado';
 
+/**
+ * Pantalla de registro con el diseño de Trekk.
+ *
+ * Mantiene el registro de Breeze: nombre, correo y contraseña, enviados a la
+ * ruta `register`. Prototipo: app/registro/page.tsx.
+ */
 export default function Register() {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const form = useForm({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
     });
 
-    const submit = (e) => {
+    const enviar = (e) => {
         e.preventDefault();
-
-        post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
+        form.post(route('register'), {
+            onFinish: () => form.reset('password', 'password_confirmation'),
         });
     };
 
+    const campo = (nombre, etiqueta, tipo = 'text', extra = {}) => (
+        <div className="flex flex-col gap-2">
+            <Etiqueta htmlFor={nombre}>{etiqueta}</Etiqueta>
+            <Campo
+                id={nombre}
+                type={tipo}
+                value={form.data[nombre]}
+                onChange={(e) => form.setData(nombre, e.target.value)}
+                required
+                {...extra}
+            />
+            <ErrorCampo message={form.errors[nombre]} className="mt-1" />
+        </div>
+    );
+
     return (
-        <GuestLayout>
-            <Head title="Register" />
+        <LayoutInvitado>
+            <Head title="Registrarse | Trekk" />
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="name" value="Name" />
+            <div className="flex flex-col gap-2 text-center">
+                <h1 className="font-display text-2xl font-semibold">Creá tu cuenta</h1>
+                <p className="text-sm text-muted-foreground">
+                    Registrate para ver excursiones, reservar y gestionar tus reservas.
+                </p>
+            </div>
 
-                    <TextInput
-                        id="name"
-                        name="name"
-                        value={data.name}
-                        className="mt-1 block w-full"
-                        autoComplete="name"
-                        isFocused={true}
-                        onChange={(e) => setData('name', e.target.value)}
-                        required
-                    />
+            <form onSubmit={enviar} className="mt-6 flex flex-col gap-4" noValidate>
+                {campo('name', 'Nombre completo', 'text', { autoComplete: 'name' })}
 
-                    <InputError message={errors.name} className="mt-2" />
+                {campo('email', 'Correo electrónico', 'email', { autoComplete: 'username' })}
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                    {campo('password', 'Contraseña', 'password', {
+                        autoComplete: 'new-password',
+                    })}
+                    {campo('password_confirmation', 'Confirmar contraseña', 'password', {
+                        autoComplete: 'new-password',
+                    })}
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email" />
+                <Boton type="submit" size="lg" disabled={form.processing}>
+                    Crear mi cuenta
+                </Boton>
 
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel
-                        htmlFor="password_confirmation"
-                        value="Confirm Password"
-                    />
-
-                    <TextInput
-                        id="password_confirmation"
-                        type="password"
-                        name="password_confirmation"
-                        value={data.password_confirmation}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) =>
-                            setData('password_confirmation', e.target.value)
-                        }
-                        required
-                    />
-
-                    <InputError
-                        message={errors.password_confirmation}
-                        className="mt-2"
-                    />
-                </div>
-
-                <div className="mt-4 flex items-center justify-end">
+                <p className="text-center text-sm text-muted-foreground">
+                    ¿Ya tenés cuenta?{' '}
                     <Link
                         href={route('login')}
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        className="font-medium text-primary underline-offset-4 hover:underline"
                     >
-                        Already registered?
+                        Iniciá sesión
                     </Link>
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Register
-                    </PrimaryButton>
-                </div>
+                </p>
             </form>
-        </GuestLayout>
+        </LayoutInvitado>
     );
 }

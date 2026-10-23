@@ -118,6 +118,12 @@ class Refugio extends Model
         return (float) $this->convenioQueCubre($fechaInicio, $fechaFin)?->precio_cama;
     }
 
+    /** CU 10 - paso 5. ¿Algún convenio del refugio cubre todo el período? */
+    public function tieneConvenioQueCubre(DateTimeInterface $fechaInicio, DateTimeInterface $fechaFin): bool
+    {
+        return $this->convenioQueCubre($fechaInicio, $fechaFin) !== null;
+    }
+
     /** Si hay más de un convenio que cubre el período, se toma el que empezó primero. */
     private function convenioQueCubre(DateTimeInterface $fechaInicio, DateTimeInterface $fechaFin): ?Convenio
     {

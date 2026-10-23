@@ -39,14 +39,14 @@ class Equipamiento extends Model
      * DS CU 25 (Administrativo): listarConStock(fechaInicio, fechaFin).
      * Elementos con stock disponible mayor a cero en el período (CU 8 - RN-06).
      */
-    public static function listarConStock(string $fechaInicio, string $fechaFin): Collection
+    public static function listarConStock(string $fechaInicio, string $fechaFin, ?int $idSalidaExcluida = null): Collection
     {
         return self::query()
             ->orderBy('nombre')
             ->get()
             ->map(fn (self $equipamiento) => [
                 ...$equipamiento->only(['id', 'nombre', 'descripcion', 'precio_alquiler']),
-                'stock_disponible' => $equipamiento->stockDisponible($fechaInicio, $fechaFin),
+                'stock_disponible' => $equipamiento->stockDisponible($fechaInicio, $fechaFin, $idSalidaExcluida),
             ])
             ->filter(fn (array $equipamiento) => $equipamiento['stock_disponible'] > 0)
             ->values();
@@ -57,10 +57,10 @@ class Equipamiento extends Model
      * Stock total menos lo comprometido en el período: lo incluido en otras salidas
      * PROGRAMADAS superpuestas y lo alquilado en reservas no canceladas de esas salidas.
      */
-    public function stockDisponible(string $fechaInicio, string $fechaFin): int
+    public function stockDisponible(string $fechaInicio, string $fechaFin, ?int $idSalidaExcluida = null): int
     {
         $incluido = $this->salidasProgramadas()
-            ->superpuestasCon($fechaInicio, $fechaFin)
+            ->superpuestasCon($fechaInicio, $fechaFin, $idSalidaExcluida)
             ->sum('equipos_prestados.cantidad');
 
         $alquilado = $this->reservas()

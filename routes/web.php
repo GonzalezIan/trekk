@@ -108,7 +108,7 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// ---------- Salidas Programadas (CU 8 y CU 9) ----------
+// ---------- Salidas Programadas (CU 8, CU 9 y CU 10) ----------
 Route::middleware('auth')->group(function () {
     // CU 9 - Listar Salidas Programadas (Cliente y Administrativo)
     Route::get('/salidas', [ControladorSalidas::class, 'listarSalidas'])
@@ -130,6 +130,20 @@ Route::middleware('auth')->group(function () {
             ->name('salidas.registrar.equipamiento');
         Route::post('/salidas', [ControladorSalidas::class, 'registrarSalida'])
             ->name('salidas.registrar.confirmar');
+
+        // CU 10 - Modificar Salida Programada
+        Route::get('/salidas/{salida}/modificar', [ControladorSalidas::class, 'mostrarFormularioModificacion'])
+            ->whereNumber('salida')
+            ->name('salidas.modificar');
+        Route::get('/salidas/{salida}/modificar/empleados', [ControladorSalidas::class, 'listarEmpleadosParaModificar'])
+            ->whereNumber('salida')
+            ->name('salidas.modificar.empleados');
+        Route::get('/salidas/{salida}/modificar/equipamiento', [ControladorSalidas::class, 'listarEquipamientoParaModificar'])
+            ->whereNumber('salida')
+            ->name('salidas.modificar.equipamiento');
+        Route::put('/salidas/{salida}', [ControladorSalidas::class, 'modificarSalida'])
+            ->whereNumber('salida')
+            ->name('salidas.actualizar');
     });
 });
 

@@ -218,6 +218,15 @@ function BarraAcciones({ salida, onListarParticipantes }) {
                             Registrar paquete
                         </Link>
                     )}
+                    {/* CU 10 - Modificar Salida Programada (RN-01: solo salidas PROGRAMADAS) */}
+                    {salida.estado === 'PROGRAMADA' && (
+                        <Link
+                            href={route('salidas.modificar', salida.id)}
+                            className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                        >
+                            Modificar
+                        </Link>
+                    )}
                     {/* CU 21 - Listar participantes de la salida */}
                     <button
                         type="button"

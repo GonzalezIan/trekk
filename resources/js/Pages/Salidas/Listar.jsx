@@ -56,6 +56,11 @@ export default function Listar({
                             {flash.exito}
                         </div>
                     )}
+                    {flash.error && (
+                        <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+                            {flash.error}
+                        </div>
+                    )}
 
                     {esAdministrativo && (
                         <Filtros
@@ -204,6 +209,15 @@ function BarraAcciones({ salida, onListarParticipantes }) {
                     >
                         Listar paquetes
                     </Link>
+                    {/* CU 5 - Registrar paquete (RN-01: solo sobre salidas PROGRAMADAS) */}
+                    {salida.estado === 'PROGRAMADA' && (
+                        <Link
+                            href={route('paquetes.registrar', salida.id)}
+                            className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                        >
+                            Registrar paquete
+                        </Link>
+                    )}
                     {/* CU 21 - Listar participantes de la salida */}
                     <button
                         type="button"

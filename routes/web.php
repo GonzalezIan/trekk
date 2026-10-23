@@ -130,12 +130,29 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// ---------- Paquetes (CU 7) ----------
+// ---------- Paquetes (CU 5 y CU 7) ----------
 Route::middleware('auth')->group(function () {
     // CU 7 - Listar paquetes de una Salida Programada (Cliente y Administrativo)
     Route::get('/salidas/{idSalida}/paquetes', [ControladorPaquetes::class, 'listarPaquetes'])
         ->whereNumber('idSalida')
         ->name('paquetes.listar');
+
+    // CU 5 - Registrar paquete (solo Administrativo)
+    Route::middleware('administrativo')->group(function () {
+        Route::get('/salidas/{idSalida}/paquetes/registrar', [ControladorPaquetes::class, 'solicitarRegistroPaquete'])
+            ->whereNumber('idSalida')
+            ->name('paquetes.registrar');
+        // CU 24 - Listar servicios
+        Route::get('/paquetes/registrar/servicios', [ControladorPaquetes::class, 'listarServicios'])
+            ->name('paquetes.registrar.servicios');
+        // CU 26 - Listar refugios admisibles para el período de la salida
+        Route::get('/salidas/{idSalida}/paquetes/registrar/refugios', [ControladorPaquetes::class, 'listarRefugiosAdmisibles'])
+            ->whereNumber('idSalida')
+            ->name('paquetes.registrar.refugios');
+        Route::post('/salidas/{idSalida}/paquetes', [ControladorPaquetes::class, 'registrarPaquete'])
+            ->whereNumber('idSalida')
+            ->name('paquetes.registrar.confirmar');
+    });
 });
 
 // CU 25 - Listar equipamientos (cliente y Administrativo)

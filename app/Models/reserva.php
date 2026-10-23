@@ -118,6 +118,7 @@ class Reserva extends Model
             ],
             'tiene_conformidad' => $this->conformidad !== null,
             'se_puede_cancelar' => $this->sePuedeCancelar(),
+            'se_puede_pagar' => $this->admitePago(),
         ];
     }
 
@@ -241,5 +242,100 @@ class Reserva extends Model
         $this->update(['estado' => self::ESTADO_CONFIRMADA]);
 
         return true;
+    }
+
+    // ========== CU 22 - REGISTRAR PAGO DE RESERVA ==========
+
+    public const PORCENTAJE_SENA = 0.5;
+
+    /**
+     * CU 22 - Precondición. Se paga una reserva "En curso" (desde el CU 14)
+     * o una "Pendiente" a la que todavía le falta pagar (desde el CU 15).
+     */
+    public function admitePago(): bool
+    {
+        return in_array($this->estado, [self::ESTADO_EN_CURSO, self::ESTADO_PENDIENTE])
+            && $this->calcularImportePendiente() > 0;
+    }
+
+    /**
+     * CU 22 - alternativo 1.1. Solo se puede abonar la seña al registrar
+     * la reserva (CU 14), antes de cualquier otro pago.
+     */
+    public function admitePagoDeSena(): bool
+    {
+        return $this->estado === self::ESTADO_EN_CURSO && ! $this->pagos()->exists();
+    }
+
+    /**
+     * DS CU 22: calcularImportePendiente(). En USD.
+     * El importe total o, si ya se pagó la seña, el saldo restante (alternativo 1.2).
+     */
+    public function calcularImportePendiente(): float
+    {
+        if ($this->situacion_de_pago === self::PAGO_COMPLETO) {
+            return 0;
+        }
+
+        return $this->tienePagoDeSena()
+            ? round((float) $this->importe_total - $this->calcularSena(), 2)
+            : (float) $this->importe_total;
+    }
+
+    /** DS CU 22: calcularSeña(). La seña es el 50% del importe total (alternativo 1.1). */
+    public function calcularSena(): float
+    {
+        return round((float) $this->importe_total * self::PORCENTAJE_SENA, 2);
+    }
+
+    /** Tipo del próximo pago: Seña si el cliente la eligió, Saldo restante si ya la pagó, si no Total. */
+    public function tipoDePago(bool $eligioSena): string
+    {
+        if ($eligioSena) {
+            return Pago::TIPO_SENA;
+        }
+
+        return $this->tienePagoDeSena() ? Pago::TIPO_SALDO_RESTANTE : Pago::TIPO_TOTAL;
+    }
+
+    /**
+     * DS CU 22: agregarPago(monto, moneda, medioPago, tipoPago).
+     * Paso 6: registra el pago con fecha y hora. Paso 7: actualiza la situación de pago.
+     */
+    public function agregarPago(float $monto, string $moneda, string $medioPago, string $tipoPago): Pago
+    {
+        $pago = $this->pagos()->create([
+            'monto' => $monto,
+            'moneda' => $moneda,
+            'medio_pago' => $medioPago,
+            'tipo_pago' => $tipoPago,
+            'fecha_hora_pago' => now(),
+            'resultado_transaccion' => Pago::RESULTADO_APROBADA,
+        ]);
+
+        $this->actualizarSituacionPago();
+
+        return $pago;
+    }
+
+    /**
+     * DS CU 22: actualizarSituacionPago().
+     * Con un pago Total o de Saldo restante queda "Pago completo"; solo con la seña,
+     * "Pendiente de pago total".
+     */
+    private function actualizarSituacionPago(): void
+    {
+        $pagoCompleto = $this->pagos()
+            ->whereIn('tipo_pago', [Pago::TIPO_TOTAL, Pago::TIPO_SALDO_RESTANTE])
+            ->exists();
+
+        $this->update([
+            'situacion_de_pago' => $pagoCompleto ? self::PAGO_COMPLETO : self::PAGO_PENDIENTE_DE_PAGO_TOTAL,
+        ]);
+    }
+
+    private function tienePagoDeSena(): bool
+    {
+        return $this->pagos()->where('tipo_pago', Pago::TIPO_SENA)->exists();
     }
 }

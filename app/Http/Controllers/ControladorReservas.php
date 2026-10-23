@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use illuminate\Http\Requests;
+use App\Models\Pago;
+use App\Services\PasarelaDePagos;
+use Illuminate\Validation\Rule;
 
 class ControladorReservas extends Controller
 {
@@ -304,25 +307,133 @@ class ControladorReservas extends Controller
     }
 
 
-// CU 25 - Listar equipamientos
-public function listarEquipamientos(Request $request)
-{
-    $equipamientos = Equipamiento::where('stock', '>', 0)->get();
-    $esAdministrativo = $request->user()->esAdministrativo();
+    // CU 25 - Listar equipamientos
+    public function listarEquipamientos(Request $request)
+    {
+        $equipamientos = Equipamiento::where('stock', '>', 0)->get();
+        $esAdministrativo = $request->user()->esAdministrativo();
 
-    if ($esAdministrativo) {
-        $salidas = SalidaProgramada::where('estado', 'PROGRAMADA')->get();
+        if ($esAdministrativo) {
+            $salidas = SalidaProgramada::where('estado', 'PROGRAMADA')->get();
+            return Inertia::render('Equipamiento/Listar', [
+                'equipamientos' => $equipamientos,
+                'salidas' => $salidas,
+                'esAdministrativo' => true,
+            ]);
+        }
+
         return Inertia::render('Equipamiento/Listar', [
             'equipamientos' => $equipamientos,
-            'salidas' => $salidas,
-            'esAdministrativo' => true,
+            'esAdministrativo' => false,
         ]);
     }
 
-    return Inertia::render('Equipamiento/Listar', [
-        'equipamientos' => $equipamientos,
-        'esAdministrativo' => false,
-    ]);
-}
+    // ========== CU 22 - REGISTRAR PAGO DE RESERVA ==========
+
+    // Alternativo 3.1: tasa de conversión fija
+    public const TASA_USD_ARS = 1500;
+
+    /**
+     * CU 22 - pasos 1 y 2. Se invoca desde el CU 15 (total o saldo) o desde el CU 14 (seña o total).
+     * DS: registrarPagoReserva(idReserva) -> buscarReserva(idReserva) -> calcularImportePendiente()
+     *     -> mostrarImporte(importePendiente).
+     */
+    public function registrarPagoReserva(Request $request, Reserva $reserva)
+    {
+        $this->verificarQueSePuedePagar($request, $reserva);
+
+        return response()->json([
+            'importe_pendiente' => $reserva->calcularImportePendiente(),
+            // Alternativo 1.1: la seña solo se ofrece al registrar la reserva
+            'importe_sena' => $reserva->admitePagoDeSena() ? $reserva->calcularSena() : null,
+            'tasa_usd_ars' => self::TASA_USD_ARS,
+            'medios_pago' => Pago::MEDIOS_PAGO,
+        ]);
+    }
+
+    /**
+     * CU 22 - pasos 3 a 7. DS: confirmarPago(medioPago) -> procesarCobro(monto, moneda, medioPago)
+     *     -> [aprobada] agregarPago(monto, moneda, medioPago, tipoPago) -> actualizarSituacionPago()
+     *        -> mostrarPagoRegistrado(situacionPago)
+     *     -> [rechazada] informarPagoRechazado().
+     */
+    public function confirmarPago(Request $request, Reserva $reserva, PasarelaDePagos $pasarela)
+    {
+        $this->verificarQueSePuedePagar($request, $reserva);
+
+        $datos = $request->validate([
+            'medio_pago' => ['required', Rule::in(Pago::MEDIOS_PAGO)],
+            'moneda' => ['required', Rule::in(Pago::MONEDAS)],
+            'sena' => ['boolean'],
+            'simular_rechazo' => ['boolean'],
+        ], [
+            'medio_pago.required' => 'Seleccioná un medio de pago.',
+            'moneda.required' => 'Seleccioná la moneda.',
+            'in' => 'El valor seleccionado no es válido.',
+        ]);
+
+        // Alternativo 1.1 (seleccionarPagoSeña) o el importe pendiente: total o saldo restante (1.2)
+        $eligioSena = (bool) ($datos['sena'] ?? false);
+        if ($eligioSena && ! $reserva->admitePagoDeSena()) {
+            abort(403, 'La seña solo puede abonarse al registrar la reserva.');
+        }
+        $importe = $eligioSena ? $reserva->calcularSena() : $reserva->calcularImportePendiente();
+
+        // Alternativo 3.1 (seleccionarMoneda("ARS"))
+        $monto = $datos['moneda'] === 'ARS' ? $this->convertirAARS($importe) : $importe;
+
+        $resultado = $pasarela->procesarCobro(
+            $monto, $datos['moneda'], $datos['medio_pago'], (bool) ($datos['simular_rechazo'] ?? false),
+        );
+
+        // Alternativo 5.1 - informarPagoRechazado(): la reserva no cambia y se vuelve al paso 3
+        if ($resultado !== PasarelaDePagos::APROBADA) {
+            return response()->json([
+                'message' => 'El pago no pudo procesarse: la pasarela de pagos rechazó la transacción. Elegí otro medio de pago e intentá nuevamente.',
+            ], 422);
+        }
+
+        $reserva->agregarPago($monto, $datos['moneda'], $datos['medio_pago'], $reserva->tipoDePago($eligioSena));
+
+        // Con el pago completo, la reserva se confirma si ya cumple los requisitos médicos (CU 19)
+        $confirmada = $reserva->confirmarSiCorresponde();
+
+        // mostrarPagoRegistrado(situacionPago)
+        return response()->json([
+            'mensaje' => $this->mensajePagoRegistrado($reserva, $confirmada),
+            'situacion_de_pago' => $reserva->situacion_de_pago,
+        ]);
+    }
+
+    /** DS CU 22: convertirAARS(importe). Tasa fija 1 USD = 1500 ARS. */
+    private function convertirAARS(float $importe): float
+    {
+        return round($importe * self::TASA_USD_ARS, 2);
+    }
+
+    /**
+     * CU 22 - Precondición: el cliente paga una reserva propia que tiene un importe pendiente.
+     * La reserva ya llega buscada por su id (buscarReserva) gracias al route model binding.
+     */
+    private function verificarQueSePuedePagar(Request $request, Reserva $reserva): void
+    {
+        if (! $reserva->perteneceA($request->user())) {
+            abort(403, 'Solo podés pagar tus propias reservas.');
+        }
+
+        if (! $reserva->admitePago()) {
+            abort(403, 'Esta reserva no tiene pagos pendientes.');
+        }
+    }
+
+    private function mensajePagoRegistrado(Reserva $reserva, bool $confirmada): string
+    {
+        if ($reserva->situacion_de_pago === Reserva::PAGO_PENDIENTE_DE_PAGO_TOTAL) {
+            return 'Se registró el pago de la seña. La reserva queda pendiente de pago total.';
+        }
+
+        return 'El pago fue registrado. La reserva tiene el pago completo'
+            . ($confirmada ? ' y quedó confirmada.' : '.');
+    }
 }
 

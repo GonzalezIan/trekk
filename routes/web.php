@@ -89,6 +89,19 @@ Route::middleware('auth')->group(function () {
             ->name('excursiones.alta');
         Route::post('/excursiones', [ControladorExcursiones::class, 'registrarExcursion'])
             ->name('excursiones.registrar');
+        
+        // CU 3 - Modificar excursión
+        Route::get('/excursiones/{excursion}/modificar', [ControladorExcursiones::class, 'mostrarFormularioModificacion'])
+            ->whereNumber('excursion')
+            ->name('excursiones.modificar');
+        Route::put('/excursiones/{excursion}', [ControladorExcursiones::class, 'modificarExcursion'])
+            ->whereNumber('excursion')
+            ->name('excursiones.actualizar');
+
+        // CU 2 - Baja de excursión
+        Route::patch('/excursiones/{excursion}/baja', [ControladorExcursiones::class, 'darDeBajaExcursion'])
+            ->whereNumber('excursion')
+            ->name('excursiones.baja');
     });
 });
 

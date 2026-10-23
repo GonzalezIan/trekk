@@ -54,4 +54,80 @@ class ControladorExcursiones extends Controller
             ->route('excursiones.listar')
             ->with('exito', 'La excursión fue registrada correctamente.');
     }
+
+    /**
+     * CU 3 - pasos 1 a 3: verifica que la excursión se pueda modificar
+     * y despliega el formulario con sus datos actuales.
+     */
+    public function mostrarFormularioModificacion(Excursion $excursion)
+    {
+        if ($error = $this->impedimentoParaModificar($excursion)) {
+            // Alternativo 2.1: se informa y el usuario vuelve al listado (paso 1)
+            return redirect()->route('excursiones.listar')->with('error', $error);
+        }
+
+        return Inertia::render('Excursiones/Modificar', [
+            'excursion' => $excursion->only([
+                'id', 'nombre', 'descripcion', 'recorrido', 'etapas', 'dificultad', 'duracion',
+                'experiencia_requerida', 'acepta_menores', 'equipamiento_obligatorio',
+                'requiere_certificado_medico',
+            ]),
+            'dificultades' => Excursion::DIFICULTADES,
+        ]);
+    }
+
+    /**
+     * CU 3 - pasos 4 a 6: valida los datos modificados y los guarda.
+     * Si la validación falla, vuelve al formulario con los errores (alternativo 5.1).
+     */
+    public function modificarExcursion(Request $request, Excursion $excursion)
+    {
+        // Se vuelve a verificar: pudo entrar una reserva mientras se completaba el formulario
+        if ($error = $this->impedimentoParaModificar($excursion)) {
+            return redirect()->route('excursiones.listar')->with('error', $error);
+        }
+
+        $excursion->modificar($excursion->validarModificacion($request->all()));
+
+        return redirect()
+            ->route('excursiones.listar')
+            ->with('exito', 'Los datos de la excursión fueron actualizados correctamente.');
+    }
+
+    /**
+     * CU 2 - Baja de excursión: si no tiene reservas activas, queda INACTIVA
+     * y se cancelan sus salidas programadas y paquetes ewe.
+     */
+    public function darDeBajaExcursion(Excursion $excursion)
+    {
+        if (! $excursion->estaActiva()) {
+            return redirect()->route('excursiones.listar')
+                ->with('error', 'Solo pueden darse de baja excursiones en estado “Activa”.');
+        }
+
+        if ($excursion->tieneReservasActivas()) {
+            return redirect()->route('excursiones.listar')
+                ->with('error', 'La excursión no puede darse de baja porque tiene paquetes con reservas activas.');
+        }
+
+        $excursion->darDeBaja();
+
+        return redirect()
+            ->route('excursiones.listar')
+            ->with('exito', 'La excursión fue dada de baja. Sus salidas programadas y paquetes quedaron cancelados.');
+    }
+
+    /** CU 3 - RN-03 y RN-01. Devuelve el motivo por el que no se puede modificar, o null :/ . */
+    private function impedimentoParaModificar(Excursion $excursion): ?string
+    {
+        if (! $excursion->estaActiva()) {
+            return 'Solo pueden modificarse excursiones en estado “Activa”.';
+        }
+
+        if ($excursion->tieneReservasActivas()) {
+            return 'La excursión seleccionada no puede ser modificada ya que está asociada a paquetes con reservas activas.';
+        }
+
+        return null;
+    }
 }

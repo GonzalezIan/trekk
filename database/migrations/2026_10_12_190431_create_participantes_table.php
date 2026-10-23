@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('nombre', 80);
             $table->string('apellido', 80);
             $table->date('fecha_nacimiento');
-            $table->string('estado_requisito_medico', 20)->nullable();
+            $table->string('estado_requisito_medico', 50)->nullable();
             $table->timestamps();
             $table->unique(['reserva_id', 'dni']);
         });

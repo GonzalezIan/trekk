@@ -435,5 +435,22 @@ class ControladorReservas extends Controller
         return 'El pago fue registrado. La reserva tiene el pago completo'
             . ($confirmada ? ' y quedó confirmada.' : '.');
     }
+
+        // ========== CU 18 - LISTAR CERTIFICADOS PENDIENTES ==========
+    public function listarCertificadosPendientes()
+    {
+        $certificados = CertificadoMedico::with(['participante.reserva'])
+            ->where('estado', 'PENDIENTE_DE_VERIFICACION') 
+            ->get()
+            ->filter(function ($certificado) {
+                $reserva = $certificado->participante->reserva;
+                return $reserva && $reserva->admiteVerificacionDeCertificados();
+            })
+            ->values(); 
+
+        return Inertia::render('Certificados/Listar', [
+            'certificados' => $certificados,
+        ]);
+    }
 }
 

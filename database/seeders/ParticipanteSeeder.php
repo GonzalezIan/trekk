@@ -23,7 +23,7 @@ class ParticipanteSeeder extends Seeder
                     'nombre' => fake()->firstName(),
                     'apellido' => fake()->lastName(),
                     'fecha_nacimiento' => fake()->dateTimeBetween('-70 years', '-10 years')->format('Y-m-d'),
-                    'estado_requisito_medico' => fake()->randomElement(['NO_REQUERIDO', 'PENDIENTE', 'CUMPLIDO']),
+                    'estado_requisito_medico' => fake()->randomElement(['NO_REQUERIDO','PENDIENTE', 'PENDIENTE_DE_VERIFICACION', 'VALIDO','INVALIDO']),
                 ]);
             }
         }

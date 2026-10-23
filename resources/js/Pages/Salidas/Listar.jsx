@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ParticipantesSalidaModal from '@/Components/ParticipantesSalidaModal';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 // "2026-10-27" -> "27/10/2026"
@@ -17,6 +17,8 @@ export default function Listar({
     estados = [],
     filtros = {},
 }) {
+    const { flash } = usePage().props;
+
     // Salida elegida por el Administrativo para operar sobre ella
     const [seleccionada, setSeleccionada] = useState(null);
     const salidaSeleccionada = salidas.find((s) => s.id === seleccionada);
@@ -48,6 +50,13 @@ export default function Listar({
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-4 sm:px-6 lg:px-8">
+                    {/* CU 8 - paso 9: se informa que la salida fue registrada */}
+                    {flash.exito && (
+                        <div className="rounded-md bg-green-50 p-4 text-sm text-green-800">
+                            {flash.exito}
+                        </div>
+                    )}
+
                     {esAdministrativo && (
                         <Filtros
                             filtros={filtros}

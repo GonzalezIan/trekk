@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 // "2026-10-27" -> "27/10/2026"
 const fecha = (valor) => valor.split('-').reverse().join('/');
@@ -8,6 +8,8 @@ const precio = (valor) =>
 
 // CU 7 - Listar paquetes
 export default function Listar({ paquetes, salida, esAdministrativo }) {
+    const { flash } = usePage().props;
+
     return (
         <AuthenticatedLayout
             header={
@@ -20,23 +22,41 @@ export default function Listar({ paquetes, salida, esAdministrativo }) {
                             Salida del {fecha(salida.fecha_inicio)} al {fecha(salida.fecha_fin)}
                         </p>
                     </div>
-                    <Link
-                        href={
-                            esAdministrativo
-                                ? route('salidas.listar')
-                                : route('salidas.listar', { excursion: salida.excursion_id })
-                        }
-                        className="text-sm text-gray-600 underline hover:text-gray-900"
-                    >
-                        Volver a salidas
-                    </Link>
+                    <div className="flex items-center gap-4">
+                        {/* CU 5 - Registrar paquete (RN-01: solo sobre salidas PROGRAMADAS) */}
+                        {esAdministrativo && salida.estado === 'PROGRAMADA' && (
+                            <Link
+                                href={route('paquetes.registrar', salida.id)}
+                                className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700"
+                            >
+                                Registrar paquete
+                            </Link>
+                        )}
+                        <Link
+                            href={
+                                esAdministrativo
+                                    ? route('salidas.listar')
+                                    : route('salidas.listar', { excursion: salida.excursion_id })
+                            }
+                            className="text-sm text-gray-600 underline hover:text-gray-900"
+                        >
+                            Volver a salidas
+                        </Link>
+                    </div>
                 </div>
             }
         >
             <Head title="Paquetes" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl space-y-4 sm:px-6 lg:px-8">
+                    {/* CU 5 - paso 6: se informa que el paquete fue registrado y su precio */}
+                    {flash.exito && (
+                        <div className="rounded-md bg-green-50 p-4 text-sm text-green-800">
+                            {flash.exito}
+                        </div>
+                    )}
+
                     <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
                         {paquetes.length === 0 ? (
                             <p className="p-6 text-gray-600">

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SalidaProgramada extends Model
 {
@@ -254,6 +255,53 @@ class SalidaProgramada extends Model
         $consulta->where('salidas_programadas.estado', self::ESTADO_PROGRAMADA)
             ->whereDate('salidas_programadas.fecha_inicio', '<=', $fechaFin)
             ->whereDate('salidas_programadas.fecha_fin', '>=', $fechaInicio);
+    }
+
+    // ========== CU 5 - REGISTRAR PAQUETE ==========
+
+    /** CU 5 (RN-01): solo se registran paquetes sobre salidas PROGRAMADAS. */
+    public function estaProgramada(): bool
+    {
+        return $this->estado === self::ESTADO_PROGRAMADA;
+    }
+
+    /** CU 5 - paso 2. Datos que el paquete toma de la salida (RN-02 y RN-07). */
+    public function getDatosParaPaquete(): array
+    {
+        $this->loadCount('paquetes');
+
+        return [
+            ...$this->getDatos(),
+            'excursion_id' => $this->excursion_id,
+            'noches' => $this->cantidadNoches(),
+        ];
+    }
+
+    /** Noches del período: una excursión de 3 días tiene 2 noches. */
+    public function cantidadNoches(): int
+    {
+        return (int) $this->fecha_inicio->diffInDays($this->fecha_fin);
+    }
+
+    /** DS CU 5: existePaquete(nombre). RN-06, sin distinguir mayúsculas. */
+    public function existePaquete(?string $nombre): bool
+    {
+        return $this->paquetes()
+            ->whereRaw('LOWER(nombre) = ?', [mb_strtolower(trim((string) $nombre))])
+            ->exists();
+    }
+
+    /**
+     * DS CU 5: crearPaquete(nombre, descripcion, servicios, ref): idPaquete, precio.
+     * Todo o nada: el paquete y sus servicios incluidos.
+     */
+    public function crearPaquete(string $nombre, string $descripcion, Collection $servicios, ?Refugio $refugio): array
+    {
+        return DB::transaction(function () use ($nombre, $descripcion, $servicios, $refugio) {
+            $paquete = Paquete::crear($this, $nombre, $descripcion, $servicios, $refugio);
+
+            return ['idPaquete' => $paquete->id, 'precio' => (float) $paquete->precio_calculado];
+        });
     }
 
     /** Fecha de inicio + hora de salida, en un solo momento. */

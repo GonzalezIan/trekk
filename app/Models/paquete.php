@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 
 class Paquete extends Model
 {
@@ -106,5 +107,53 @@ class Paquete extends Model
     public function cantidadReservasActivas(): int
     {
         return $this->reservas()->whereIn('estado', self::ESTADOS_RESERVA_ACTIVA)->count();
+    }
+
+    // ========== CU 5 - REGISTRAR PAQUETE ==========
+
+    /**
+     * DS CU 5: crear(nombre, descripcion, servicios, ref).
+     * RN-04: el precio se calcula antes de registrarlo. RN-10: queda DISPONIBLE.
+     * RN-03: servicios y refugio son opcionales (colección vacía / null).
+     */
+    public static function crear(SalidaProgramada $salida, string $nombre, string $descripcion, Collection $servicios, ?Refugio $refugio): self
+    {
+        $paquete = new self([
+            'salida_programada_id' => $salida->id,
+            'refugio_id' => $refugio?->id,
+            'nombre' => $nombre,
+            'descripcion' => $descripcion,
+            'estado' => self::ESTADO_DISPONIBLE,
+        ]);
+        $paquete->setRelation('salidaProgramada', $salida);
+        $paquete->setRelation('refugio', $refugio);
+        $paquete->setRelation('servicios', $servicios);
+
+        $paquete->precio_calculado = $paquete->calcularPrecio();
+        $paquete->save();
+
+        // ServicioIncluido: cada servicio se incluye una vez
+        $paquete->servicios()->attach($servicios->pluck('id'));
+
+        return $paquete;
+    }
+
+    /**
+     * DS CU 5: calcularPrecio(). RN-04:
+     *  precio base de la salida + suma del precio de los servicios
+     *  + (precio por cama del convenio del refugio x noches de la salida), si tiene alojamiento.
+     */
+    public function calcularPrecio(): float
+    {
+        $salida = $this->salidaProgramada;
+
+        $servicios = $this->servicios->sum(fn (Servicio $servicio) =>
+            (float) $servicio->precio_servicio * ($servicio->pivot?->cantidad ?? 1));
+
+        $alojamiento = $this->refugio
+            ? $this->refugio->getPrecioCama($salida->fecha_inicio, $salida->fecha_fin) * $salida->cantidadNoches()
+            : 0;
+
+        return round((float) $salida->precio_base + $servicios + $alojamiento, 2);
     }
 }

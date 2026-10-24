@@ -5,6 +5,7 @@ use App\Http\Controllers\ControladorSalidas;
 use App\Http\Controllers\ControladorExcursiones;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ControladorReservas;
+use App\Http\Controllers\ControladorReportes;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -132,6 +133,14 @@ Route::middleware('auth')->group(function () {
         Route::patch('/excursiones/{excursion}/baja', [ControladorExcursiones::class, 'darDeBajaExcursion'])
             ->whereNumber('excursion')
             ->name('excursiones.baja');
+		
+		// CU 27 - Reporte periódico.
+		Route::get('/admin/reportes', [ControladorReportes::class, 'index'])
+			->name('admin.reportes.index');
+		Route::get('/admin/reportes/periodico', [ControladorReportes::class, 'generar'])
+			->name('admin.reportes.generar');
+		Route::get('/admin/reportes/periodico/exportar', [ControladorReportes::class, 'exportar'])
+			->name('admin.reportes.exportar');
     });
 });
 

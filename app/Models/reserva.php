@@ -9,8 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 
 class Reserva extends Model
 {
@@ -336,7 +338,32 @@ class Reserva extends Model
             'situacion_de_pago' => $pagoCompleto ? self::PAGO_COMPLETO : self::PAGO_PENDIENTE_DE_PAGO_TOTAL,
         ]);
     }
+	
+	/** Reservas realizadas (CU 27, RN-01). */
+    public function scopeRealizadas(Builder $query): Builder
+    {
+        return $query->where('estado', self::ESTADO_REALIZADA);
+    }
+    /**
+     * Reservas realizadas cuya salida programada tiene fecha de fin dentro del período
+     * (CU 27, RN-01).
+     *
+     * @return Collection<int, Reserva>
+     */
+    public static function listarRealizadas(Carbon|string $fechaInicio, Carbon|string $fechaFin)
+    {
+        $inicio = $fechaInicio instanceof Carbon ? $fechaInicio : Carbon::parse($fechaInicio);
+        $fin = $fechaFin instanceof Carbon ? $fechaFin : Carbon::parse($fechaFin);
 
+        return static::query()
+            ->realizadas()
+            ->whereHas('paquete.salidaProgramada', fn (Builder $q) => $q
+                ->whereDate('fecha_fin', '>=', $inicio->toDateString())
+                ->whereDate('fecha_fin', '<=', $fin->toDateString()))
+            ->with(['cliente', 'paquete.salidaProgramada.excursion', 'participantes', 'conformidad'])
+            ->get();
+    }
+	
     private function tienePagoDeSena(): bool
     {
         return $this->pagos()->where('tipo_pago', Pago::TIPO_SENA)->exists();

@@ -65,6 +65,7 @@ class NotificarEventualidadesTest extends TestCase
             'paquete_id' => Paquete::factory()->create([
                 'salida_programada_id' => ($salida ?? $this->salida)->id,
                 'nombre' => 'Paquete Full',
+                'estado' => Paquete::ESTADO_DISPONIBLE,
             ])->id,
             'estado' => $estado,
             'motivo_cancelacion' => null,
@@ -185,7 +186,7 @@ class NotificarEventualidadesTest extends TestCase
 
         $this->actingAs(User::factory()->create(['rol' => 'admin']))
             ->post(route('paquetes.cancelar.confirmar', $pendiente->paquete_id), ['motivo_cancelacion' => 'Refugio cerrado'])
-            ->assertRedirect();
+            ->assertRedirect(route('paquetes.listar', $this->salida->id));
 
         Notification::assertSentTo($pendiente->cliente->user, ReservaCancelada::class,
             fn (ReservaCancelada $aviso) => $aviso->origen === ReservaCancelada::ORIGEN_PAQUETE);

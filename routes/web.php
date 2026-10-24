@@ -34,6 +34,30 @@ Route::middleware('auth')->group(function () {
     Route::post('/reservas/{reserva}/cancelar', [ControladorReservas::class, 'ingresarMotivoCancelacion'])
         ->name('reservas.cancelar.confirmar');
 
+    // CU 14 - Registrar reserva (Cliente). Se invoca desde el CU 7, al elegir un paquete.
+    Route::get('/paquetes/{paquete}/reservar', [ControladorReservas::class, 'registrarReserva'])
+        ->whereNumber('paquete')
+        ->name('reservas.registrar');
+    Route::post('/paquetes/{paquete}/reservar', [ControladorReservas::class, 'ingresarCantidadParticipantes'])
+        ->whereNumber('paquete')
+        ->name('reservas.registrar.cantidad');
+    Route::prefix('/reservas/{reserva}/registro')->group(function () {
+        Route::post('/participantes', [ControladorReservas::class, 'ingresarDatosParticipantes'])
+            ->name('reservas.registrar.participantes');
+        // 12.1 - CU 25 Listar equipamientos, para el período de la salida
+        Route::get('/equipamiento', [ControladorReservas::class, 'listarEquipamientosParaReserva'])
+            ->name('reservas.registrar.equipamiento');
+        Route::post('/equipamiento', [ControladorReservas::class, 'agregarEquipamiento'])
+            ->name('reservas.registrar.equipamiento.agregar');
+        Route::post('/continuar', [ControladorReservas::class, 'continuar'])
+            ->name('reservas.registrar.continuar');
+        Route::post('/confirmar', [ControladorReservas::class, 'confirmarReserva'])
+            ->name('reservas.registrar.confirmar');
+        // 17.1 - El cliente cancela antes de efectuar el pago
+        Route::post('/cancelar', [ControladorReservas::class, 'cancelarRegistroReserva'])
+            ->name('reservas.registrar.cancelar');
+    });
+
     // CU 22 - Registrar pago de reserva (Cliente: reservas propias)
     Route::get('/reservas/{reserva}/pago', [ControladorReservas::class, 'registrarPagoReserva'])
         ->name('reservas.pago');

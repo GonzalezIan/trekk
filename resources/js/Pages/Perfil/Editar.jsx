@@ -3,23 +3,27 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import UpdatePasswordForm from '@/Pages/Profile/Partials/UpdatePasswordForm';
+import { Transition } from '@headlessui/react';
+import { Head, useForm } from '@inertiajs/react';
 
 /**
  * CU 13 - Modificar datos personales (RF-13): pantalla «Mis datos».
  *
  * Solo son modificables el nombre, el apellido, el email y el teléfono.
  * El DNI y la fecha de nacimiento se muestran, pero no se modifican.
+ *
+ * Las dos tarjetas (datos personales y contraseña) comparten el mismo pie:
+ * botón «Guardar» a la izquierda y confirmación «Guardado.» a su lado.
  */
 export default function Editar({ cliente }) {
-    const { flash } = usePage().props;
-
-    const { data, setData, patch, processing, errors } = useForm({
-        nombre: cliente.nombre ?? '',
-        apellido: cliente.apellido ?? '',
-        email: cliente.email ?? '',
-        telefono: cliente.telefono ?? '',
-    });
+    const { data, setData, patch, processing, errors, recentlySuccessful } =
+        useForm({
+            nombre: cliente.nombre ?? '',
+            apellido: cliente.apellido ?? '',
+            email: cliente.email ?? '',
+            telefono: cliente.telefono ?? '',
+        });
 
     const enviar = (e) => {
         e.preventDefault();
@@ -37,27 +41,37 @@ export default function Editar({ cliente }) {
             <Head title="Mis datos" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-3xl space-y-6 sm:px-6 lg:px-8">
-                    {flash.exito && (
-                        <div
-                            role="status"
-                            className="rounded-md bg-green-50 p-4 text-sm text-green-800"
-                        >
-                            {flash.exito}
-                        </div>
-                    )}
-
+                <div className="mx-auto max-w-2xl space-y-6 sm:px-6 lg:px-8">
                     <section className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                         <header>
-                            <h3 className="text-lg font-medium text-gray-900">
+                            <h2 className="text-lg font-medium text-gray-900">
                                 Datos personales
-                            </h3>
+                            </h2>
                             <p className="mt-1 text-sm text-gray-600">
                                 Podés modificar tu nombre, apellido, correo
                                 electrónico y teléfono. Tu DNI y tu fecha de
-                                nacimiento no se modifican.
+                                nacimiento no se pueden cambiar.
                             </p>
                         </header>
+
+                        <dl className="mt-6 grid gap-4 rounded-md bg-gray-50 p-4 sm:grid-cols-2">
+                            <div>
+                                <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    DNI
+                                </dt>
+                                <dd className="mt-1 text-sm text-gray-900">
+                                    {cliente.dni}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Fecha de nacimiento
+                                </dt>
+                                <dd className="mt-1 text-sm text-gray-900">
+                                    {cliente.fechaNacimiento}
+                                </dd>
+                            </div>
+                        </dl>
 
                         <form onSubmit={enviar} className="mt-6 space-y-6">
                             <div className="grid gap-6 sm:grid-cols-2">
@@ -146,27 +160,31 @@ export default function Editar({ cliente }) {
                                 />
                             </div>
 
-                            <dl className="rounded-md bg-gray-50 p-4 text-sm text-gray-600">
-                                <div className="flex gap-2">
-                                    <dt className="font-medium text-gray-900">
-                                        DNI:
-                                    </dt>
-                                    <dd>{cliente.dni}</dd>
-                                </div>
-                                <div className="mt-1 flex gap-2">
-                                    <dt className="font-medium text-gray-900">
-                                        Fecha de nacimiento:
-                                    </dt>
-                                    <dd>{cliente.fechaNacimiento}</dd>
-                                </div>
-                            </dl>
-
-                            <div className="flex items-center justify-end">
+                            <div className="flex items-center gap-4">
                                 <PrimaryButton disabled={processing}>
-                                    Guardar cambios
+                                    Guardar
                                 </PrimaryButton>
+
+                                <Transition
+                                    show={recentlySuccessful}
+                                    enter="transition ease-in-out"
+                                    enterFrom="opacity-0"
+                                    leave="transition ease-in-out"
+                                    leaveTo="opacity-0"
+                                >
+                                    <p
+                                        role="status"
+                                        className="text-sm text-gray-600"
+                                    >
+                                        Guardado.
+                                    </p>
+                                </Transition>
                             </div>
                         </form>
+                    </section>
+
+                    <section className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+                        <UpdatePasswordForm />
                     </section>
                 </div>
             </div>

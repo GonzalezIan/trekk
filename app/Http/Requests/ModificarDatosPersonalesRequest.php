@@ -31,7 +31,7 @@ class ModificarDatosPersonalesRequest extends FormRequest
                 'required',
                 'string',
                 'lowercase',
-                'email',
+                'email:strict',
                 'max:255',
                 Rule::unique(User::class, 'email')->ignore($this->user()->id),
             ],

@@ -29,7 +29,11 @@ class LoginUsuarioTest extends TestCase
     private function registrar(array $cambios = [])
     {
         return $this->post(route('register'), [
-            'name' => 'Ana Gómez',
+            'dni' => '30123456',
+            'nombre' => 'Ana',
+            'apellido' => 'Gómez',
+            'fecha_nacimiento' => '1990-01-01',
+            'telefono' => '2804123456',
             'usuario' => 'anagomez',
             'email' => 'ana@test.com',
             'password' => 'password',
@@ -115,7 +119,7 @@ class LoginUsuarioTest extends TestCase
     public function test_el_usuario_es_obligatorio(): void
     {
         $this->registrar(['usuario' => ''])
-            ->assertSessionHasErrors(['usuario' => 'Ingresá un nombre de usuario.']);
+            ->assertSessionHasErrors(['usuario' => 'Este dato es obligatorio.']);
 
         $this->assertDatabaseMissing('users', ['email' => 'ana@test.com']);
     }

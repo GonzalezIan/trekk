@@ -25,6 +25,7 @@ class Excursion extends Model
         'experiencia_requerida',
         'acepta_menores',
         'equipamiento_obligatorio',
+        'punto_de_encuentro',
         'requiere_certificado_medico',
         'estado',
     ];
@@ -74,7 +75,7 @@ class Excursion extends Model
      /**
      * CU 1 - paso 4. Valida los datos del alta y devuelve los datos limpios.
      * Si algo falla, lanza una ValidationException y Laravel vuelve al formulario.
-     *  RN-01: todo es obligatorio salvo el equipamiento obligatorio.
+     *  RN-01: todo es obligatorio salvo el equipamiento obligatorio (y el punto de encuentro).
      *  RN-02: la duración no puede ser menor a un día.
      *  RN-03: el nombre debe ser único.
      */
@@ -112,6 +113,8 @@ class Excursion extends Model
             'experiencia_requerida' => ['required', Rule::in(['SI', 'NO'])],
             'acepta_menores' => ['required', 'boolean'],
             'equipamiento_obligatorio' => ['nullable', 'string'],
+            // Se informa en el recordatorio de salida (RF Notificar eventualidades)
+            'punto_de_encuentro' => ['nullable', 'string', 'max:255'],
             'requiere_certificado_medico' => ['required', 'boolean'],
         ], [
             'required' => 'Este campo es obligatorio.',
@@ -119,6 +122,7 @@ class Excursion extends Model
             'duracion.min' => 'La duración de la excursión debe ser de al menos un día.',
             'duracion.max' => 'La duración no puede superar los 365 días.',
             'nombre.max' => 'El nombre no puede superar los 120 caracteres.',
+            'punto_de_encuentro.max' => 'El punto de encuentro no puede superar los 255 caracteres.',
             'in' => 'El valor seleccionado no es válido.',
         ])->validate();
     }

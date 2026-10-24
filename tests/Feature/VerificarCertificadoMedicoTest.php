@@ -12,7 +12,10 @@ use App\Models\Reserva;
 use App\Models\SalidaProgramada;
 use App\Models\User;
 use Carbon\CarbonInterface;
+use App\Notifications\CertificadoInvalido;
+use App\Notifications\ReservaConfirmada;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -128,6 +131,50 @@ class VerificarCertificadoMedicoTest extends TestCase
         $this->assertSame(now()->subDays(5)->toDateString(), $certificado->fecha_emision->toDateString());
         $this->assertSame(now()->addDays(25)->toDateString(), $certificado->fecha_de_vencimiento->toDateString());
         $this->assertSame(Participante::REQUISITO_CUMPLIDO, $this->participante->fresh()->estado_requisito_medico);
+    }
+
+    // ---------- RF Notificar eventualidades ----------
+
+    public function test_3_1_se_notifica_al_cliente_el_certificado_invalido_con_el_motivo(): void
+    {
+        Notification::fake();
+
+        $this->actingAs($this->administrativo)
+            ->postJson(route('reservas.certificado.invalidez', [$this->reserva, '30111222']), ['motivo' => 'Ilegible'])
+            ->assertOk();
+
+        Notification::assertSentTo($this->reserva->cliente->user, CertificadoInvalido::class,
+            fn (CertificadoInvalido $aviso) => $aviso->certificado->motivo_de_invalidez === 'Ilegible');
+    }
+
+    public function test_7_1_se_notifica_al_cliente_si_la_vigencia_no_cubre_la_salida(): void
+    {
+        Notification::fake();
+
+        // Emitido hace 25 días: vence en 5, antes de que termine la salida
+        $this->ingresarFecha($this->participante, now()->subDays(25)->toDateString())->assertOk();
+
+        Notification::assertSentTo($this->reserva->cliente->user, CertificadoInvalido::class);
+    }
+
+    public function test_si_la_reserva_queda_confirmada_se_notifica_la_confirmacion(): void
+    {
+        Notification::fake();
+        $this->reserva->update(['situacion_de_pago' => Reserva::PAGO_COMPLETO]);
+
+        $this->ingresarFecha($this->participante, now()->subDays(5)->toDateString())->assertOk();
+
+        Notification::assertSentTo($this->reserva->cliente->user, ReservaConfirmada::class);
+        Notification::assertNotSentTo($this->reserva->cliente->user, CertificadoInvalido::class);
+    }
+
+    public function test_un_certificado_valido_sin_confirmar_la_reserva_no_notifica(): void
+    {
+        Notification::fake();
+
+        $this->ingresarFecha($this->participante, now()->subDays(5)->toDateString())->assertOk();
+
+        Notification::assertNothingSent();
     }
 
     // ---------- Flujos alternativos ----------

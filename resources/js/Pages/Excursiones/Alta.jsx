@@ -43,6 +43,7 @@ export default function Alta({ dificultades }) {
         experiencia_requerida: '',
         acepta_menores: '',
         equipamiento_obligatorio: '',
+        punto_de_encuentro: '',
         requiere_certificado_medico: '',
     });
 
@@ -206,6 +207,29 @@ export default function Alta({ dificultades }) {
                             />
                             <InputError
                                 message={errors.equipamiento_obligatorio}
+                                className="mt-2"
+                            />
+                        </div>
+
+                        <div>
+                            <InputLabel
+                                htmlFor="punto_de_encuentro"
+                                value="Punto de encuentro (opcional)"
+                            />
+                            <TextInput
+                                id="punto_de_encuentro"
+                                className="mt-1 block w-full"
+                                placeholder="Ej.: Terminal de ómnibus de El Chaltén, andén 3"
+                                value={data.punto_de_encuentro}
+                                onChange={(e) =>
+                                    setData('punto_de_encuentro', e.target.value)
+                                }
+                            />
+                            <p className="mt-1 text-xs text-gray-500">
+                                Se informa a los clientes en el recordatorio de la salida.
+                            </p>
+                            <InputError
+                                message={errors.punto_de_encuentro}
                                 className="mt-2"
                             />
                         </div>

@@ -55,6 +55,22 @@ class AltaExcursionTest extends TestCase
         ]);
     }
 
+    public function test_el_punto_de_encuentro_es_opcional_y_se_guarda(): void
+    {
+        $this->actingAs($this->administrativo())
+            ->post(route('excursiones.registrar'), $this->datosValidos([
+                'punto_de_encuentro' => 'Terminal de El Chaltén, andén 3',
+            ]))
+            ->assertSessionHasNoErrors();
+        $this->actingAs($this->administrativo())
+            ->post(route('excursiones.registrar'), $this->datosValidos(['nombre' => 'Otra', 'punto_de_encuentro' => '']))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('Terminal de El Chaltén, andén 3',
+            Excursion::where('nombre', 'Laguna de los Témpanos')->value('punto_de_encuentro'));
+        $this->assertNull(Excursion::where('nombre', 'Otra')->value('punto_de_encuentro'));
+    }
+
     public function test_rn01_los_datos_obligatorios_deben_completarse(): void
     {
         $this->actingAs($this->administrativo())

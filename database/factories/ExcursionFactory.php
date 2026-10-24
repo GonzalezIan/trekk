@@ -20,6 +20,7 @@ class ExcursionFactory extends Factory
             'experiencia_requerida' => $this->faker->randomElement(['SI', 'NO']), // Lo dejamos string como pediste
             'acepta_menores' => $this->faker->boolean(),
             'equipamiento_obligatorio' => $this->faker->sentence(),
+            'punto_de_encuentro' => $this->faker->streetAddress(),
             'requiere_certificado_medico' => $this->faker->boolean(30), // 30% de probabilidad de que sea true
             'estado' => $this->faker->randomElement(['ACTIVA', 'INACTIVA']),
         ];

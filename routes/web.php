@@ -205,6 +205,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/salidas/{idSalida}/paquetes', [ControladorPaquetes::class, 'registrarPaquete'])
             ->whereNumber('idSalida')
             ->name('paquetes.registrar.confirmar');
+            // CU - Cancelar Paquete (solo Administrativo)
+        
+    Route::middleware('administrativo')->group(function () {
+        Route::get('/paquetes/{idPaquete}/cancelar', [ControladorPaquetes::class, 'solicitarCancelacion'])
+            ->name('paquetes.cancelar');
+        Route::post('/paquetes/{idPaquete}/cancelar', [ControladorPaquetes::class, 'confirmarCancelacion'])
+            ->name('paquetes.cancelar.confirmar');
+    });
     });
 });
 

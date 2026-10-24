@@ -1,5 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
+import { useState } from 'react';
+import Cancelar from '@/Components/Cancelar';
 
 // "2026-10-27" -> "27/10/2026"
 const fecha = (valor) => valor.split('-').reverse().join('/');
@@ -9,6 +11,7 @@ const precio = (valor) =>
 // CU 7 - Listar paquetes
 export default function Listar({ paquetes, salida, esAdministrativo }) {
     const { flash } = usePage().props;
+    const [paqueteACancelar, setPaqueteACancelar] = useState(null);
 
     return (
         <AuthenticatedLayout
@@ -52,8 +55,15 @@ export default function Listar({ paquetes, salida, esAdministrativo }) {
                 <div className="mx-auto max-w-7xl space-y-4 sm:px-6 lg:px-8">
                     {/* CU 5 - paso 6: se informa que el paquete fue registrado y su precio */}
                     {flash.exito && (
-                        <div className="rounded-md bg-green-50 p-4 text-sm text-green-800">
-                            {flash.exito}
+                        <div className="rounded-md bg-green-50 p-6 mb-4 shadow-sm border border-green-200">
+                            <h3 className="text-2xl font-bold text-green-800 mb-1">
+                                {flash.exito}
+                            </h3>
+                            {flash.subtexto_exito && (
+                                <p className="text-green-700 text-sm">
+                                    {flash.subtexto_exito}
+                                </p>
+                            )}
                         </div>
                     )}
 
@@ -65,13 +75,19 @@ export default function Listar({ paquetes, salida, esAdministrativo }) {
                                     : 'No hay paquetes disponibles para la salida seleccionada.'}
                             </p>
                         ) : esAdministrativo ? (
-                            <TablaAdministrativo paquetes={paquetes} />
+                            <TablaAdministrativo paquetes={paquetes} onCancelar={setPaqueteACancelar} />
                         ) : (
                             <TablaCliente paquetes={paquetes} />
                         )}
                     </div>
                 </div>
             </div>
+            {paqueteACancelar && (
+                <Cancelar
+                    paquete={paqueteACancelar}
+                    onCerrar={() => setPaqueteACancelar(null)}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }
@@ -129,7 +145,7 @@ function TablaCliente({ paquetes }) {
 }
 
 // Lo que ve el Administrativo: todos los paquetes con la cantidad de reservas activas
-function TablaAdministrativo({ paquetes }) {
+function TablaAdministrativo({ paquetes, onCancelar }) {
     return (
         <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50 text-left text-gray-600">
@@ -140,6 +156,7 @@ function TablaAdministrativo({ paquetes }) {
                     <th className="px-4 py-3">Precio</th>
                     <th className="px-4 py-3">Reservas activas</th>
                     <th className="px-4 py-3">Estado</th>
+                    <th className="px-4 py-3"></th>
                 </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -159,11 +176,23 @@ function TablaAdministrativo({ paquetes }) {
                                     'rounded-full px-2 py-1 text-xs font-semibold ' +
                                     (p.estado === 'DISPONIBLE'
                                         ? 'bg-green-100 text-green-800'
+                                        : p.estado === 'CANCELADO' 
+                                        ? 'bg-red-100 text-red-800'
                                         : 'bg-gray-200 text-gray-700')
                                 }
                             >
                                 {p.estado}
                             </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                            {p.estado === 'DISPONIBLE' && (
+                                <button
+                                    onClick={() => onCancelar(p)}
+                                    className="text-sm font-medium text-red-600 hover:text-red-900 hover:underline"
+                                >
+                                    Cancelar
+                                </button>
+                            )}
                         </td>
                     </tr>
                 ))}

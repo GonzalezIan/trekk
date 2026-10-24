@@ -27,14 +27,20 @@ class ControladorReservas extends Controller
      * Cliente: solo sus reservas (3.1). Administrativo: todas (3.2).
      * En ambos casos se excluyen las reservas "En curso".
      */
-    public function listarReservas(Request $request)
+        public function listarReservas(Request $request)
     {
         $reservas = Reserva::listarSegunPerfil($request->user())
             ->map(fn (Reserva $reserva) => $reserva->datosParaListado());
 
+        $reservaCancelada = $reservas->first(function ($reserva) {
+            return $reserva['estado'] === 'CANCELADA' && 
+                str_contains($reserva['motivo_cancelacion'] ?? '', 'Cancelación del paquete');
+        });
+
         return Inertia::render('Reservas/Listar', [
             'reservas' => $reservas,
             'esAdministrativo' => $request->user()->esAdministrativo(),
+            'notificacion_cancelacion' => $reservaCancelada, // ✅ Le pasamos la reserva (o null)
         ]);
     }
 

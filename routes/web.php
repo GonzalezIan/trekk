@@ -182,6 +182,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/salidas/{salida}', [ControladorSalidas::class, 'modificarSalida'])
             ->whereNumber('salida')
             ->name('salidas.actualizar');
+
+        // CU 11 - Cancelar Salida Programada (solo Administrativo)
+        Route::post('/salidas/{salida}/cancelar', [ControladorSalidas::class, 'cancelar'])
+            ->whereNumber('salida')
+            ->name('salidas.cancelar');
     });
 });
 

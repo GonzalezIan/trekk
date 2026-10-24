@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Empleado;
 use App\Models\Equipamiento;
 use App\Models\Excursion;
+use App\Models\Paquete;
+use App\Models\Reserva;
 use App\Models\SalidaProgramada;
+use App\Notifications\ReservaCancelada;
 use App\Services\Notificador;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -261,6 +265,76 @@ class ControladorSalidas extends Controller
         }
 
         return redirect()->route('salidas.listar')->with('exito', $mensaje);
+    }
+
+    // ========== CU 11 - CANCELAR SALIDA PROGRAMADA ==========
+
+    private const ERROR_SALIDA_NO_PROGRAMADA_CANCELAR =
+        'Solo pueden cancelarse Salidas Programadas en estado “Programada”.';
+
+    /**
+     * CU 11 - Cancela la salida programada en cascada (paquetes, reservas activas,
+     * cupos, camas y notificaciones a los clientes afectados).
+     */
+    public function cancelar(Request $request, SalidaProgramada $salida, Notificador $notificador)
+    {
+        if (! $salida->estaProgramada()) {
+            return redirect()->route('salidas.listar')
+                ->with('error', self::ERROR_SALIDA_NO_PROGRAMADA_CANCELAR);
+        }
+
+        $datos = $request->validate([
+            'motivo' => ['required', 'string', 'min:3', 'max:1000'],
+        ], [
+            'motivo.required' => 'El motivo de la cancelación es obligatorio.',
+            'motivo.min' => 'El motivo debe tener al menos 3 caracteres.',
+            'motivo.max' => 'El motivo no puede superar los 1000 caracteres.',
+        ]);
+
+        $motivo = trim($datos['motivo']);
+
+        DB::transaction(function () use ($salida, $motivo, $notificador): void {
+            $salida->update([
+                'estado' => SalidaProgramada::ESTADO_CANCELADA,
+                'motivo_cancelacion' => $motivo,
+            ]);
+
+            $salida->paquetes()
+                ->where('estado', Paquete::ESTADO_DISPONIBLE)
+                ->update([
+                    'estado' => Paquete::ESTADO_CANCELADO,
+                ]);
+
+            $reservas = $salida->reservasActivas();
+
+            foreach ($reservas as $reserva) {
+                $cantidadParticipantes = $reserva->participantes()->count();
+                if ($cantidadParticipantes === 0) {
+                    $cantidadParticipantes = (int) ($reserva->cantidad_participantes ?? 0);
+                }
+
+                $reserva->update([
+                    'estado' => Reserva::ESTADO_CANCELADA,
+                    'motivo_cancelacion' => $motivo,
+                ]);
+
+                $salida->liberarCupo($cantidadParticipantes);
+
+                if ($reserva->paquete?->refugio) {
+                    $reserva->paquete->refugio->liberarCamas(
+                        $salida->fecha_inicio,
+                        $salida->fecha_fin,
+                        $cantidadParticipantes
+                    );
+                }
+
+                $notificador->notificarCancelacion($reserva, ReservaCancelada::ORIGEN_SALIDA);
+            }
+
+        });
+
+        return redirect()->route('salidas.listar')
+            ->with('exito', 'La Salida Programada fue cancelada correctamente.');
     }
 
     // ========== PROCESOS AUTOMÁTICOS (los dispara el scheduler, ver routes/console.php) ==========

@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Modal from '@/Components/Modal';
 import ParticipantesSalidaModal from '@/Components/ParticipantesSalidaModal';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -25,6 +26,10 @@ export default function Listar({
 
     // Alternativo 4.8: ver los participantes de la salida seleccionada (CU 21)
     const [verParticipantes, setVerParticipantes] = useState(false);
+
+    // CU 11 - Cancelar Salida Programada
+    const [cancelando, setCancelando] = useState(null);
+    const [motivo, setMotivo] = useState('');
 
     return (
         <AuthenticatedLayout
@@ -74,6 +79,10 @@ export default function Listar({
                         <BarraAcciones
                             salida={salidaSeleccionada}
                             onListarParticipantes={() => setVerParticipantes(true)}
+                            onCancelar={() => {
+                                setCancelando(salidaSeleccionada);
+                                setMotivo('');
+                            }}
                         />                    
                     )}
 
@@ -105,6 +114,47 @@ export default function Listar({
                     }}
                     onCerrar={() => setVerParticipantes(false)}
                 />
+            )}
+            {cancelando && (
+                <Modal show={true} onClose={() => setCancelando(null)} maxWidth="md">
+                    <div className="p-6">
+                        <h2 className="text-lg font-medium text-gray-900">
+                            Cancelar salida programada
+                        </h2>
+                        <p className="mt-1 text-sm text-gray-600">
+                            Indicá el motivo de la cancelación. Se cancelarán las
+                            reservas activas asociadas y se notificará a los clientes.
+                        </p>
+                        <textarea
+                            value={motivo}
+                            onChange={(e) => setMotivo(e.target.value)}
+                            className="mt-4 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            rows={4}
+                        />
+                        <div className="mt-4 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setCancelando(null)}
+                                className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                            >
+                                Volver
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    router.post(
+                                        route('salidas.cancelar', cancelando.id),
+                                        { motivo },
+                                        { preserveScroll: true, onSuccess: () => setCancelando(null) },
+                                    );
+                                }}
+                                className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-red-700"
+                            >
+                                Confirmar cancelación
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
             )}
         </AuthenticatedLayout>
     );
@@ -193,7 +243,7 @@ function Filtros({ filtros, excursiones, estados }) {
 }
 
 // Operaciones que habilita la salida seleccionada por el Administrativo
-function BarraAcciones({ salida, onListarParticipantes }) {
+function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
     return (
         <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-3 text-sm shadow-sm sm:rounded-lg">
             {salida ? (
@@ -235,6 +285,16 @@ function BarraAcciones({ salida, onListarParticipantes }) {
                     >
                         Listar participantes
                     </button>
+                    {/* CU 11 - Cancelar Salida Programada (RN-01: solo salidas PROGRAMADAS) */}
+                    {salida.estado === 'PROGRAMADA' && (
+                        <button
+                            type="button"
+                            onClick={onCancelar}
+                            className="rounded-md border border-red-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-red-700 hover:bg-red-50"
+                        >
+                            Cancelar
+                        </button>
+                    )}
                 </>
             ) : (
                 <span className="text-gray-600">

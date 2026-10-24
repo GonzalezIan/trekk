@@ -10,9 +10,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/**
- * Paquete de análisis «Cliente» y «Gestión Usuarios» (CU 13 - Modificar datos personales).
- */
+
 class controladorClientes extends Controller
 {
     public function __construct(

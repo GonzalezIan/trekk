@@ -52,11 +52,6 @@ class ModificarDatosPersonalesRequest extends FormRequest
         ];
     }
 
-    /**
-     * Mensajes en español (el proyecto no tiene archivos de idioma).
-     *
-     * @return array<string, string>
-     */
     public function messages(): array
     {
         return [
@@ -69,11 +64,6 @@ class ModificarDatosPersonalesRequest extends FormRequest
         ];
     }
 
-    /**
-     * Datos normalizados para actualizar la ficha del cliente.
-     *
-     * @return array<string, string>
-     */
     public function datos(): array
     {
         return [

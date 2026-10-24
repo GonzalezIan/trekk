@@ -167,6 +167,29 @@ class SalidaProgramada extends Model
         return $this->cupo_disponible;
     }
 
+    // ========== CU 14 - REGISTRAR RESERVA ==========
+
+    /** DS CU 14 paso 9: hayCupoDisponible(cantidad). */
+    public function hayCupoDisponible(int $cantidad): bool
+    {
+        return $this->cupo_disponible >= $cantidad;
+    }
+
+    /**
+     * DS CU 14 paso 11: retenerCupo(cantidad). RN-03: resta la cantidad del cupo disponible
+     * mientras la reserva está "En curso"; si vence, se devuelve con liberarCupo().
+     */
+    public function retenerCupo(int $cantidad): void
+    {
+        $this->update(['cupo_disponible' => $this->cupo_disponible - $cantidad]);
+    }
+
+    /** DS CU 14 paso 20: getExcursion(). */
+    public function getExcursion(): Excursion
+    {
+        return $this->excursion;
+    }
+
     // ========== CU 16 - CANCELAR RESERVA ==========
 
     /**

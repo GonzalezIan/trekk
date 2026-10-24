@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\CertificadoMedico;
+use App\Models\Cliente;
+use App\Models\Paquete;
 use App\Models\Participante;
 use App\Models\Reserva;
 use App\Models\Equipamiento;
@@ -16,6 +18,7 @@ use illuminate\Http\Requests;
 use App\Models\Pago;
 use App\Services\PasarelaDePagos;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ControladorReservas extends Controller
 {
@@ -328,6 +331,330 @@ class ControladorReservas extends Controller
         ]);
     }
 
+    // ========== CU 14 - REGISTRAR RESERVA ==========
+
+    private const MENSAJE_RESERVA_VENCIDA =
+        'El tiempo para completar la reserva venció. Liberamos los cupos y el equipamiento retenidos: volvé a iniciar la reserva.';
+
+    /**
+     * CU 14 - pasos 1 a 3. Se invoca desde el CU 7, al elegir un paquete (Cliente).
+     * DS: registrarReserva(idPaquete) -> buscar(idPaquete) -> getSalidaProgramada()
+     *     -> solicitarCantidadParticipantes().
+     * El paquete ya llega buscado por su id gracias al route model binding.
+     */
+    public function registrarReserva(Request $request, Paquete $paquete)
+    {
+        $this->clienteAutenticado($request);
+        $this->verificarQueSePuedeReservar($paquete);
+
+        $salida = $paquete->salidaProgramada;
+        $excursion = $salida->getExcursion();
+
+        return Inertia::render('Reservas/Registrar', [
+            'paquete' => [...$paquete->getDatos(), ...$paquete->getDisponibilidad()],
+            'salida' => [
+                'id' => $salida->id,
+                'fecha_inicio' => $salida->fecha_inicio->format('Y-m-d'),
+                'fecha_fin' => $salida->fecha_fin->format('Y-m-d'),
+                'hora_de_salida' => $salida->hora_de_salida->format('H:i'),
+            ],
+            'excursion' => [
+                'id' => $excursion->id,
+                'nombre' => $excursion->nombre,
+                'requiere_certificado_medico' => $excursion->requiere_certificado_medico,
+            ],
+            'minutosRetencion' => Reserva::MINUTOS_RETENCION,
+        ]);
+    }
+
+    /**
+     * CU 14 - pasos 4 a 6. DS: ingresarCantidadParticipantes(cantidad) -> hayCupoDisponible(cantidad)
+     *     -> crearReserva(unCliente, unPaquete) -> retenerCupo(cantidad) -> setFechaHoraVencimiento(20)
+     *     -> mostrarFormularioParticipantes(cantidad).
+     * La reserva se crea con la cantidad, que es cuando queda "En curso" con los cupos retenidos (paso 5).
+     * Si la cantidad no es válida (4.1) o no hay lugar (5.1), responde 422 con el mensaje para el cliente.
+     */
+    public function ingresarCantidadParticipantes(Request $request, Paquete $paquete)
+    {
+        // Paso 1: el cliente autenticado queda como responsable de la reserva
+        $cliente = $this->clienteAutenticado($request);
+        $this->verificarQueSePuedeReservar($paquete);
+        $cantidad = (int) Reserva::validarCantidadParticipantes($request->all())['cantidad'];
+
+        $reserva = DB::transaction(function () use ($cliente, $paquete, $cantidad) {
+            // Se vuelven a leer bloqueados, para que dos clientes no retengan el mismo lugar
+            $salida = SalidaProgramada::lockForUpdate()->findOrFail($paquete->salida_programada_id);
+            $refugio = $paquete->refugio?->load(['convenios' => fn ($consulta) => $consulta->lockForUpdate()]);
+            $camasDisponibles = $refugio?->getCamasDisponibles($salida->fecha_inicio, $salida->fecha_fin);
+
+            // 5.1: no hay cupo en la salida y/o camas en el refugio (5.2)
+            if (! $salida->hayCupoDisponible($cantidad) || ($refugio && $camasDisponibles < $cantidad)) {
+                $lugares = $refugio ? min($salida->cupo_disponible, $camasDisponibles) : $salida->cupo_disponible;
+
+                throw ValidationException::withMessages([
+                    'cantidad' => "No hay cupos suficientes para el paquete. Lugares disponibles: {$lugares}.",
+                ]);
+            }
+
+            $reserva = Reserva::crearReserva($cliente, $paquete, $cantidad);
+            $salida->retenerCupo($cantidad);
+            // 5.2: el paquete incluye alojamiento
+            $refugio?->retenerCamas($salida->fecha_inicio, $salida->fecha_fin, $cantidad);
+            // RN-03: los lugares quedan retenidos 20 minutos
+            $reserva->setFechaHoraVencimiento(Reserva::MINUTOS_RETENCION);
+
+            return $reserva;
+        });
+
+        // mostrarFormularioParticipantes(cantidad)
+        return response()->json([
+            'reserva' => $this->datosReservaEnCurso($reserva),
+        ]);
+    }
+
+    /**
+     * CU 14 - pasos 7 a 11. El formulario manda los datos y confirma la carga en un solo envío.
+     * DS: ingresarDatosParticipantes(datosParticipantes[]) -> loop agregarParticipante(...)
+     *     -> confirmarCargaParticipantes() -> participantesValidos() -> getExcursion()
+     *     -> getEquipamientoObligatorio() -> mostrar equipamiento necesario para la excursión.
+     * Si falta algún dato (8.1) o algún participante no cumple las condiciones (9.1 / 9.2),
+     * responde 422 y no se guarda ningún participante.
+     */
+    public function ingresarDatosParticipantes(Request $request, Reserva $reserva)
+    {
+        $this->verificarReservaEnCurso($request, $reserva);
+        $datosParticipantes = $reserva->validarDatosParticipantes($request->all());
+
+        DB::transaction(function () use ($reserva, $datosParticipantes) {
+            $reserva->quitarParticipantes();
+
+            foreach ($datosParticipantes as $participante) {
+                $reserva->agregarParticipante(
+                    $participante['dni'],
+                    $participante['nombre'],
+                    $participante['apellido'],
+                    $participante['fecha_nacimiento'],
+                );
+            }
+
+            // confirmarCargaParticipantes(): si no son válidos, se deshace la carga
+            $reserva->participantesValidos();
+        });
+
+        $salida = $reserva->getSalidaProgramada();
+        $excursion = $salida->getExcursion();
+
+        return response()->json([
+            // Paso 10: situación del requisito médico de cada participante
+            'participantes' => $reserva->participantes()->orderBy('id')->get()
+                ->map(fn (Participante $participante) => $participante->datosParaRegistro($salida->fecha_inicio)),
+            // Paso 11: elementos obligatorios y necesarios para la excursión
+            'equipamiento_obligatorio' => $excursion->getEquipamientoObligatorio(),
+            'equipamiento_incluido' => $salida->equipoPrestado->pluck('nombre'),
+        ]);
+    }
+
+    /**
+     * CU 14 - 12.1, paso 1: invoca al CU 25 - Listar equipamientos.
+     * DS CU 25: listarConStock(fechaInicio, fechaFin) para el período de la salida.
+     * Al stock de cada elemento se le suma lo que esta misma reserva ya tiene retenido,
+     * así el cliente puede modificar su selección.
+     */
+    public function listarEquipamientosParaReserva(Request $request, Reserva $reserva)
+    {
+        $this->verificarReservaEnCurso($request, $reserva);
+        [$fechaInicio, $fechaFin] = $reserva->getSalidaProgramada()->getFechas();
+        $retenido = $reserva->equipos_alquilados()->pluck('equipos_alquilados.cantidad', 'equipamientos.id');
+
+        return response()->json([
+            'equipamientos' => Equipamiento::listarConStock($fechaInicio, $fechaFin)
+                ->map(fn (array $equipamiento) => [
+                    ...$equipamiento,
+                    'stock_disponible' => $equipamiento['stock_disponible'] + ($retenido[$equipamiento['id']] ?? 0),
+                ]),
+        ]);
+    }
+
+    /**
+     * CU 14 - 12.1, pasos 2 a 4. DS: loop agregarEquipamiento(unEquipamiento, cantidad)
+     *     -> stockDisponible(fechaInicio, fechaFin) -> [alcanza] reserva.agregarEquipamiento(...)
+     *     -> confirmarEquipamientoAgregado().
+     * La selección reemplaza a la anterior. Si algún elemento no tiene stock suficiente (12.1.1),
+     * responde 422, señala cuáles y la reserva conserva la selección que tenía.
+     */
+    public function agregarEquipamiento(Request $request, Reserva $reserva)
+    {
+        $this->verificarReservaEnCurso($request, $reserva);
+        $seleccion = Reserva::validarSeleccionEquipamiento($request->all());
+        [$fechaInicio, $fechaFin] = $reserva->getSalidaProgramada()->getFechas();
+
+        DB::transaction(function () use ($reserva, $seleccion, $fechaInicio, $fechaFin) {
+            $reserva->quitarEquipamientos();
+            $sinStock = [];
+
+            foreach ($seleccion as $i => $elemento) {
+                // Bloqueado, para que dos reservas no tomen el mismo stock
+                $equipamiento = Equipamiento::lockForUpdate()->findOrFail($elemento['id']);
+                $cantidadDisponible = $equipamiento->stockDisponible($fechaInicio, $fechaFin);
+
+                if ($elemento['cantidad'] <= $cantidadDisponible) {
+                    $reserva->agregarEquipamiento($equipamiento, $elemento['cantidad']);
+                } else {
+                    // 12.1.1: informar stock insuficiente para el equipamiento seleccionado
+                    $sinStock["equipamientos.{$i}.cantidad"] =
+                        "No hay stock suficiente de {$equipamiento->nombre}: quedan {$cantidadDisponible} disponibles.";
+                }
+            }
+
+            if ($sinStock) {
+                throw ValidationException::withMessages($sinStock);
+            }
+        });
+
+        // confirmarEquipamientoAgregado()
+        return response()->json([
+            'equipamiento' => $reserva->detalleImporte()['equipamiento'],
+        ]);
+    }
+
+    /**
+     * CU 14 - pasos 12 a 14. DS: continuar() -> calcularImporteTotal() -> mostrar importe.
+     */
+    public function continuar(Request $request, Reserva $reserva)
+    {
+        $this->verificarReservaEnCurso($request, $reserva);
+
+        $reserva->update(['importe_total' => $reserva->calcularImporteTotal()]);
+
+        return response()->json([
+            'importe' => $reserva->detalleImporte(),
+        ]);
+    }
+
+    /**
+     * CU 14 - pasos 15 y 16. DS: confirmarReserva() -> temporizadorVigente().
+     * Si sigue "En curso" y vigente, la pantalla invoca al CU 22 - Registrar pago de reserva,
+     * que al aprobarse el pago registra la reserva (confirmarRegistroReserva, pasos 17 a 21).
+     */
+    public function confirmarReserva(Request $request, Reserva $reserva)
+    {
+        $this->verificarReservaEnCurso($request, $reserva);
+
+        return response()->json([
+            'reserva' => $this->datosReservaEnCurso($reserva),
+        ]);
+    }
+
+    /**
+     * CU 14 - 17.1: el cliente cancela antes de efectuar el pago.
+     * Se liberan los cupos, camas y equipamiento retenidos, y la reserva se descarta.
+     */
+    public function cancelarRegistroReserva(Request $request, Reserva $reserva)
+    {
+        if (! $reserva->perteneceA($request->user())) {
+            abort(403, 'Solo podés cancelar tus propias reservas.');
+        }
+
+        if (! $reserva->estaEnCurso()) {
+            abort(403, 'Esta reserva ya no está en curso.');
+        }
+
+        $this->anularRegistroEnCurso($reserva);
+
+        return response()->json([
+            'mensaje' => 'Cancelaste la reserva. Los cupos retenidos volvieron a estar disponibles.',
+        ]);
+    }
+
+    /**
+     * CU 14 - Precondición: el paquete está "Disponible" y su salida es reservable
+     * (PROGRAMADA y a más de 48 hs, RN-01 del CU 9).
+     */
+    private function verificarQueSePuedeReservar(Paquete $paquete): void
+    {
+        if (! $paquete->estaDisponible() || ! $paquete->salidaProgramada->esReservable()) {
+            abort(403, 'El paquete ya no admite reservas.');
+        }
+    }
+
+    /**
+     * CU 14 - paso 1. Cliente del usuario autenticado, responsable de la reserva.
+     * El Administrativo no registra reservas.
+     */
+    private function clienteAutenticado(Request $request): Cliente
+    {
+        $cliente = Cliente::where('user_id', $request->user()->id)->first();
+
+        abort_if(! $cliente, 403, 'Solo los clientes pueden registrar reservas.');
+
+        return $cliente;
+    }
+
+    /**
+     * CU 14 - el cliente sigue registrando su propia reserva "En curso".
+     * DS paso 30, temporizadorVigente(): si superó su vencimiento (*a), se liberan los cupos,
+     * camas y equipamiento retenidos y el caso de uso termina (responde 410).
+     * La reserva ya llega buscada por su id gracias al route model binding.
+     */
+    private function verificarReservaEnCurso(Request $request, Reserva $reserva): void
+    {
+        if (! $reserva->perteneceA($request->user())) {
+            abort(403, 'Solo podés registrar tus propias reservas.');
+        }
+
+        if (! $reserva->estaEnCurso()) {
+            abort(403, 'Esta reserva ya no está en curso.');
+        }
+
+        if (! $reserva->temporizadorVigente()) {
+            $this->anularRegistroEnCurso($reserva);
+            abort(410, self::MENSAJE_RESERVA_VENCIDA);
+        }
+    }
+
+    /**
+     * CU 14 - 17.1 / *a. Se vuelve a leer bloqueada, para no liberar dos veces
+     * si llegan dos pedidos a la vez.
+     */
+    private function anularRegistroEnCurso(Reserva $reserva): void
+    {
+        DB::transaction(function () use ($reserva) {
+            $reserva = Reserva::lockForUpdate()->find($reserva->id);
+
+            if ($reserva?->estaEnCurso()) {
+                $reserva->anularRegistro();
+            }
+        });
+    }
+
+    /** Datos de la reserva en curso para la pantalla: cupos retenidos y tiempo que le queda. */
+    private function datosReservaEnCurso(Reserva $reserva): array
+    {
+        return [
+            'id' => $reserva->id,
+            'estado' => $reserva->estado,
+            'situacion_de_pago' => $reserva->situacion_de_pago,
+            'cantidad_participantes' => $reserva->cantidad_participantes,
+            'segundos_restantes' => max(0, (int) now()->diffInSeconds($reserva->fecha_hora_vencimiento, false)),
+        ];
+    }
+
+    /** CU 14 - paso 21. Situación de pago y de requisito médico de la reserva registrada. */
+    private function mensajeReservaRegistrada(Reserva $reserva): string
+    {
+        $mensaje = 'La reserva fue registrada correctamente. ';
+
+        $mensaje .= $reserva->situacion_de_pago === Reserva::PAGO_COMPLETO
+            ? 'Abonaste el importe total.'
+            : 'Abonaste la seña: tenés 24 horas para pagar el saldo restante desde Mis reservas.';
+
+        if ($reserva->participantes()->where('estado_requisito_medico', Participante::REQUISITO_PENDIENTE)->exists()) {
+            $mensaje .= ' La excursión requiere certificado médico: cargalo para cada participante desde Mis reservas.';
+        }
+
+        return $mensaje;
+    }
+
     // ========== CU 22 - REGISTRAR PAGO DE RESERVA ==========
 
     // Alternativo 3.1: tasa de conversión fija
@@ -393,15 +720,28 @@ class ControladorReservas extends Controller
             ], 422);
         }
 
-        $reserva->agregarPago($monto, $datos['moneda'], $datos['medio_pago'], $reserva->tipoDePago($eligioSena));
+        // CU 14 - paso 16: el pago se invocó desde el registro de la reserva
+        $registraReserva = $reserva->estaEnCurso();
 
-        // Con el pago completo, la reserva se confirma si ya cumple los requisitos médicos (CU 19)
-        $confirmada = $reserva->confirmarSiCorresponde();
+        $confirmada = DB::transaction(function () use ($reserva, $monto, $datos, $eligioSena, $registraReserva) {
+            $reserva->agregarPago($monto, $datos['moneda'], $datos['medio_pago'], $reserva->tipoDePago($eligioSena));
+
+            // CU 14 - pasos 17 a 20.1: confirmarRegistroReserva()
+            if ($registraReserva) {
+                $reserva->confirmarRegistroReserva();
+            }
+
+            // Con el pago completo, la reserva se confirma si ya cumple los requisitos médicos (CU 19 / CU 14 20.2)
+            return $reserva->confirmarSiCorresponde();
+        });
 
         // mostrarPagoRegistrado(situacionPago)
         return response()->json([
-            'mensaje' => $this->mensajePagoRegistrado($reserva, $confirmada),
+            'mensaje' => $registraReserva
+                ? $this->mensajeReservaRegistrada($reserva)
+                : $this->mensajePagoRegistrado($reserva, $confirmada),
             'situacion_de_pago' => $reserva->situacion_de_pago,
+            'estado' => $reserva->estado,
         ]);
     }
 
@@ -419,6 +759,12 @@ class ControladorReservas extends Controller
     {
         if (! $reserva->perteneceA($request->user())) {
             abort(403, 'Solo podés pagar tus propias reservas.');
+        }
+
+        // CU 14 - paso 15: la reserva en curso no superó su fecha y hora de vencimiento (*a)
+        if ($reserva->estaEnCurso() && ! $reserva->temporizadorVigente()) {
+            $this->anularRegistroEnCurso($reserva);
+            abort(410, self::MENSAJE_RESERVA_VENCIDA);
         }
 
         if (! $reserva->admitePago()) {

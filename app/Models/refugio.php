@@ -56,6 +56,20 @@ class Refugio extends Model
         }
     }
 
+    /**
+     * CU 14 - 5.2 (RN-03). Retiene las camas para una reserva en curso, restándolas de
+     * las camas disponibles de los convenios que cubren el período de la salida.
+     * Si la reserva vence o se cancela, se devuelven con liberarCamas().
+     */
+    public function retenerCamas(DateTimeInterface $fechaInicio, DateTimeInterface $fechaFin, int $cantidad): void
+    {
+        foreach ($this->convenios as $convenio) {
+            if ($cantidad > 0 && $convenio->cubre($fechaInicio, $fechaFin)) {
+                $cantidad -= $convenio->retenerCamas($cantidad);
+            }
+        }
+    }
+
     // ========== CU 26 - LISTAR REFUGIOS (desde el CU 5) ==========
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -41,6 +42,32 @@ class Participante extends Model
     public const REQUISITO_NO_REQUERIDO = 'NO_REQUERIDO';
     public const REQUISITO_PENDIENTE = 'PENDIENTE';
     public const REQUISITO_CUMPLIDO = 'CUMPLIDO';
+
+    // CU 14 - RN-02: mayor de edad
+    public const EDAD_ADULTO = 18;
+
+    /** CU 14 - paso 9. Edad que tiene (o tendrá) el participante en esa fecha. */
+    public function edadAl(DateTimeInterface $fecha): int
+    {
+        return (int) floor($this->fecha_nacimiento->diffInYears($fecha));
+    }
+
+    public function esMayorDeEdadAl(DateTimeInterface $fecha): bool
+    {
+        return $this->edadAl($fecha) >= self::EDAD_ADULTO;
+    }
+
+    /** CU 14 - paso 10. Datos del participante cargado, con su situación de requisito médico. */
+    public function datosParaRegistro(DateTimeInterface $fechaSalida): array
+    {
+        return [
+            'dni' => $this->dni,
+            'nombre' => $this->nombre,
+            'apellido' => $this->apellido,
+            'edad' => $this->edadAl($fechaSalida),
+            'estado_requisito_medico' => $this->estado_requisito_medico,
+        ];
+    }
 
     /**
      * CU 21 - flujo alternativo 3.2. Nómina de participantes de las reservas

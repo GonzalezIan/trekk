@@ -1,5 +1,5 @@
 {
-  "version": "31.5.2",
+  "version": "32.4.5",
   "pages": [
     {
       "id": "huOPTvcQidO11RnF0KDx",
@@ -1005,6 +1005,12 @@
           "label": "- motivoCancelacion: string"
         },
         {
+          "id": "6VRaVb7T8cSVNrZZZtMm-0",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-122",
+          "label": "- cantidad_participantes: integer"
+        },
+        {
           "id": "SqVM0nvIEwWP_lFodTa7-129",
           "type": "node",
           "parent": "SqVM0nvIEwWP_lFodTa7-122",
@@ -1968,6 +1974,12 @@
           "parent": "SqVM0nvIEwWP_lFodTa7-1",
           "source": "SqVM0nvIEwWP_lFodTa7-101",
           "target": "SqVM0nvIEwWP_lFodTa7-122"
+        },
+        {
+          "id": "6VRaVb7T8cSVNrZZZtMm-1",
+          "type": "node",
+          "parent": "SqVM0nvIEwWP_lFodTa7-1",
+          "label": "cantidad_participantes es NUEVO"
         }
       ]
     }

@@ -603,11 +603,99 @@ class Reserva extends Model
      */
     public function anularRegistro(): void
     {
-        $salida = $this->getSalidaProgramada();
-
-        $salida->liberarCupo($this->cantidad_participantes);
-        $this->paquete->refugio?->liberarCamas($salida->fecha_inicio, $salida->fecha_fin, $this->cantidad_participantes);
+        $this->liberarCuposYCamas($this->cantidad_participantes);
 
         $this->delete();
+    }
+
+    /**
+     * Devuelve el cupo a la salida y, si el paquete tiene alojamiento, las camas al convenio
+     * que cubre el período. El equipamiento alquilado no se toca: stockDisponible() deja de
+     * contarlo cuando la reserva se cancela o se descarta.
+     */
+    public function liberarCuposYCamas(int $cantidad): void
+    {
+        $salida = $this->getSalidaProgramada();
+
+        $salida->liberarCupo($cantidad);
+        $this->paquete->refugio?->liberarCamas($salida->fecha_inicio, $salida->fecha_fin, $cantidad);
+    }
+
+    // ========== RF-17 - CANCELAR RESERVA AUTOMÁTICAMENTE ==========
+
+    public const MOTIVO_SALDO_NO_ABONADO =
+        'Cancelación automática: no se abonó el importe total dentro de las 24 horas posteriores al pago de la seña.';
+    public const MOTIVO_REQUISITO_MEDICO_PENDIENTE =
+        'Cancelación automática: al llegar la fecha límite de verificación de los certificados médicos, algún participante mantenía el requisito médico pendiente.';
+
+    /** RF-17 (CU 14, RN-04): reservas "En curso" que superaron su fecha y hora de vencimiento. */
+    public static function enCursoVencidas(): Collection
+    {
+        return self::query()
+            ->where('estado', self::ESTADO_EN_CURSO)
+            ->where('fecha_hora_vencimiento', '<=', now())
+            ->get();
+    }
+
+    /**
+     * RF-17: reservas "Pendiente" que pueden tener que cancelarse. Es un primer filtro;
+     * cada una se confirma con motivoCancelacionAutomatica().
+     *  - "Pendiente de pago total" con el vencimiento de la seña cumplido (CU 14, 19.1).
+     *  - Con algún requisito médico "Pendiente" y la salida a un día o menos.
+     */
+    public static function candidatasACancelacionAutomatica(): Collection
+    {
+        return self::query()
+            ->where('estado', self::ESTADO_PENDIENTE)
+            ->where(fn ($consulta) => $consulta
+                ->where(fn ($consulta) => $consulta
+                    ->where('situacion_de_pago', self::PAGO_PENDIENTE_DE_PAGO_TOTAL)
+                    ->where('fecha_hora_vencimiento', '<=', now()))
+                ->orWhere(fn ($consulta) => $consulta
+                    ->whereHas('participantes', fn ($consulta) => $consulta
+                        ->where('estado_requisito_medico', Participante::REQUISITO_PENDIENTE))
+                    ->whereHas('paquete.salidaProgramada', fn ($consulta) => $consulta
+                        ->whereDate('fecha_inicio', '<=', now()->addDay()->toDateString()))))
+            ->get();
+    }
+
+    /**
+     * RF-17: motivo por el que corresponde cancelar la reserva automáticamente, o null si no corresponde.
+     *  - No se abonó el importe total pasadas las 24 horas de la seña (vencimiento del CU 14, 19.1).
+     *  - Llegó la fecha límite de verificación del certificado médico (12 horas antes de la salida,
+     *    RN-02 del CU 19) y algún participante mantiene el requisito médico "Pendiente".
+     */
+    public function motivoCancelacionAutomatica(): ?string
+    {
+        if ($this->estado !== self::ESTADO_PENDIENTE) {
+            return null;
+        }
+
+        if ($this->situacion_de_pago === self::PAGO_PENDIENTE_DE_PAGO_TOTAL && ! $this->temporizadorVigente()) {
+            return self::MOTIVO_SALDO_NO_ABONADO;
+        }
+
+        $requisitoPendiente = $this->participantes()
+            ->where('estado_requisito_medico', Participante::REQUISITO_PENDIENTE)
+            ->exists();
+
+        if ($requisitoPendiente && ! $this->admiteVerificacionDeCertificados()) {
+            return self::MOTIVO_REQUISITO_MEDICO_PENDIENTE;
+        }
+
+        return null;
+    }
+
+    /**
+     * RF-17. La reserva pasa a "Cancelada" con el motivo, y se liberan el cupo de la salida y las
+     * camas del refugio (el equipamiento alquilado queda libre al cancelarse). No hay reembolso:
+     * los pagos quedan registrados.
+     */
+    public function cancelarAutomaticamente(string $motivo): void
+    {
+        $cantidadParticipantes = $this->participantes()->count();
+
+        $this->cancelar($motivo);
+        $this->liberarCuposYCamas($cantidadParticipantes);
     }
 }

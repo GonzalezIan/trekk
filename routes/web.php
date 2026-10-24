@@ -41,7 +41,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/paquetes/{paquete}/reservar', [ControladorReservas::class, 'ingresarCantidadParticipantes'])
         ->whereNumber('paquete')
         ->name('reservas.registrar.cantidad');
-    Route::prefix('/reservas/{reserva}/registro')->group(function () {
+    // Si la reserva en curso ya no existe, se descartó al vencer (*a, RF-17) o al cancelarse (17.1)
+    Route::prefix('/reservas/{reserva}/registro')->missing(
+        fn () => abort(410, ControladorReservas::MENSAJE_RESERVA_VENCIDA)
+    )->group(function () {
         Route::post('/participantes', [ControladorReservas::class, 'ingresarDatosParticipantes'])
             ->name('reservas.registrar.participantes');
         // 12.1 - CU 25 Listar equipamientos, para el período de la salida

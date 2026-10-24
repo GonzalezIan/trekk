@@ -133,14 +133,14 @@ Route::middleware('auth')->group(function () {
         Route::patch('/excursiones/{excursion}/baja', [ControladorExcursiones::class, 'darDeBajaExcursion'])
             ->whereNumber('excursion')
             ->name('excursiones.baja');
-		
-		// CU 27 - Reporte periódico.
-		Route::get('/admin/reportes', [ControladorReportes::class, 'index'])
-			->name('admin.reportes.index');
-		Route::get('/admin/reportes/periodico', [ControladorReportes::class, 'generar'])
-			->name('admin.reportes.generar');
-		Route::get('/admin/reportes/periodico/exportar', [ControladorReportes::class, 'exportar'])
-			->name('admin.reportes.exportar');
+
+        // CU 27 - Generar reporte periódico
+        Route::get('/admin/reportes', [ControladorReportes::class, 'mostrarPantallaReporte'])
+            ->name('admin.reportes.index');
+        Route::get('/admin/reportes/periodico', [ControladorReportes::class, 'generarReportePeriodico'])
+            ->name('admin.reportes.generar');
+        Route::get('/admin/reportes/periodico/exportar', [ControladorReportes::class, 'exportarReporte'])
+            ->name('admin.reportes.exportar');
     });
 });
 

@@ -338,32 +338,7 @@ class Reserva extends Model
             'situacion_de_pago' => $pagoCompleto ? self::PAGO_COMPLETO : self::PAGO_PENDIENTE_DE_PAGO_TOTAL,
         ]);
     }
-	
-	/** Reservas realizadas (CU 27, RN-01). */
-    public function scopeRealizadas(Builder $query): Builder
-    {
-        return $query->where('estado', self::ESTADO_REALIZADA);
-    }
-    /**
-     * Reservas realizadas cuya salida programada tiene fecha de fin dentro del período
-     * (CU 27, RN-01).
-     *
-     * @return Collection<int, Reserva>
-     */
-    public static function listarRealizadas(Carbon|string $fechaInicio, Carbon|string $fechaFin)
-    {
-        $inicio = $fechaInicio instanceof Carbon ? $fechaInicio : Carbon::parse($fechaInicio);
-        $fin = $fechaFin instanceof Carbon ? $fechaFin : Carbon::parse($fechaFin);
 
-        return static::query()
-            ->realizadas()
-            ->whereHas('paquete.salidaProgramada', fn (Builder $q) => $q
-                ->whereDate('fecha_fin', '>=', $inicio->toDateString())
-                ->whereDate('fecha_fin', '<=', $fin->toDateString()))
-            ->with(['cliente', 'paquete.salidaProgramada.excursion', 'participantes', 'conformidad'])
-            ->get();
-    }
-	
     private function tienePagoDeSena(): bool
     {
         return $this->pagos()->where('tipo_pago', Pago::TIPO_SENA)->exists();
@@ -724,5 +699,55 @@ class Reserva extends Model
 
         $this->cancelar($motivo);
         $this->liberarCuposYCamas($cantidadParticipantes);
+    }
+
+    // ========== CU 27 - GENERAR REPORTE PERIÓDICO ==========
+
+    /** Reservas realizadas (CU 27, RN-01). */
+    public function scopeRealizadas(Builder $query): Builder
+    {
+        return $query->where('estado', self::ESTADO_REALIZADA);
+    }
+
+    /**
+     * DS CU 27 paso 2: listarRealizadas(fechaInicio, fechaFin).
+     * RN-01: reservas "Realizada" cuya Salida Programada tiene fecha de fin dentro del período.
+     */
+    public static function listarRealizadas(Carbon|string $fechaInicio, Carbon|string $fechaFin): Collection
+    {
+        $inicio = Carbon::parse($fechaInicio)->toDateString();
+        $fin = Carbon::parse($fechaFin)->toDateString();
+
+        return self::query()
+            ->realizadas()
+            ->whereHas('paquete.salidaProgramada', fn (Builder $consulta) => $consulta
+                ->whereDate('fecha_fin', '>=', $inicio)
+                ->whereDate('fecha_fin', '<=', $fin))
+            ->with(['cliente', 'paquete.salidaProgramada.excursion', 'participantes', 'conformidad'])
+            ->get();
+    }
+
+    /** DS CU 27 paso 5: getCliente(). */
+    public function getCliente(): Cliente
+    {
+        return $this->cliente;
+    }
+
+    /** DS CU 27 pasos 8 y 13: getExcursion() (Reserva -> Paquete -> SalidaProgramada -> Excursion). */
+    public function getExcursion(): Excursion
+    {
+        return $this->getSalidaProgramada()->getExcursion();
+    }
+
+    /** DS CU 27 paso 10: getCantidadParticipantes(). */
+    public function getCantidadParticipantes(): int
+    {
+        return $this->participantes->count();
+    }
+
+    /** DS CU 27 paso 15: getConformidad(). Null si el cliente no registró su conformidad (CU 20). */
+    public function getConformidad(): ?Conformidad
+    {
+        return $this->conformidad;
     }
 }

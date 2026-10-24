@@ -48,7 +48,7 @@ export default function Listar({ reservas, esAdministrativo, notificacion_cancel
     return (
         <AuthenticatedLayout>
             <Head title={esAdministrativo ? 'Reservas' : 'Mis reservas'} />
-            {mostrarPopUp && (
+            {!esAdministrativo&&mostrarPopUp && (
                 <div className="fixed bottom-6 right-6 z-50 max-w-md w-full bg-white shadow-2xl rounded-xl border-l-4 border-red-500 overflow-hidden">
                     <div className="p-5">
                         <div className="flex items-start">

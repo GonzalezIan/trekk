@@ -333,7 +333,7 @@ class ControladorReservas extends Controller
 
     // ========== CU 14 - REGISTRAR RESERVA ==========
 
-    private const MENSAJE_RESERVA_VENCIDA =
+    public const MENSAJE_RESERVA_VENCIDA =
         'El tiempo para completar la reserva venció. Liberamos los cupos y el equipamiento retenidos: volvé a iniciar la reserva.';
 
     /**
@@ -653,6 +653,54 @@ class ControladorReservas extends Controller
         }
 
         return $mensaje;
+    }
+
+    // ========== RF-17 - CANCELAR RESERVA AUTOMÁTICAMENTE ==========
+
+    /**
+     * RF-17. Lo ejecuta el sistema cada minuto (comando reservas:cancelar-vencidas, routes/console.php).
+     *  - Reservas "En curso" vencidas (CU 14, RN-04 / *a): se liberan los recursos retenidos y se descartan.
+     *  - Reservas "Pendiente" con la seña vencida o con el requisito médico pendiente al llegar la fecha
+     *    límite de verificación: pasan a "Cancelada" y se liberan el cupo, las camas y el equipamiento.
+     * Devuelve cuántas reservas canceló.
+     */
+    public function cancelarReservasAutomaticamente(): int
+    {
+        $canceladas = 0;
+
+        foreach (Reserva::enCursoVencidas() as $reserva) {
+            $this->anularRegistroEnCurso($reserva);
+            $canceladas++;
+        }
+
+        foreach (Reserva::candidatasACancelacionAutomatica() as $reserva) {
+            if ($this->cancelarAutomaticamente($reserva)) {
+                $canceladas++;
+            }
+        }
+
+        return $canceladas;
+    }
+
+    /**
+     * RF-17. Se vuelve a leer bloqueada y se revisa otra vez si corresponde, por si el cliente
+     * pagó el saldo o el administrativo la canceló mientras tanto.
+     */
+    private function cancelarAutomaticamente(Reserva $reserva): bool
+    {
+        return DB::transaction(function () use ($reserva) {
+            $reserva = Reserva::lockForUpdate()->find($reserva->id);
+            $motivo = $reserva?->motivoCancelacionAutomatica();
+
+            if (! $motivo) {
+                return false;
+            }
+
+            $reserva->cancelarAutomaticamente($motivo);
+            // ref RF-29 Notificar eventualidades: la notificación al cliente (motivo, sin reintegro) queda a cargo del RF-29.
+
+            return true;
+        });
     }
 
     // ========== CU 22 - REGISTRAR PAGO DE RESERVA ==========

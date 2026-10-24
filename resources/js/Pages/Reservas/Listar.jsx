@@ -3,6 +3,7 @@ import { PanelRegistrarPago } from '@/Components/RegistrarPago';
 import EstadoBadge, { etiquetaEstado } from '@/Components/EstadoBadge';
 import ParticipantesReserva from '@/Components/ParticipantesReserva';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import RegistrarConformidadModal from '@/Components/RegistrarConformidadModal';
 import { Head } from '@inertiajs/react';
 import { useState,useEffect } from 'react';
 
@@ -21,6 +22,7 @@ const formatFecha = (fecha) =>
 
 export default function Listar({ reservas, esAdministrativo, notificacion_cancelacion }) {
     const [mostrarPopUp, setMostrarPopUp] = useState(false);
+    const [reservaACalificar, setReservaACalificar] = useState(null);
 
     useEffect(() => {
         if (notificacion_cancelacion) {
@@ -90,9 +92,16 @@ export default function Listar({ reservas, esAdministrativo, notificacion_cancel
                 {esAdministrativo ? (
                     <ReservasAdministrativo reservas={reservas} />
                 ) : (
-                    <ReservasCliente reservas={reservas} />
+                    <ReservasCliente reservas={reservas}
+                    onCalificar={setReservaACalificar}/>
                 )}
             </main>
+            {reservaACalificar && (
+                <RegistrarConformidadModal
+                    reserva={reservaACalificar}
+                    onCerrar={() => setReservaACalificar(null)}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }
@@ -147,7 +156,7 @@ function BotonAccion({ children, cu }) {
 
 // ---------- Vista del Cliente (3.1) ----------
 
-function ReservasCliente({ reservas }) {
+function ReservasCliente({ reservas,onCalificar }) {
     const [aviso, setAviso] = useState('');
 
     return (
@@ -167,7 +176,12 @@ function ReservasCliente({ reservas }) {
             ) : (
                 <div className="flex flex-col gap-4">
                     {reservas.map((r) => (
-                        <TarjetaReserva key={r.id} reserva={r} onAviso={setAviso} />
+                        <TarjetaReserva 
+                            key={r.id} 
+                            reserva={r} 
+                            onAviso={setAviso} 
+                            onCalificar={onCalificar} // 👈 ACÁ LE PASAMOS LA FUNCIÓN
+                        />
                     ))}
                 </div>
             )}
@@ -175,7 +189,7 @@ function ReservasCliente({ reservas }) {
     );
 }
 
-function TarjetaReserva({ reserva: r, onAviso }) {
+function TarjetaReserva({ reserva: r, onAviso,onCalificar }) {
     // Panel desplegado debajo de la tarjeta: null | 'participantes' | 'cancelar' | 'pagar'
     const [panel, setPanel] = useState(null);
 
@@ -233,7 +247,13 @@ function TarjetaReserva({ reserva: r, onAviso }) {
                     </button>
                 )}
                 {r.estado === 'REALIZADA' && !r.tiene_conformidad && (
-                    <BotonAccion cu="CU 20">Registrar conformidad</BotonAccion>
+                <button
+                    type="button"
+                    onClick={() => onCalificar(r)} // 👈 Le pasamos la reserva
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                >
+                    ⭐ Registrar conformidad
+                </button>
                 )}
                 {/* CU 16 - Cancelar reserva (solo "Pendiente" o "Confirmada", lo decide el servidor) */}
                 {r.se_puede_cancelar && (

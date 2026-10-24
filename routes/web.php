@@ -105,6 +105,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/reservas/{reserva}/conformidad', [ControladorReservas::class, 'solicitarConformidad'])->name('reservas.conformidad');
+    Route::post('/reservas/{reserva}/conformidad', [ControladorReservas::class, 'guardarConformidad'])->name('reservas.conformidad.guardar');
 });
 
 // ---------- Excursiones (CU 1 y CU 4) ----------

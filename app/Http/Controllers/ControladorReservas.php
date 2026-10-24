@@ -852,5 +852,53 @@ class ControladorReservas extends Controller
             'certificados' => $certificados,
         ]);
     }
+        // ========== CU 20 - REGISTRAR CONFORMIDAD ==========
+
+    /**
+     * Muestra el modal para registrar la conformidad de una reserva realizada.
+     */
+    public function solicitarConformidad(Reserva $reserva)
+    {
+        // Validaciones (RN)
+        if ($reserva->estado !== 'REALIZADA') {
+            return response()->json(['error' => 'Solo podés calificar reservas que hayan sido realizadas.'], 403);
+        }
+
+        if ($reserva->conformidad()->exists()) {
+            return response()->json(['error' => 'Esta reserva ya tiene una conformidad registrada.'], 403);
+        }
+
+        return response()->json([
+            'reserva_id' => $reserva->id,
+            'excursion' => $reserva->paquete->salidaProgramada->excursion->nombre,
+        ]);
+    }
+
+    /**
+     * Guarda la conformidad en la base de datos.
+     */
+    public function guardarConformidad(Request $request, Reserva $reserva)
+    {
+        if ($reserva->estado !== 'REALIZADA' || $reserva->conformidad()->exists()) {
+            return redirect()->back()->with('error', 'No se puede registrar la conformidad en este momento.');
+        }
+
+        $datos = $request->validate([
+            'valoracion' => 'required|integer|min:1|max:5',
+            'comentario' => 'nullable|string|max:1000',
+        ], [
+            'valoracion.required' => 'Debés seleccionar una puntuación.',
+            'valoracion.min' => 'La puntuación mínima es 1.',
+            'valoracion.max' => 'La puntuación máxima es 5.',
+        ]);
+
+        // Creamos la conformidad asociada a la reserva
+        $reserva->conformidad()->create([
+            'valoracion' => $datos['valoracion'],
+            'comentario' => $datos['comentario'] ?? null,
+        ]);
+
+        return redirect()->back()->with('exito', '¡Gracias por tu opinión! Tu conformidad ha sido registrada.');
+    }
 }
 

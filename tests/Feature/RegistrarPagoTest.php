@@ -9,7 +9,9 @@ use App\Models\Paquete;
 use App\Models\Participante;
 use App\Models\Reserva;
 use App\Models\SalidaProgramada;
+use App\Notifications\ReservaConfirmada;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Pagina;
 use Tests\TestCase;
 
@@ -212,6 +214,27 @@ class RegistrarPagoTest extends TestCase
         $this->pagar($reserva)->assertOk();
 
         $this->assertSame(Reserva::ESTADO_CONFIRMADA, $reserva->fresh()->estado);
+    }
+
+    public function test_si_la_reserva_queda_confirmada_se_notifica_la_confirmacion(): void
+    {
+        Notification::fake();
+        $reserva = $this->reserva(requisitoMedico: 'NO_REQUERIDO');
+
+        $this->pagar($reserva)->assertOk();
+
+        Notification::assertSentTo($this->cliente->user, ReservaConfirmada::class,
+            fn (ReservaConfirmada $aviso) => $aviso->reserva->is($reserva));
+    }
+
+    public function test_si_la_reserva_no_queda_confirmada_no_se_notifica(): void
+    {
+        Notification::fake();
+
+        $this->pagar($this->reserva(requisitoMedico: Participante::REQUISITO_PENDIENTE))->assertOk();
+        $this->pagar($this->reserva(), ['simular_rechazo' => true])->assertUnprocessable();
+
+        Notification::assertNothingSent();
     }
 
     public function test_con_certificados_pendientes_sigue_pendiente(): void

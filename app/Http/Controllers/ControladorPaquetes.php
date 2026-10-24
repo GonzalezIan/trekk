@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use App\Models\Paquete;
+use App\Models\Reserva;
+use App\Notifications\ReservaCancelada;
+use App\Services\Notificador;
 use Illuminate\Support\Facades\DB;
 
 class ControladorPaquetes extends Controller
@@ -27,31 +30,11 @@ class ControladorPaquetes extends Controller
             abort(404);
         }
 
-        $paquetes = $esAdministrativo
-            ? $salida->getPaquetes()
-            : $salida->getPaquetesDisponibles();
-
-        // Convertimos a array de forma segura. Si ya es array, lo deja igual.
-        $paquetes = is_array($paquetes) ? $paquetes : $paquetes->toArray();
-
-        if ($esAdministrativo) {
-            // Usamos array_map que es una función nativa de PHP y no da problemas en VS Code
-            $paquetes = array_map(function ($paquete) {
-                // Buscamos el paquete directo en la base de datos para contar las reservas
-                $cantidad = \App\Models\Paquete::find($paquete['id'])
-                    ->reservas()
-                    ->whereIn('estado', ['PENDIENTE', 'CONFIRMADA', 'EN_CURSO'])
-                    ->count();
-
-                // Agregamos el dato al array
-                $paquete['reservas_activas'] = $cantidad;
-
-                return $paquete;
-            }, $paquetes);
-        }
-
         return Inertia::render('Paquetes/Listar', [
-            'paquetes' => $paquetes,
+            // getPaquetes() ya trae las reservas activas de cada paquete (Pendiente o Confirmada)
+            'paquetes' => $esAdministrativo
+                ? $salida->getPaquetes()
+                : $salida->getPaquetesDisponibles(),
             'salida' => [
                 'id' => $salida->id,
                 'excursion_id' => $salida->excursion_id,
@@ -154,6 +137,9 @@ class ControladorPaquetes extends Controller
     }
         // ========== CU - CANCELAR PAQUETE ==========
 
+    // Reservas que se cancelan con el paquete: las activas y las "En curso", que tienen recursos retenidos
+    private const ESTADOS_RESERVA_A_CANCELAR = [...Paquete::ESTADOS_RESERVA_ACTIVA, Reserva::ESTADO_EN_CURSO];
+
     /**
      * Muestra la información para confirmar la cancelación.
      */
@@ -166,7 +152,7 @@ class ControladorPaquetes extends Controller
         }
 
         $reservasActivas = $paquete->reservas()
-            ->whereIn('estado', ['PENDIENTE', 'CONFIRMADA', 'EN_CURSO'])
+            ->whereIn('estado', self::ESTADOS_RESERVA_A_CANCELAR)
             ->count();
 
         return response()->json([
@@ -178,7 +164,7 @@ class ControladorPaquetes extends Controller
     /**
      * Confirma la cancelación y hace la cascada.
      */
-    public function confirmarCancelacion(Request $request, int $idPaquete)
+    public function confirmarCancelacion(Request $request, int $idPaquete, Notificador $notificador)
     {
         $paquete = Paquete::findOrFail($idPaquete);
 
@@ -195,15 +181,15 @@ class ControladorPaquetes extends Controller
         ]);
 
         // 2. Realizar baja lógica y cancelación en cascada
-        DB::transaction(function () use ($paquete, $datos) {
+        DB::transaction(function () use ($paquete, $datos, $notificador) {
             
             // Baja lógica del paquete
             $paquete->estado = 'CANCELADO';
             $paquete->save();
 
-            // Buscamos las reservas activas
+            // Buscamos las reservas activas (RF-06: Pendiente o Confirmada) y las "En curso"
             $reservasActivas = $paquete->reservas()
-                ->whereIn('estado', ['PENDIENTE', 'CONFIRMADA', 'EN_CURSO'])
+                ->whereIn('estado', self::ESTADOS_RESERVA_A_CANCELAR)
                 ->get();
 
             // Si hay reservas, hacemos la cascada
@@ -213,7 +199,9 @@ class ControladorPaquetes extends Controller
                     $reserva->motivo_cancelacion = "Cancelación del paquete: " . $datos['motivo_cancelacion'];
                     $reserva->save();
 
-                    $cantidadParticipantes = $reserva->participantes()->count();
+                    // Los cupos que retiene la reserva (CU 14, RN-03): una "En curso" puede no tener
+                    // todavía los participantes cargados
+                    $cantidadParticipantes = $reserva->cantidad_participantes;
                     $salida = $paquete->salidaProgramada;
 
                     if ($salida) {
@@ -227,6 +215,9 @@ class ControladorPaquetes extends Controller
                             $cantidadParticipantes
                         );
                     }
+
+                    // RF Notificar eventualidades: motivo y, si hubo pagos, el reembolso a gestionar ante la empresa
+                    $notificador->notificarCancelacion($reserva, ReservaCancelada::ORIGEN_PAQUETE);
                 }
             }
         });

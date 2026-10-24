@@ -249,6 +249,12 @@ class Reserva extends Model
         return true;
     }
 
+    /** RF Finalizar Salida Programada: la reserva confirmada de una salida finalizada queda "Realizada". */
+    public function marcarRealizada(): void
+    {
+        $this->update(['estado' => self::ESTADO_REALIZADA]);
+    }
+
     // ========== CU 22 - REGISTRAR PAGO DE RESERVA ==========
 
     public const PORCENTAJE_SENA = 0.5;

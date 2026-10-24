@@ -17,6 +17,8 @@ use Inertia\Inertia;
 use illuminate\Http\Requests;
 use App\Models\Pago;
 use App\Services\PasarelaDePagos;
+use App\Services\Notificador;
+use App\Notifications\ReservaCancelada;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -134,7 +136,7 @@ class ControladorReservas extends Controller
      *     -> confirmarCancelacionReserva().
      * Si falta el motivo, responde 422 con el mensaje para el usuario (4.1).
      */
-    public function ingresarMotivoCancelacion(Request $request, Reserva $reserva)
+    public function ingresarMotivoCancelacion(Request $request, Reserva $reserva, Notificador $notificador)
     {
         $this->verificarQueSePuedeCancelar($request, $reserva);
         $motivo = Reserva::validarMotivoCancelacion($request->all())['motivo'];
@@ -159,7 +161,8 @@ class ControladorReservas extends Controller
             $paquete->refugio?->liberarCamas($salida->fecha_inicio, $salida->fecha_fin, $cantidadParticipantes);
         });
 
-        // ref RF-29 Notificar eventualidades: la notificación al cliente (paso 7) queda a cargo del RF-29.
+        // Paso 7 -> RF Notificar eventualidades: motivo y que no corresponde reintegro
+        $notificador->notificarCancelacion($reserva->refresh(), ReservaCancelada::ORIGEN_RESERVA);
 
         // confirmarCancelacionReserva()
         return response()->json([
@@ -220,12 +223,12 @@ class ControladorReservas extends Controller
      *     -> confirmarVerificacionCertificado(); si no cubre, setEstado(INVALIDO) (7.1).
      * Si la fecha es futura o no válida, responde 422 (5.1).
      */
-    public function ingresarFechaEmision(Request $request, Reserva $reserva, string $dniParticipante)
+    public function ingresarFechaEmision(Request $request, Reserva $reserva, string $dniParticipante, Notificador $notificador)
     {
         $certificado = $this->certificadoQueAdmiteVerificacion($reserva, $dniParticipante);
         $fechaEmision = Carbon::parse(CertificadoMedico::validarFechaEmision($request->all())['fecha_emision']);
 
-        $mensaje = DB::transaction(function () use ($reserva, $certificado, $fechaEmision) {
+        $mensaje = DB::transaction(function () use ($reserva, $certificado, $fechaEmision, $notificador) {
             $certificado->calcularVigencia($fechaEmision);
             $salida = $reserva->getSalidaProgramada();
 
@@ -235,7 +238,8 @@ class ControladorReservas extends Controller
                     CertificadoMedico::ESTADO_INVALIDO,
                     'El certificado no cubre el período de la salida programada.',
                 );
-                // ref RF-29 Notificar eventualidades: la notificación al cliente queda a cargo del RF-29.
+                // RF Notificar eventualidades: motivo de invalidez
+                $notificador->notificarCertificadoInvalido($certificado);
 
                 return 'La vigencia del certificado no cubre el período de la salida: quedó inválido. El requisito médico sigue pendiente.';
             }
@@ -245,6 +249,10 @@ class ControladorReservas extends Controller
 
             // Con el pago completo y todos los requisitos cumplidos, la reserva queda "Confirmada"
             $confirmada = $reserva->confirmarSiCorresponde();
+            if ($confirmada) {
+                // RF Notificar eventualidades: confirmación de reserva
+                $notificador->notificarConfirmacion($reserva);
+            }
 
             return 'El certificado fue verificado correctamente. El requisito médico del participante quedó cumplido.'
                 .($confirmada ? ' La reserva quedó confirmada.' : '');
@@ -262,13 +270,14 @@ class ControladorReservas extends Controller
      * DS: solicitarMotivoInvalidez() -> ingresarMotivoInvalidez(motivo) -> setEstado(INVALIDO).
      * El requisito médico del participante sigue "Pendiente" y no se pide fecha de emisión (RN-03).
      */
-    public function ingresarMotivoInvalidez(Request $request, Reserva $reserva, string $dniParticipante)
+    public function ingresarMotivoInvalidez(Request $request, Reserva $reserva, string $dniParticipante, Notificador $notificador)
     {
         $certificado = $this->certificadoQueAdmiteVerificacion($reserva, $dniParticipante);
         $motivo = CertificadoMedico::validarMotivoInvalidez($request->all())['motivo'];
 
         $certificado->setEstado(CertificadoMedico::ESTADO_INVALIDO, $motivo);
-        // ref RF-29 Notificar eventualidades (motivo = motivo de invalidez): queda a cargo del RF-29.
+        // RF Notificar eventualidades: motivo de invalidez
+        $notificador->notificarCertificadoInvalido($certificado);
 
         return response()->json([
             'mensaje' => 'El certificado fue marcado como inválido. El requisito médico sigue pendiente.',
@@ -670,7 +679,7 @@ class ControladorReservas extends Controller
      *    límite de verificación: pasan a "Cancelada" y se liberan el cupo, las camas y el equipamiento.
      * Devuelve cuántas reservas canceló.
      */
-    public function cancelarReservasAutomaticamente(): int
+    public function cancelarReservasAutomaticamente(Notificador $notificador): int
     {
         $canceladas = 0;
 
@@ -680,7 +689,7 @@ class ControladorReservas extends Controller
         }
 
         foreach (Reserva::candidatasACancelacionAutomatica() as $reserva) {
-            if ($this->cancelarAutomaticamente($reserva)) {
+            if ($this->cancelarAutomaticamente($reserva, $notificador)) {
                 $canceladas++;
             }
         }
@@ -692,9 +701,9 @@ class ControladorReservas extends Controller
      * RF-17. Se vuelve a leer bloqueada y se revisa otra vez si corresponde, por si el cliente
      * pagó el saldo o el administrativo la canceló mientras tanto.
      */
-    private function cancelarAutomaticamente(Reserva $reserva): bool
+    private function cancelarAutomaticamente(Reserva $reserva, Notificador $notificador): bool
     {
-        return DB::transaction(function () use ($reserva) {
+        return DB::transaction(function () use ($reserva, $notificador) {
             $reserva = Reserva::lockForUpdate()->find($reserva->id);
             $motivo = $reserva?->motivoCancelacionAutomatica();
 
@@ -703,7 +712,8 @@ class ControladorReservas extends Controller
             }
 
             $reserva->cancelarAutomaticamente($motivo);
-            // ref RF-29 Notificar eventualidades: la notificación al cliente (motivo, sin reintegro) queda a cargo del RF-29.
+            // RF Notificar eventualidades: motivo y que no corresponde reintegro
+            $notificador->notificarCancelacion($reserva, ReservaCancelada::ORIGEN_RESERVA);
 
             return true;
         });
@@ -738,7 +748,7 @@ class ControladorReservas extends Controller
      *        -> mostrarPagoRegistrado(situacionPago)
      *     -> [rechazada] informarPagoRechazado().
      */
-    public function confirmarPago(Request $request, Reserva $reserva, PasarelaDePagos $pasarela)
+    public function confirmarPago(Request $request, Reserva $reserva, PasarelaDePagos $pasarela, Notificador $notificador)
     {
         $this->verificarQueSePuedePagar($request, $reserva);
 
@@ -788,6 +798,11 @@ class ControladorReservas extends Controller
             // Con el pago completo, la reserva se confirma si ya cumple los requisitos médicos (CU 19 / CU 14 20.2)
             return $reserva->confirmarSiCorresponde();
         });
+
+        if ($confirmada) {
+            // RF Notificar eventualidades: confirmación de reserva
+            $notificador->notificarConfirmacion($reserva);
+        }
 
         // mostrarPagoRegistrado(situacionPago)
         return response()->json([

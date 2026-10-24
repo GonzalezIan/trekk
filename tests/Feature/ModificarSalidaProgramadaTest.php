@@ -12,7 +12,9 @@ use App\Models\Refugio;
 use App\Models\Reserva;
 use App\Models\SalidaProgramada;
 use App\Models\User;
+use App\Notifications\SalidaModificada;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Pagina;
 use Tests\TestCase;
 
@@ -344,21 +346,64 @@ class ModificarSalidaProgramadaTest extends TestCase
 
     public function test_se_notifica_a_los_clientes_si_cambia_el_personal(): void
     {
+        Notification::fake();
         $paquete = $this->paquete();
-        $this->reserva($paquete, 'PENDIENTE');
-        $this->reserva($paquete, 'CONFIRMADA');
-        $this->reserva($paquete, 'CANCELADA'); // no se notifica
+        $pendiente = $this->reserva($paquete, 'PENDIENTE');
+        $confirmada = $this->reserva($paquete, 'CONFIRMADA');
+        $cancelada = $this->reserva($paquete, 'CANCELADA'); // no se notifica
+        $nuevoGuia = $this->empleado('GUIA');
 
-        $this->modificar(['id_guia' => $this->empleado('GUIA')->id])
+        $this->modificar(['id_guia' => $nuevoGuia->id])
             ->assertSessionHas('exito', fn ($mensaje) =>
                 str_contains($mensaje, 'Se notificó el cambio a 2 clientes con reservas activas.'));
+
+        // RF Notificar eventualidades: el correo informa el dato anterior y el nuevo
+        Notification::assertSentTo($pendiente->cliente->user, SalidaModificada::class,
+            fn (SalidaModificada $aviso) => $aviso->cambios === [[
+                'dato' => 'Guía responsable',
+                'anterior' => $this->guia->nombre . ' ' . $this->guia->apellido,
+                'nuevo' => $nuevoGuia->nombre . ' ' . $nuevoGuia->apellido,
+            ]]);
+        Notification::assertSentTo($confirmada->cliente->user, SalidaModificada::class);
+        Notification::assertNotSentTo($cancelada->cliente->user, SalidaModificada::class);
+    }
+
+    public function test_se_notifica_el_cambio_de_la_hora_de_salida(): void
+    {
+        Notification::fake();
+        $reserva = $this->reserva($this->paquete(), 'CONFIRMADA');
+
+        $this->modificar(['hora_de_salida' => '10:00'])
+            ->assertSessionHas('exito', fn ($mensaje) => str_contains($mensaje, 'Se notificó el cambio a 1 cliente'));
+
+        Notification::assertSentTo($reserva->cliente->user, SalidaModificada::class,
+            fn (SalidaModificada $aviso) => $aviso->cambios === [
+                ['dato' => 'Hora de salida', 'anterior' => '08:30 hs', 'nuevo' => '10:00 hs'],
+            ]);
+    }
+
+    public function test_se_notifica_la_reprogramacion_con_las_fechas_anteriores_y_nuevas(): void
+    {
+        Notification::fake();
+        $reserva = $this->reserva($this->paquete(), 'PENDIENTE');
+
+        $this->modificar(['fecha_inicio' => '2026-11-15', 'fecha_fin' => '2026-11-17'])->assertSessionHasNoErrors();
+
+        Notification::assertSentTo($reserva->cliente->user, SalidaModificada::class,
+            fn (SalidaModificada $aviso) => $aviso->cambios === [
+                ['dato' => 'Fecha de inicio', 'anterior' => '10/11/2026', 'nuevo' => '15/11/2026'],
+                ['dato' => 'Fecha de fin', 'anterior' => '12/11/2026', 'nuevo' => '17/11/2026'],
+            ]);
     }
 
     public function test_no_se_notifica_si_solo_cambia_el_precio(): void
     {
+        Notification::fake();
         $this->reserva($this->paquete(), 'PENDIENTE');
 
         $this->modificar(['precio_base' => 45000])
             ->assertSessionHas('exito', fn ($mensaje) => ! str_contains($mensaje, 'notificó'));
+
+        Notification::assertNothingSent();
     }
 }

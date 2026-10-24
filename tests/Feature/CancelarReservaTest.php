@@ -12,7 +12,9 @@ use App\Models\Reserva;
 use App\Models\SalidaProgramada;
 use App\Models\User;
 use Carbon\CarbonInterface;
+use App\Notifications\ReservaCancelada;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -92,6 +94,27 @@ class CancelarReservaTest extends TestCase
     }
 
     // ---------- Flujo normal ----------
+
+    public function test_7_se_notifica_al_cliente_la_cancelacion_con_el_motivo(): void
+    {
+        Notification::fake();
+        $reserva = $this->reserva();
+
+        $this->cancelar($reserva, 'Me lesioné', User::factory()->create(['rol' => 'admin']))->assertOk();
+
+        Notification::assertSentTo($this->cliente->user, ReservaCancelada::class,
+            fn (ReservaCancelada $aviso) => $aviso->origen === ReservaCancelada::ORIGEN_RESERVA
+                && $aviso->reserva->motivo_cancelacion === 'Me lesioné');
+    }
+
+    public function test_si_falta_el_motivo_no_se_notifica(): void
+    {
+        Notification::fake();
+
+        $this->cancelar($this->reserva(), '')->assertUnprocessable();
+
+        Notification::assertNothingSent();
+    }
 
     public function test_1_3_el_sistema_obtiene_los_datos_y_solicita_el_motivo(): void
     {

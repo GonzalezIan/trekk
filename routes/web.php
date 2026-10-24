@@ -6,6 +6,7 @@ use App\Http\Controllers\ControladorExcursiones;
 use App\Http\Controllers\controladorClientes;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ControladorReservas;
+use App\Http\Controllers\ControladorReportes;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -43,6 +44,33 @@ Route::middleware('auth')->group(function () {
         ->name('reservas.cancelar');
     Route::post('/reservas/{reserva}/cancelar', [ControladorReservas::class, 'ingresarMotivoCancelacion'])
         ->name('reservas.cancelar.confirmar');
+
+    // CU 14 - Registrar reserva (Cliente). Se invoca desde el CU 7, al elegir un paquete.
+    Route::get('/paquetes/{paquete}/reservar', [ControladorReservas::class, 'registrarReserva'])
+        ->whereNumber('paquete')
+        ->name('reservas.registrar');
+    Route::post('/paquetes/{paquete}/reservar', [ControladorReservas::class, 'ingresarCantidadParticipantes'])
+        ->whereNumber('paquete')
+        ->name('reservas.registrar.cantidad');
+    // Si la reserva en curso ya no existe, se descartó al vencer (*a, RF-17) o al cancelarse (17.1)
+    Route::prefix('/reservas/{reserva}/registro')->missing(
+        fn () => abort(410, ControladorReservas::MENSAJE_RESERVA_VENCIDA)
+    )->group(function () {
+        Route::post('/participantes', [ControladorReservas::class, 'ingresarDatosParticipantes'])
+            ->name('reservas.registrar.participantes');
+        // 12.1 - CU 25 Listar equipamientos, para el período de la salida
+        Route::get('/equipamiento', [ControladorReservas::class, 'listarEquipamientosParaReserva'])
+            ->name('reservas.registrar.equipamiento');
+        Route::post('/equipamiento', [ControladorReservas::class, 'agregarEquipamiento'])
+            ->name('reservas.registrar.equipamiento.agregar');
+        Route::post('/continuar', [ControladorReservas::class, 'continuar'])
+            ->name('reservas.registrar.continuar');
+        Route::post('/confirmar', [ControladorReservas::class, 'confirmarReserva'])
+            ->name('reservas.registrar.confirmar');
+        // 17.1 - El cliente cancela antes de efectuar el pago
+        Route::post('/cancelar', [ControladorReservas::class, 'cancelarRegistroReserva'])
+            ->name('reservas.registrar.cancelar');
+    });
 
     // CU 22 - Registrar pago de reserva (Cliente: reservas propias)
     Route::get('/reservas/{reserva}/pago', [ControladorReservas::class, 'registrarPagoReserva'])
@@ -115,10 +143,18 @@ Route::middleware('auth')->group(function () {
         Route::patch('/excursiones/{excursion}/baja', [ControladorExcursiones::class, 'darDeBajaExcursion'])
             ->whereNumber('excursion')
             ->name('excursiones.baja');
+
+        // CU 27 - Generar reporte periódico
+        Route::get('/admin/reportes', [ControladorReportes::class, 'mostrarPantallaReporte'])
+            ->name('admin.reportes.index');
+        Route::get('/admin/reportes/periodico', [ControladorReportes::class, 'generarReportePeriodico'])
+            ->name('admin.reportes.generar');
+        Route::get('/admin/reportes/periodico/exportar', [ControladorReportes::class, 'exportarReporte'])
+            ->name('admin.reportes.exportar');
     });
 });
 
-// ---------- Salidas Programadas (CU 8 y CU 9) ----------
+// ---------- Salidas Programadas (CU 8, CU 9 y CU 10) ----------
 Route::middleware('auth')->group(function () {
     // CU 9 - Listar Salidas Programadas (Cliente y Administrativo)
     Route::get('/salidas', [ControladorSalidas::class, 'listarSalidas'])
@@ -140,6 +176,20 @@ Route::middleware('auth')->group(function () {
             ->name('salidas.registrar.equipamiento');
         Route::post('/salidas', [ControladorSalidas::class, 'registrarSalida'])
             ->name('salidas.registrar.confirmar');
+
+        // CU 10 - Modificar Salida Programada
+        Route::get('/salidas/{salida}/modificar', [ControladorSalidas::class, 'mostrarFormularioModificacion'])
+            ->whereNumber('salida')
+            ->name('salidas.modificar');
+        Route::get('/salidas/{salida}/modificar/empleados', [ControladorSalidas::class, 'listarEmpleadosParaModificar'])
+            ->whereNumber('salida')
+            ->name('salidas.modificar.empleados');
+        Route::get('/salidas/{salida}/modificar/equipamiento', [ControladorSalidas::class, 'listarEquipamientoParaModificar'])
+            ->whereNumber('salida')
+            ->name('salidas.modificar.equipamiento');
+        Route::put('/salidas/{salida}', [ControladorSalidas::class, 'modificarSalida'])
+            ->whereNumber('salida')
+            ->name('salidas.actualizar');
     });
 });
 

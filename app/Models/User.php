@@ -21,6 +21,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'usuario',
         'email',
         'password',
         'rol',
@@ -49,6 +50,7 @@ class User extends Authenticatable
         return $this->rol === 'admin';
     }
 
+    /** Datos personales del usuario con rol cliente (CU 12). */
     public function cliente(): HasOne
     {
         return $this->hasOne(Cliente::class);

@@ -87,6 +87,7 @@ function TablaCliente({ paquetes }) {
                     <th className="px-4 py-3">Servicios incluidos</th>
                     <th className="px-4 py-3">Precio</th>
                     <th className="px-4 py-3">Lugares disponibles</th>
+                    <th className="px-4 py-3"></th>
                 </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -105,6 +106,19 @@ function TablaCliente({ paquetes }) {
                                 <div className="text-xs text-gray-500">
                                     Cupo {p.cupo_disponible} · Camas {p.camas_disponibles}
                                 </div>
+                            )}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                            {/* CU 14 - Registrar reserva para el paquete seleccionado */}
+                            {p.lugares_disponibles > 0 ? (
+                                <Link
+                                    href={route('reservas.registrar', p.id)}
+                                    className="inline-flex items-center rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-800/80"
+                                >
+                                    Reservar
+                                </Link>
+                            ) : (
+                                <span className="text-xs text-gray-500">Sin lugares</span>
                             )}
                         </td>
                     </tr>

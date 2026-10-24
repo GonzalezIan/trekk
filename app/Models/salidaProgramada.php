@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class SalidaProgramada extends Model
 {
@@ -166,6 +167,29 @@ class SalidaProgramada extends Model
         return $this->cupo_disponible;
     }
 
+    // ========== CU 14 - REGISTRAR RESERVA ==========
+
+    /** DS CU 14 paso 9: hayCupoDisponible(cantidad). */
+    public function hayCupoDisponible(int $cantidad): bool
+    {
+        return $this->cupo_disponible >= $cantidad;
+    }
+
+    /**
+     * DS CU 14 paso 11: retenerCupo(cantidad). RN-03: resta la cantidad del cupo disponible
+     * mientras la reserva está "En curso"; si vence, se devuelve con liberarCupo().
+     */
+    public function retenerCupo(int $cantidad): void
+    {
+        $this->update(['cupo_disponible' => $this->cupo_disponible - $cantidad]);
+    }
+
+    /** DS CU 14 paso 20: getExcursion(). */
+    public function getExcursion(): Excursion
+    {
+        return $this->excursion;
+    }
+
     // ========== CU 16 - CANCELAR RESERVA ==========
 
     /**
@@ -235,7 +259,7 @@ class SalidaProgramada extends Model
         [$fechaInicio, $fechaFin] = $this->getFechas();
 
         return $equipamientos
-            ->map(fn (Equipamiento $equipamiento) => $equipamiento->stockDisponible($fechaInicio, $fechaFin))
+            ->map(fn (Equipamiento $equipamiento) => $equipamiento->stockDisponible($fechaInicio, $fechaFin, $this->id))
             ->push($this->cupo_maximo)
             ->min();
     }
@@ -249,12 +273,14 @@ class SalidaProgramada extends Model
     /**
      * Salidas PROGRAMADAS cuyo período se superpone con [fechaInicio, fechaFin].
      * Las usan el CU 23 (empleados disponibles) y el CU 25 (stock disponible).
+     * CU 10: $idSalidaExcluida deja afuera a la salida que se está modificando.
      */
-    public function scopeSuperpuestasCon(Builder $consulta, string $fechaInicio, string $fechaFin): void
+    public function scopeSuperpuestasCon(Builder $consulta, string $fechaInicio, string $fechaFin, ?int $idSalidaExcluida = null): void
     {
         $consulta->where('salidas_programadas.estado', self::ESTADO_PROGRAMADA)
             ->whereDate('salidas_programadas.fecha_inicio', '<=', $fechaFin)
-            ->whereDate('salidas_programadas.fecha_fin', '>=', $fechaInicio);
+            ->whereDate('salidas_programadas.fecha_fin', '>=', $fechaInicio)
+            ->when($idSalidaExcluida, fn ($consulta) => $consulta->where('salidas_programadas.id', '!=', $idSalidaExcluida));
     }
 
     // ========== CU 5 - REGISTRAR PAQUETE ==========
@@ -302,6 +328,171 @@ class SalidaProgramada extends Model
 
             return ['idPaquete' => $paquete->id, 'precio' => (float) $paquete->precio_calculado];
         });
+    }
+
+    // ========== CU 10 - MODIFICAR SALIDA PROGRAMADA ==========
+
+    /** CU 10 - paso 2. Datos actuales de la salida para precargar el formulario. */
+    public function getDatosParaModificar(): array
+    {
+        $this->load(['excursion', 'empleados', 'equipoPrestado'])->loadCount('paquetes');
+
+        return [
+            ...$this->getDatos(),
+            'duracion' => $this->excursion->duracion,
+            'id_guia' => $this->idsDeEmpleados(self::ROL_GUIA)->first(),
+            'ids_asistentes' => $this->idsDeEmpleados(self::ROL_ASISTENTE),
+            'ids_equipamiento' => $this->equipoPrestado->pluck('id'),
+            'participantes_activos' => $this->cantidadParticipantesActivos(),
+        ];
+    }
+
+    /**
+     * DS CU 10: modificar(datosSalida, guia, asistentes, eqs): cupoMaximo, clientesNotificados.
+     * Pasos 5 a 12, todo o nada. Los datos ya vienen revalidados (paso 4).
+     * Si algo falla, lanza una ValidationException con el alternativo que corresponda.
+     */
+    public function modificar(array $datosSalida, Empleado $guia, Collection $asistentes, Collection $equipamientos): array
+    {
+        return DB::transaction(function () use ($datosSalida, $guia, $asistentes, $equipamientos) {
+            $idsEquipamientoAnterior = $this->equipoPrestado->pluck('id');
+            $cambioPersonal = $this->idsDeEmpleados(self::ROL_GUIA)->first() !== $guia->id
+                || $this->idsDeEmpleados(self::ROL_ASISTENTE)->sort()->values()->all()
+                    !== $asistentes->pluck('id')->sort()->values()->all();
+            $cambioEquipamiento = $idsEquipamientoAnterior->sort()->values()->all()
+                !== $equipamientos->pluck('id')->sort()->values()->all();
+            $ocupados = $this->cupo_maximo - $this->cupo_disponible;
+
+            $this->fill($datosSalida);
+            $cambioPeriodo = $this->isDirty(['fecha_inicio', 'fecha_fin']);
+
+            // Paso 5 (RN-04)
+            if ($cambioPeriodo) {
+                $this->verificarConvenios();
+            }
+            // Paso 6: solo los elementos que se agregan a la salida
+            $this->verificarStock($equipamientos->whereNotIn('id', $idsEquipamientoAnterior));
+            // Paso 7 (RN-02)
+            $this->cupo_maximo = $this->calcularCupoMaximo($equipamientos);
+            // Paso 8 (RN-03)
+            $this->verificarCupoMinimo();
+            // Paso 9: se conservan los lugares ya ocupados
+            $this->cupo_disponible = max(0, $this->cupo_maximo - $ocupados);
+            // Paso 12
+            $this->save();
+
+            $this->empleados()->sync([
+                $guia->id => ['rol' => self::ROL_GUIA],
+                ...$asistentes->mapWithKeys(fn (Empleado $asistente) =>
+                    [$asistente->id => ['rol' => self::ROL_ASISTENTE]])->all(),
+            ]);
+            $this->equipoPrestado()->sync($equipamientos->mapWithKeys(fn (Equipamiento $equipamiento) =>
+                [$equipamiento->id => ['cantidad' => $this->cupo_maximo]])->all());
+
+            // Paso 10 (RN-05)
+            $this->recalcularPreciosDePaquetes();
+
+            // *a (RN-06)
+            $clientesNotificados = $cambioPeriodo || $cambioPersonal || $cambioEquipamiento
+                ? $this->cantidadClientesConReservasActivas()
+                : 0;
+
+            return ['cupoMaximo' => $this->cupo_maximo, 'clientesNotificados' => $clientesNotificados];
+        });
+    }
+
+    /** CU 10 - paso 8. Participantes registrados en reservas activas de la salida. */
+    public function cantidadParticipantesActivos(): int
+    {
+        return Participante::whereHas('reserva', fn ($consulta) => $consulta
+            ->whereIn('estado', Paquete::ESTADOS_RESERVA_ACTIVA)
+            ->whereHas('paquete', fn ($consulta) => $consulta->where('salida_programada_id', $this->id)))
+            ->count();
+    }
+
+    /** CU 10 - 5.1. Los refugios de los paquetes con alojamiento deben cubrir el nuevo período. */
+    private function verificarConvenios(): void
+    {
+        $afectados = $this->paquetes()
+            ->where('estado', Paquete::ESTADO_DISPONIBLE)
+            ->whereNotNull('refugio_id')
+            ->with('refugio.convenios')
+            ->get()
+            ->reject(fn (Paquete $paquete) =>
+                $paquete->refugio->tieneConvenioQueCubre($this->fecha_inicio, $this->fecha_fin));
+
+        if ($afectados->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'fecha_inicio' => 'Los convenios de estos refugios no cubren el nuevo período: '
+                    . $afectados->map(fn (Paquete $paquete) =>
+                        "paquete “{$paquete->nombre}” (refugio {$paquete->refugio->nombre})")->join(', ') . '.',
+            ]);
+        }
+    }
+
+    /** CU 10 - 6.1. Cada elemento nuevo debe tener stock suficiente para el cupo ingresado. */
+    private function verificarStock(Collection $equipamientos): void
+    {
+        [$fechaInicio, $fechaFin] = $this->getFechas();
+
+        $sinStock = $equipamientos
+            ->map(fn (Equipamiento $equipamiento) => [
+                'nombre' => $equipamiento->nombre,
+                'stock' => $equipamiento->stockDisponible($fechaInicio, $fechaFin, $this->id),
+            ])
+            ->filter(fn (array $equipamiento) => $equipamiento['stock'] < $this->cupo_maximo);
+
+        if ($sinStock->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'ids_equipamiento' => 'El stock disponible no alcanza para el cupo máximo ingresado: '
+                    . $sinStock->map(fn (array $equipamiento) =>
+                        "{$equipamiento['nombre']} (stock disponible: {$equipamiento['stock']})")->join(', ') . '.',
+            ]);
+        }
+    }
+
+    /** CU 10 - 8.1. */
+    private function verificarCupoMinimo(): void
+    {
+        $participantes = $this->cantidadParticipantesActivos();
+
+        if ($this->cupo_maximo < $participantes) {
+            throw ValidationException::withMessages([
+                'cupo_maximo' => "El cupo no puede reducirse por debajo de la cantidad ya reservada ({$participantes} "
+                    . ($participantes === 1 ? 'participante' : 'participantes') . ').',
+            ]);
+        }
+    }
+
+    /** CU 10 - paso 10. Los paquetes disponibles toman el nuevo precio base y período. */
+    private function recalcularPreciosDePaquetes(): void
+    {
+        $this->paquetes()
+            ->where('estado', Paquete::ESTADO_DISPONIBLE)
+            ->with(['refugio.convenios', 'servicios'])
+            ->get()
+            ->each(function (Paquete $paquete) {
+                $paquete->setRelation('salidaProgramada', $this);
+                $paquete->update(['precio_calculado' => $paquete->calcularPrecio()]);
+            });
+    }
+
+    /** *a (RN-06). Clientes con reservas activas que reciben la notificación. */
+    private function cantidadClientesConReservasActivas(): int
+    {
+        return Reserva::whereIn('estado', Paquete::ESTADOS_RESERVA_ACTIVA)
+            ->whereHas('paquete', fn ($consulta) => $consulta->where('salida_programada_id', $this->id))
+            ->distinct()
+            ->count('cliente_id');
+    }
+
+    /** Ids de los empleados asignados con ese rol (GUIA / ASISTENTE). */
+    private function idsDeEmpleados(string $rol): Collection
+    {
+        return $this->empleados
+            ->filter(fn ($empleado) => $empleado->pivot->rol === $rol)
+            ->pluck('id')
+            ->values();
     }
 
     /** Fecha de inicio + hora de salida, en un solo momento. */

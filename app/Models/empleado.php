@@ -44,7 +44,7 @@ class Empleado extends Persona
      * DS CU 23 / DS CU 8: listarDisponibles(categoria, fechaInicio, fechaFin).
      * RN-01: solo empleados ACTIVOS. RN-02: sin otra salida superpuesta en el período.
      */
-    public static function listarDisponibles(string $categoria, string $fechaInicio, string $fechaFin): Collection
+    public static function listarDisponibles(string $categoria, string $fechaInicio, string $fechaFin, ?int $idSalidaExcluida = null): Collection
     {
         return self::query()
             ->where('categoria', $categoria)
@@ -52,16 +52,16 @@ class Empleado extends Persona
             ->orderBy('apellido')
             ->orderBy('nombre')
             ->get()
-            ->filter(fn (self $empleado) => $empleado->estaDisponible($fechaInicio, $fechaFin))
+            ->filter(fn (self $empleado) => $empleado->estaDisponible($fechaInicio, $fechaFin, $idSalidaExcluida))
             ->map(fn (self $empleado) => $empleado->getDatos())
             ->values();
     }
 
     /** DS CU 23: estaDisponible(fechaInicio, fechaFin). No tiene otra salida PROGRAMADA superpuesta. */
-    public function estaDisponible(string $fechaInicio, string $fechaFin): bool
+    public function estaDisponible(string $fechaInicio, string $fechaFin, ?int $idSalidaExcluida = null): bool
     {
         return ! $this->SalidasProgramadas()
-            ->superpuestasCon($fechaInicio, $fechaFin)
+            ->superpuestasCon($fechaInicio, $fechaFin, $idSalidaExcluida)
             ->exists();
     }
 
@@ -69,11 +69,11 @@ class Empleado extends Persona
      * CU 8 - paso 7: se vuelve a verificar al confirmar, por si el empleado
      * fue asignado a otra salida mientras se completaba el registro.
      */
-    public function esAsignable(string $categoria, string $fechaInicio, string $fechaFin): bool
+    public function esAsignable(string $categoria, string $fechaInicio, string $fechaFin, ?int $idSalidaExcluida = null): bool
     {
         return $this->categoria === $categoria
             && $this->estado === self::ESTADO_ACTIVO
-            && $this->estaDisponible($fechaInicio, $fechaFin);
+            && $this->estaDisponible($fechaInicio, $fechaFin, $idSalidaExcluida);
     }
 
     /** DS CU 8: buscar(idEmpleado) / buscar(idsEmpleados). */

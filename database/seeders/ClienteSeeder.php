@@ -14,6 +14,7 @@ class ClienteSeeder extends Seeder
         // 1. Cliente fijo de prueba (Juan)
         $user = User::create([
             'name' => 'Juan Pérez',
+            'usuario' => 'juan',
             'email' => 'juan@test.com',
             'password' => Hash::make('password123'),
             'rol' => 'cliente',

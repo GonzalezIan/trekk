@@ -56,6 +56,20 @@ class Refugio extends Model
         }
     }
 
+    /**
+     * CU 14 - 5.2 (RN-03). Retiene las camas para una reserva en curso, restándolas de
+     * las camas disponibles de los convenios que cubren el período de la salida.
+     * Si la reserva vence o se cancela, se devuelven con liberarCamas().
+     */
+    public function retenerCamas(DateTimeInterface $fechaInicio, DateTimeInterface $fechaFin, int $cantidad): void
+    {
+        foreach ($this->convenios as $convenio) {
+            if ($cantidad > 0 && $convenio->cubre($fechaInicio, $fechaFin)) {
+                $cantidad -= $convenio->retenerCamas($cantidad);
+            }
+        }
+    }
+
     // ========== CU 26 - LISTAR REFUGIOS (desde el CU 5) ==========
 
     /**
@@ -69,12 +83,34 @@ class Refugio extends Model
             ->orderBy('nombre')
             ->get()
             ->filter(fn (self $refugio) => $refugio->esAdmisible($fechaInicio, $fechaFin))
-            ->map(fn (self $refugio) => [
-                ...$refugio->only(['id', 'nombre', 'ubicacion']),
-                'precio_cama' => $refugio->getPrecioCama($fechaInicio, $fechaFin),
-                'camas_disponibles' => $refugio->getCamasDisponibles($fechaInicio, $fechaFin),
-            ])
+            ->map(fn (self $refugio) => $refugio->getDatos($fechaInicio, $fechaFin))
             ->values();
+    }
+
+    /**
+     * CU 26 - paso 3. Nombre, descripción, ubicación, camas totales, camas disponibles,
+     * precio por cama y período de vigencia del convenio que cubre el período.
+     */
+    public function getDatos(DateTimeInterface $fechaInicio, DateTimeInterface $fechaFin): array
+    {
+        $convenio = $this->convenioQueCubre($fechaInicio, $fechaFin);
+
+        return [
+            ...$this->only(['id', 'nombre', 'descripcion', 'ubicacion']),
+            'precio_cama' => $this->getPrecioCama($fechaInicio, $fechaFin),
+            'camas_totales' => $this->getCamasTotales($fechaInicio, $fechaFin),
+            'camas_disponibles' => $this->getCamasDisponibles($fechaInicio, $fechaFin),
+            'vigencia_desde' => $convenio?->fecha_inicio->format('Y-m-d'),
+            'vigencia_hasta' => $convenio?->fecha_fin->format('Y-m-d'),
+        ];
+    }
+
+    /** CU 26 - paso 3. Camas totales de los convenios vigentes durante todo el período. */
+    public function getCamasTotales(DateTimeInterface $fechaInicio, DateTimeInterface $fechaFin): int
+    {
+        return $this->convenios
+            ->filter(fn (Convenio $convenio) => $convenio->cubre($fechaInicio, $fechaFin))
+            ->sum('camas_totales');
     }
 
     /** DS CU 5: buscar(idRefugio). */
@@ -94,6 +130,12 @@ class Refugio extends Model
     public function getPrecioCama(DateTimeInterface $fechaInicio, DateTimeInterface $fechaFin): float
     {
         return (float) $this->convenioQueCubre($fechaInicio, $fechaFin)?->precio_cama;
+    }
+
+    /** CU 10 - paso 5. ¿Algún convenio del refugio cubre todo el período? */
+    public function tieneConvenioQueCubre(DateTimeInterface $fechaInicio, DateTimeInterface $fechaFin): bool
+    {
+        return $this->convenioQueCubre($fechaInicio, $fechaFin) !== null;
     }
 
     /** Si hay más de un convenio que cubre el período, se toma el que empezó primero. */

@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 
 class Reserva extends Model
 {
@@ -19,6 +22,7 @@ class Reserva extends Model
     protected $fillable = [
         'cliente_id',
         'paquete_id',
+        'cantidad_participantes',
         'fecha_hora_registro',
         'fecha_hora_vencimiento',
         'estado',
@@ -31,6 +35,7 @@ class Reserva extends Model
         'fecha_hora_registro' => 'datetime',
         'fecha_hora_vencimiento' => 'datetime',
         'importe_total' => 'decimal:2',
+        'cantidad_participantes' => 'integer',
         'estado' => 'string',
         'situacion_de_pago' => 'string',
     ];
@@ -337,5 +342,412 @@ class Reserva extends Model
     private function tienePagoDeSena(): bool
     {
         return $this->pagos()->where('tipo_pago', Pago::TIPO_SENA)->exists();
+    }
+
+    // ========== CU 14 - REGISTRAR RESERVA ==========
+
+    // RN-03: los cupos se retienen 20 minutos mientras la reserva está "En curso"
+    public const MINUTOS_RETENCION = 20;
+    // 19.1: con la seña, el saldo se abona dentro de las 24 horas
+    public const MINUTOS_PAGO_TOTAL = 24 * 60;
+
+    /**
+     * CU 14 - paso 4. Valida la cantidad de participantes y la devuelve.
+     *  4.1: tiene que ser un número entero mayor o igual a 1.
+     */
+    public static function validarCantidadParticipantes(array $datos): array
+    {
+        $cantidadInvalida = 'Ingresá una cantidad válida de participantes (al menos 1).';
+
+        return Validator::make($datos, [
+            'cantidad' => ['required', 'integer', 'min:1', 'max:1000'],
+        ], [
+            'cantidad.required' => $cantidadInvalida,
+            'cantidad.integer' => $cantidadInvalida,
+            'cantidad.min' => $cantidadInvalida,
+            'cantidad.max' => 'La cantidad ingresada supera el cupo de cualquier salida.',
+        ])->validate();
+    }
+
+    /**
+     * CU 14 - 12.1, paso 2. Valida los elementos y cantidades elegidos del catálogo.
+     * Una selección vacía equivale a continuar sin equipamiento.
+     */
+    public static function validarSeleccionEquipamiento(array $datos): array
+    {
+        return Validator::make($datos, [
+            'equipamientos' => ['present', 'array'],
+            'equipamientos.*.id' => ['required', 'integer', 'distinct', 'exists:equipamientos,id'],
+            'equipamientos.*.cantidad' => ['required', 'integer', 'min:1'],
+        ], [
+            'required' => 'Este campo es obligatorio.',
+            'equipamientos.*.id.exists' => 'El elemento seleccionado no existe.',
+            'equipamientos.*.id.distinct' => 'Hay elementos repetidos en la selección.',
+            'equipamientos.*.cantidad.integer' => 'La cantidad tiene que ser un número entero.',
+            'equipamientos.*.cantidad.min' => 'La cantidad tiene que ser al menos 1.',
+        ])->validate()['equipamientos'];
+    }
+
+    /**
+     * DS CU 14 paso 6: crearReserva(unCliente, unPaquete).
+     * Paso 5: la reserva arranca "En curso", con la cantidad de cupos retenidos y sin pagos.
+     * El importe se vuelve a calcular en el paso 13, con el equipamiento elegido.
+     */
+    public static function crearReserva(Cliente $cliente, Paquete $paquete, int $cantidadParticipantes): self
+    {
+        $reserva = new self([
+            'cliente_id' => $cliente->id,
+            'paquete_id' => $paquete->id,
+            'cantidad_participantes' => $cantidadParticipantes,
+            'fecha_hora_registro' => now(),
+            'estado' => self::ESTADO_EN_CURSO,
+            'situacion_de_pago' => self::PAGO_PENDIENTE_DE_PAGO_TOTAL,
+        ]);
+        $reserva->setRelation('paquete', $paquete);
+        $reserva->importe_total = $reserva->calcularImporteTotal();
+        $reserva->save();
+
+        return $reserva;
+    }
+
+    /** DS CU 14 paso 12: setFechaHoraVencimiento(minutos), a partir del momento actual. */
+    public function setFechaHoraVencimiento(int $minutos): void
+    {
+        $this->update(['fecha_hora_vencimiento' => now()->addMinutes($minutos)]);
+    }
+
+    /** DS CU 14 paso 30: temporizadorVigente(). Sin vencimiento, siempre está vigente. */
+    public function temporizadorVigente(): bool
+    {
+        return $this->fecha_hora_vencimiento === null || now()->lt($this->fecha_hora_vencimiento);
+    }
+
+    public function estaEnCurso(): bool
+    {
+        return $this->estado === self::ESTADO_EN_CURSO;
+    }
+
+    /**
+     * CU 14 - paso 8. Valida el formulario de participantes y devuelve los datos limpios.
+     *  8.1: todos los datos son obligatorios.
+     *  Uno por cada cupo retenido en el paso 5 y sin DNI repetidos.
+     */
+    public function validarDatosParticipantes(array $datos): array
+    {
+        $participantes = is_array($datos['participantes'] ?? null) ? $datos['participantes'] : [];
+
+        // El DNI se guarda solo con números, igual que el del cliente (CU 12)
+        foreach ($participantes as $i => $participante) {
+            if (is_array($participante) && isset($participante['dni'])) {
+                $participantes[$i]['dni'] = preg_replace('/\D/', '', (string) $participante['dni']);
+            }
+        }
+
+        return Validator::make(['participantes' => $participantes], [
+            'participantes' => ['required', 'array', 'size:'.$this->cantidad_participantes],
+            'participantes.*.dni' => ['required', 'digits_between:7,8', 'distinct'],
+            'participantes.*.nombre' => ['required', 'string', 'max:80'],
+            'participantes.*.apellido' => ['required', 'string', 'max:80'],
+            'participantes.*.fecha_nacimiento' => ['required', 'date_format:Y-m-d', 'before:today'],
+        ], [
+            'required' => 'Este campo es obligatorio.',
+            'participantes.required' => 'Cargá los datos de los participantes.',
+            'participantes.size' => 'Cargá los datos de los :size participantes.',
+            'participantes.*.dni.digits_between' => 'El DNI debe tener 7 u 8 números.',
+            'participantes.*.dni.distinct' => 'Hay participantes con el mismo DNI.',
+            'participantes.*.fecha_nacimiento.date_format' => 'La fecha ingresada no es válida.',
+            'participantes.*.fecha_nacimiento.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
+            'max' => 'No puede superar los :max caracteres.',
+        ])->validate()['participantes'];
+    }
+
+    /**
+     * DS CU 14 pasos 15 y 16: agregarParticipante(dni, nombre, apellido, fechaNacimiento)
+     *     -> «create» crearParticipante(...). La Reserva crea a sus participantes.
+     * Paso 10: si la excursión requiere certificado médico, el requisito arranca "Pendiente"
+     * (se cumple con los CU 17 y 19); si no, queda "No requerido".
+     */
+    public function agregarParticipante(string $dni, string $nombre, string $apellido, string $fechaNacimiento): Participante
+    {
+        return $this->participantes()->create([
+            'dni' => $dni,
+            'nombre' => trim($nombre),
+            'apellido' => trim($apellido),
+            'fecha_nacimiento' => $fechaNacimiento,
+            'estado_requisito_medico' => $this->getSalidaProgramada()->getExcursion()->requiere_certificado_medico
+                ? Participante::REQUISITO_PENDIENTE
+                : Participante::REQUISITO_NO_REQUERIDO,
+        ]);
+    }
+
+    /**
+     * Si el cliente vuelve al formulario y lo confirma otra vez, la nueva carga
+     * reemplaza a la anterior.
+     */
+    public function quitarParticipantes(): void
+    {
+        $this->participantes()->delete();
+    }
+
+    /**
+     * DS CU 14 paso 18: participantesValidos(). Paso 9.
+     *  9.1: si la excursión no acepta menores, todos tienen que ser mayores de edad.
+     *  9.2 (RN-02): al menos un participante mayor de 18 años.
+     * La edad se toma a la fecha de inicio de la salida.
+     * Si algo falla, lanza una ValidationException que señala a los participantes.
+     */
+    public function participantesValidos(): bool
+    {
+        $salida = $this->getSalidaProgramada();
+        $participantes = $this->participantes()->orderBy('id')->get();
+        $menores = $participantes->reject(
+            fn (Participante $participante) => $participante->esMayorDeEdadAl($salida->fecha_inicio));
+
+        if (! $salida->getExcursion()->acepta_menores && $menores->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'participantes' => 'La excursión no acepta menores de edad. Corregí los participantes señalados.',
+                ...$menores->mapWithKeys(fn (Participante $participante, int $i) => [
+                    "participantes.{$i}.fecha_nacimiento" => 'No cumple la edad mínima de la excursión ('
+                        .Participante::EDAD_ADULTO.' años).',
+                ])->all(),
+            ]);
+        }
+
+        if ($menores->count() === $participantes->count()) {
+            throw ValidationException::withMessages([
+                'participantes' => 'La reserva debe incluir al menos un participante mayor de edad (+'
+                    .Participante::EDAD_ADULTO.' años).',
+            ]);
+        }
+
+        return true;
+    }
+
+    /**
+     * DS CU 14 (12.1) pasos 5 y 6: agregarEquipamiento(unEquipamiento, cantidad)
+     *     -> «create» crear(reserva, unEquipamiento, cantidad) (EquipamientoAlquilado).
+     * La cantidad queda retenida para el período de la salida: stockDisponible() la descuenta
+     * mientras la reserva no se cancele, y se libera si vence (RN-04).
+     */
+    public function agregarEquipamiento(Equipamiento $equipamiento, int $cantidad): void
+    {
+        $this->equipos_alquilados()->attach($equipamiento->id, ['cantidad' => $cantidad]);
+    }
+
+    /**
+     * Si el cliente modifica la selección de equipamiento, la nueva reemplaza a la anterior
+     * (y libera lo que había retenido antes de verificar el stock de nuevo).
+     */
+    public function quitarEquipamientos(): void
+    {
+        $this->equipos_alquilados()->detach();
+    }
+
+    /**
+     * DS CU 14 paso 26: calcularImporteTotal(). RN-05:
+     *  (precio del paquete x cantidad de participantes) + Σ costos del equipamiento alquilado.
+     */
+    public function calcularImporteTotal(): float
+    {
+        return round(
+            (float) $this->paquete->precio_calculado * $this->cantidad_participantes
+                + $this->equipos_alquilados()->get()->sum(
+                    fn (Equipamiento $equipamiento) => (float) $equipamiento->precio_alquiler * $equipamiento->pivot->cantidad),
+            2,
+        );
+    }
+
+    /** CU 14 - paso 14. Detalle del importe total que se le muestra al cliente. */
+    public function detalleImporte(): array
+    {
+        return [
+            'precio_paquete' => (float) $this->paquete->precio_calculado,
+            'cantidad_participantes' => $this->cantidad_participantes,
+            'equipamiento' => $this->equipos_alquilados()->orderBy('nombre')->get()
+                ->map(fn (Equipamiento $equipamiento) => [
+                    'id' => $equipamiento->id,
+                    'nombre' => $equipamiento->nombre,
+                    'cantidad' => $equipamiento->pivot->cantidad,
+                    'subtotal' => round((float) $equipamiento->precio_alquiler * $equipamiento->pivot->cantidad, 2),
+                ])->values(),
+            'importe_total' => (float) $this->importe_total,
+        ];
+    }
+
+    /**
+     * DS CU 14 paso 32: confirmarRegistroReserva(). Se llama después del pago (CU 22),
+     * que ya actualizó la situación de pago (paso 18).
+     *  19.1: solo la seña -> la reserva vence a las 24 horas (el saldo lo controla el RF-17).
+     *  19.2: pago completo -> sin vencimiento.
+     *  20.1: queda "Pendiente". La 20.2 la resuelve confirmarSiCorresponde(), que el CU 22
+     *        llama a continuación: con el pago completo y ningún requisito médico pendiente,
+     *        la reserva queda "Confirmada".
+     * Paso 21: los cupos, camas y equipamiento retenidos quedan consolidados con la reserva.
+     */
+    public function confirmarRegistroReserva(): void
+    {
+        $this->update([
+            'estado' => self::ESTADO_PENDIENTE,
+            'fecha_hora_registro' => now(),
+            'fecha_hora_vencimiento' => null,
+        ]);
+
+        if ($this->situacion_de_pago === self::PAGO_PENDIENTE_DE_PAGO_TOTAL) {
+            $this->setFechaHoraVencimiento(self::MINUTOS_PAGO_TOTAL);
+        }
+    }
+
+    /**
+     * CU 14 - 17.1 / *a (RN-04): la reserva en curso vence o el cliente cancela antes de pagar.
+     * Libera los cupos retenidos de la salida y las camas del convenio (si el paquete tiene
+     * alojamiento), y descarta la reserva con sus participantes y el equipamiento retenido
+     * (rollback): nunca llegó a registrarse.
+     */
+    public function anularRegistro(): void
+    {
+        $this->liberarCuposYCamas($this->cantidad_participantes);
+
+        $this->delete();
+    }
+
+    /**
+     * Devuelve el cupo a la salida y, si el paquete tiene alojamiento, las camas al convenio
+     * que cubre el período. El equipamiento alquilado no se toca: stockDisponible() deja de
+     * contarlo cuando la reserva se cancela o se descarta.
+     */
+    public function liberarCuposYCamas(int $cantidad): void
+    {
+        $salida = $this->getSalidaProgramada();
+
+        $salida->liberarCupo($cantidad);
+        $this->paquete->refugio?->liberarCamas($salida->fecha_inicio, $salida->fecha_fin, $cantidad);
+    }
+
+    // ========== RF-17 - CANCELAR RESERVA AUTOMÁTICAMENTE ==========
+
+    public const MOTIVO_SALDO_NO_ABONADO =
+        'Cancelación automática: no se abonó el importe total dentro de las 24 horas posteriores al pago de la seña.';
+    public const MOTIVO_REQUISITO_MEDICO_PENDIENTE =
+        'Cancelación automática: al llegar la fecha límite de verificación de los certificados médicos, algún participante mantenía el requisito médico pendiente.';
+
+    /** RF-17 (CU 14, RN-04): reservas "En curso" que superaron su fecha y hora de vencimiento. */
+    public static function enCursoVencidas(): Collection
+    {
+        return self::query()
+            ->where('estado', self::ESTADO_EN_CURSO)
+            ->where('fecha_hora_vencimiento', '<=', now())
+            ->get();
+    }
+
+    /**
+     * RF-17: reservas "Pendiente" que pueden tener que cancelarse. Es un primer filtro;
+     * cada una se confirma con motivoCancelacionAutomatica().
+     *  - "Pendiente de pago total" con el vencimiento de la seña cumplido (CU 14, 19.1).
+     *  - Con algún requisito médico "Pendiente" y la salida a un día o menos.
+     */
+    public static function candidatasACancelacionAutomatica(): Collection
+    {
+        return self::query()
+            ->where('estado', self::ESTADO_PENDIENTE)
+            ->where(fn ($consulta) => $consulta
+                ->where(fn ($consulta) => $consulta
+                    ->where('situacion_de_pago', self::PAGO_PENDIENTE_DE_PAGO_TOTAL)
+                    ->where('fecha_hora_vencimiento', '<=', now()))
+                ->orWhere(fn ($consulta) => $consulta
+                    ->whereHas('participantes', fn ($consulta) => $consulta
+                        ->where('estado_requisito_medico', Participante::REQUISITO_PENDIENTE))
+                    ->whereHas('paquete.salidaProgramada', fn ($consulta) => $consulta
+                        ->whereDate('fecha_inicio', '<=', now()->addDay()->toDateString()))))
+            ->get();
+    }
+
+    /**
+     * RF-17: motivo por el que corresponde cancelar la reserva automáticamente, o null si no corresponde.
+     *  - No se abonó el importe total pasadas las 24 horas de la seña (vencimiento del CU 14, 19.1).
+     *  - Llegó la fecha límite de verificación del certificado médico (12 horas antes de la salida,
+     *    RN-02 del CU 19) y algún participante mantiene el requisito médico "Pendiente".
+     */
+    public function motivoCancelacionAutomatica(): ?string
+    {
+        if ($this->estado !== self::ESTADO_PENDIENTE) {
+            return null;
+        }
+
+        if ($this->situacion_de_pago === self::PAGO_PENDIENTE_DE_PAGO_TOTAL && ! $this->temporizadorVigente()) {
+            return self::MOTIVO_SALDO_NO_ABONADO;
+        }
+
+        $requisitoPendiente = $this->participantes()
+            ->where('estado_requisito_medico', Participante::REQUISITO_PENDIENTE)
+            ->exists();
+
+        if ($requisitoPendiente && ! $this->admiteVerificacionDeCertificados()) {
+            return self::MOTIVO_REQUISITO_MEDICO_PENDIENTE;
+        }
+
+        return null;
+    }
+
+    /**
+     * RF-17. La reserva pasa a "Cancelada" con el motivo, y se liberan el cupo de la salida y las
+     * camas del refugio (el equipamiento alquilado queda libre al cancelarse). No hay reembolso:
+     * los pagos quedan registrados.
+     */
+    public function cancelarAutomaticamente(string $motivo): void
+    {
+        $cantidadParticipantes = $this->participantes()->count();
+
+        $this->cancelar($motivo);
+        $this->liberarCuposYCamas($cantidadParticipantes);
+    }
+
+    // ========== CU 27 - GENERAR REPORTE PERIÓDICO ==========
+
+    /** Reservas realizadas (CU 27, RN-01). */
+    public function scopeRealizadas(Builder $query): Builder
+    {
+        return $query->where('estado', self::ESTADO_REALIZADA);
+    }
+
+    /**
+     * DS CU 27 paso 2: listarRealizadas(fechaInicio, fechaFin).
+     * RN-01: reservas "Realizada" cuya Salida Programada tiene fecha de fin dentro del período.
+     */
+    public static function listarRealizadas(Carbon|string $fechaInicio, Carbon|string $fechaFin): Collection
+    {
+        $inicio = Carbon::parse($fechaInicio)->toDateString();
+        $fin = Carbon::parse($fechaFin)->toDateString();
+
+        return self::query()
+            ->realizadas()
+            ->whereHas('paquete.salidaProgramada', fn (Builder $consulta) => $consulta
+                ->whereDate('fecha_fin', '>=', $inicio)
+                ->whereDate('fecha_fin', '<=', $fin))
+            ->with(['cliente', 'paquete.salidaProgramada.excursion', 'participantes', 'conformidad'])
+            ->get();
+    }
+
+    /** DS CU 27 paso 5: getCliente(). */
+    public function getCliente(): Cliente
+    {
+        return $this->cliente;
+    }
+
+    /** DS CU 27 pasos 8 y 13: getExcursion() (Reserva -> Paquete -> SalidaProgramada -> Excursion). */
+    public function getExcursion(): Excursion
+    {
+        return $this->getSalidaProgramada()->getExcursion();
+    }
+
+    /** DS CU 27 paso 10: getCantidadParticipantes(). */
+    public function getCantidadParticipantes(): int
+    {
+        return $this->participantes->count();
+    }
+
+    /** DS CU 27 paso 15: getConformidad(). Null si el cliente no registró su conformidad (CU 20). */
+    public function getConformidad(): ?Conformidad
+    {
+        return $this->conformidad;
     }
 }

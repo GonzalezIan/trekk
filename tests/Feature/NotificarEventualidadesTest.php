@@ -3,11 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Cliente;
+use App\Models\Equipamiento;
 use App\Models\Excursion;
 use App\Models\Pago;
 use App\Models\Paquete;
 use App\Models\Reserva;
 use App\Models\SalidaProgramada;
+use App\Models\User;
 use App\Notifications\NotificacionAlCliente;
 use App\Notifications\RecordatorioSalida;
 use App\Notifications\ReservaCancelada;
@@ -19,7 +21,8 @@ use Tests\TestCase;
 
 /**
  * Pruebas del RF Notificar eventualidades: recordatorio de salida y contenido de los correos.
- * Los avisos que disparan los CU 10, 16, 19 y 22 se prueban en los tests de cada CU.
+ * Los avisos que disparan los CU 10, 16, 19, 22 y el RF-17 se prueban en los tests de cada uno;
+ * los del CU 6, acá.
  * Correr con: php artisan test --filter=NotificarEventualidadesTest
  */
 class NotificarEventualidadesTest extends TestCase
@@ -135,6 +138,30 @@ class NotificarEventualidadesTest extends TestCase
         $this->assertStringContainsString('Botas de trekking y campera impermeable', $texto);
     }
 
+    public function test_el_recordatorio_informa_el_equipamiento_incluido_y_el_alquilado_que_ya_cubren_lo_obligatorio(): void
+    {
+        $bastones = Equipamiento::factory()->create(['nombre' => 'Bastones']);
+        $campera = Equipamiento::factory()->create(['nombre' => 'Campera impermeable']);
+        $this->salida->equipoPrestado()->attach($bastones->id, ['cantidad' => 10]);
+        $reserva = $this->reserva(Reserva::ESTADO_CONFIRMADA);
+        $reserva->agregarEquipamiento($campera, 2);
+
+        $texto = $this->texto(new RecordatorioSalida($reserva));
+
+        $this->assertStringContainsString('La empresa provee sin costo: Bastones.', $texto);
+        $this->assertStringContainsString('Alquilaste en tu reserva: Campera impermeable x2.', $texto);
+        $this->assertStringContainsString('que no esté cubierto por lo anterior tenés que llevarlo vos', $texto);
+    }
+
+    public function test_sin_equipamiento_incluido_ni_alquilado_todo_lo_obligatorio_queda_pendiente(): void
+    {
+        $texto = $this->texto(new RecordatorioSalida($this->reserva(Reserva::ESTADO_CONFIRMADA)));
+
+        $this->assertStringContainsString('Tenés que llevarlo vos', $texto);
+        $this->assertStringNotContainsString('provee sin costo', $texto);
+        $this->assertStringNotContainsString('Alquilaste', $texto);
+    }
+
     public function test_sin_punto_de_encuentro_ni_equipamiento_se_aclara_que_la_empresa_lo_confirmara(): void
     {
         $this->excursion->update(['punto_de_encuentro' => null, 'equipamiento_obligatorio' => null]);
@@ -143,6 +170,39 @@ class NotificarEventualidadesTest extends TestCase
 
         $this->assertStringContainsString('la empresa te lo va a confirmar', $texto);
         $this->assertStringNotContainsString('Equipamiento obligatorio', $texto);
+    }
+
+    // ---------- Cancelación del paquete (CU 6, que no tiene tests propios) ----------
+
+    public function test_al_cancelar_el_paquete_se_notifica_a_las_reservas_activas_con_reembolso_si_pagaron(): void
+    {
+        $pendiente = $this->reserva(Reserva::ESTADO_PENDIENTE);
+        $confirmada = $this->reserva(Reserva::ESTADO_CONFIRMADA);
+        $confirmada->update(['paquete_id' => $pendiente->paquete_id]);
+        $this->pago($confirmada, 500, 'USD');
+        $cancelada = $this->reserva(Reserva::ESTADO_CANCELADA);
+        $cancelada->update(['paquete_id' => $pendiente->paquete_id]);
+
+        $this->actingAs(User::factory()->create(['rol' => 'admin']))
+            ->post(route('paquetes.cancelar.confirmar', $pendiente->paquete_id), ['motivo_cancelacion' => 'Refugio cerrado'])
+            ->assertRedirect();
+
+        Notification::assertSentTo($pendiente->cliente->user, ReservaCancelada::class,
+            fn (ReservaCancelada $aviso) => $aviso->origen === ReservaCancelada::ORIGEN_PAQUETE);
+        Notification::assertSentTo($confirmada->cliente->user, ReservaCancelada::class,
+            fn (ReservaCancelada $aviso) => str_contains($this->texto($aviso), 'reembolso del 100%'));
+        Notification::assertNotSentTo($cancelada->cliente->user, ReservaCancelada::class);
+    }
+
+    public function test_al_cancelar_el_paquete_la_reserva_en_curso_no_es_activa_y_no_se_toca(): void
+    {
+        $enCurso = $this->reserva(Reserva::ESTADO_EN_CURSO);
+
+        $this->actingAs(User::factory()->create(['rol' => 'admin']))
+            ->post(route('paquetes.cancelar.confirmar', $enCurso->paquete_id), ['motivo_cancelacion' => 'Refugio cerrado']);
+
+        $this->assertSame(Reserva::ESTADO_EN_CURSO, $enCurso->fresh()->estado);
+        Notification::assertNothingSent();
     }
 
     public function test_el_recordatorio_esta_programado_una_vez_por_dia(): void

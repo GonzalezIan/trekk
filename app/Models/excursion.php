@@ -67,6 +67,15 @@ class Excursion extends Model
             ->values();
     }
 
+    /**
+     * DS CU 14 paso 22: getEquipamientoObligatorio(). Texto informativo que carga el
+     * administrativo (CU 1): no está vinculado al catálogo de alquiler.
+     */
+    public function getEquipamientoObligatorio(): ?string
+    {
+        return $this->equipamiento_obligatorio;
+    }
+
     // Estados y dificultades según el diagrama de clases
     public const ESTADO_ACTIVA = 'ACTIVA';
     public const ESTADO_INACTIVA = 'INACTIVA';

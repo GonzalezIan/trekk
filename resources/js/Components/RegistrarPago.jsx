@@ -46,7 +46,10 @@ export function PanelRegistrarPago({ reserva, onPagado }) {
             })
             .then((respuesta) =>
                 // Se vuelve a consultar el listado para ver la nueva situación de pago
-                router.reload({ only: ['reservas'], onFinish: () => onPagado(respuesta.data.mensaje) }),
+                router.reload({
+                    only: ['reservas'],
+                    onFinish: () => onPagado(respuesta.data.mensaje, respuesta.data),
+                }),
             )
             .catch((e) => {
                 setError(e.response?.data?.message || 'No se pudo registrar el pago.');
@@ -65,7 +68,7 @@ export function PanelRegistrarPago({ reserva, onPagado }) {
     const importeUsd = sena ? datos.importe_sena : datos.importe_pendiente;
     const tipo = sena
         ? 'Seña (50% del total)'
-        : reserva.situacion_de_pago === 'PENDIENTE_DE_PAGO_TOTAL'
+        : reserva.situacion_de_pago === 'PENDIENTE_DE_PAGO_TOTAL' && reserva.estado !== 'EN_CURSO'
           ? 'Saldo restante'
           : 'Importe total';
 

@@ -43,6 +43,18 @@ class Convenio extends Model
     }
 
     /**
+     * CU 14 - 5.2. Toma camas disponibles para una reserva, sin bajar de cero.
+     * Retorna cuántas pudo tomar.
+     */
+    public function retenerCamas(int $cantidad): int
+    {
+        $retenidas = min($cantidad, $this->camas_disponibles);
+        $this->update(['camas_disponibles' => $this->camas_disponibles - $retenidas]);
+
+        return $retenidas;
+    }
+
+    /**
      * CU 16 - 6.1. Devuelve camas comprometidas, sin superar las camas totales.
      * Retorna cuántas pudo devolver.
      */

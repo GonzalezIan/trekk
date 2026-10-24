@@ -195,15 +195,33 @@ class NotificarEventualidadesTest extends TestCase
         Notification::assertNotSentTo($cancelada->cliente->user, ReservaCancelada::class);
     }
 
-    public function test_al_cancelar_el_paquete_la_reserva_en_curso_no_es_activa_y_no_se_toca(): void
+    public function test_al_cancelar_el_paquete_la_reserva_en_curso_se_cancela_libera_sus_cupos_y_se_notifica(): void
+    {
+        $this->salida->update(['cupo_maximo' => 10, 'cupo_disponible' => 7]);
+        // Retiene 3 cupos y todavía no cargó los participantes (CU 14, RN-03)
+        $enCurso = $this->reserva(Reserva::ESTADO_EN_CURSO);
+        $enCurso->update(['cantidad_participantes' => 3]);
+
+        $this->actingAs(User::factory()->create(['rol' => 'admin']))
+            ->post(route('paquetes.cancelar.confirmar', $enCurso->paquete_id), ['motivo_cancelacion' => 'Refugio cerrado'])
+            ->assertRedirect(route('paquetes.listar', $this->salida->id));
+
+        $this->assertSame(Reserva::ESTADO_CANCELADA, $enCurso->fresh()->estado);
+        $this->assertSame(10, $this->salida->fresh()->cupo_disponible);
+        Notification::assertSentTo($enCurso->cliente->user, ReservaCancelada::class);
+    }
+
+    public function test_el_cliente_ya_no_puede_seguir_con_la_reserva_en_curso_del_paquete_cancelado(): void
     {
         $enCurso = $this->reserva(Reserva::ESTADO_EN_CURSO);
+        $enCurso->update(['fecha_hora_vencimiento' => now()->addMinutes(10)]);
 
         $this->actingAs(User::factory()->create(['rol' => 'admin']))
             ->post(route('paquetes.cancelar.confirmar', $enCurso->paquete_id), ['motivo_cancelacion' => 'Refugio cerrado']);
 
-        $this->assertSame(Reserva::ESTADO_EN_CURSO, $enCurso->fresh()->estado);
-        Notification::assertNothingSent();
+        $this->actingAs($enCurso->cliente->user)
+            ->postJson(route('reservas.registrar.continuar', $enCurso))
+            ->assertForbidden();
     }
 
     public function test_el_recordatorio_esta_programado_una_vez_por_dia(): void

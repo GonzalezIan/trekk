@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -55,5 +56,11 @@ class User extends Authenticatable
     public function esAdministrativo(): bool
     {
         return $this->rol === 'admin';
+    }
+
+    /** Datos personales del usuario con rol cliente (CU 12). */
+    public function cliente(): HasOne
+    {
+        return $this->hasOne(Cliente::class);
     }
 }

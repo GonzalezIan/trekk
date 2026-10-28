@@ -290,19 +290,62 @@ class ModificarSalidaProgramadaTest extends TestCase
         $this->assertSame('2026-11-15', $this->salida->fresh()->fecha_inicio->format('Y-m-d'));
     }
 
-    // ---------- Alternativo 6.1 y RN-02 ----------
-
-    public function test_el_equipamiento_nuevo_debe_tener_stock_para_el_cupo(): void
+    public function test_el_refugio_no_puede_quedar_en_dos_salidas_superpuestas(): void
     {
+        $refugio = Refugio::factory()->create(['nombre' => 'Refugio Frey']);
+        Convenio::create([
+            'refugio_id' => $refugio->id,
+            'nombre_convenio' => 'Temporada',
+            'fecha_inicio' => '2026-11-01',
+            'fecha_fin' => '2026-11-30',
+            'camas_totales' => 20,
+            'camas_disponibles' => 20,
+            'precio_cama' => 5000,
+        ]);
+        $this->paquete(['nombre' => 'Con refugio', 'refugio_id' => $refugio->id]);
+
+        // Otra salida del 25 al 27/11 ya tiene un paquete en el mismo refugio
+        $otraSalida = SalidaProgramada::factory()->create([
+            'excursion_id' => Excursion::factory()->create(['estado' => 'ACTIVA'])->id,
+            'fecha_inicio' => '2026-11-25',
+            'fecha_fin' => '2026-11-27',
+            'estado' => 'PROGRAMADA',
+        ]);
+        Paquete::factory()->create([
+            'salida_programada_id' => $otraSalida->id,
+            'refugio_id' => $refugio->id,
+            'estado' => 'DISPONIBLE',
+        ]);
+
+        $this->modificar(['fecha_inicio' => '2026-11-26', 'fecha_fin' => '2026-11-28'])
+            ->assertSessionHasErrors([
+                'fecha_inicio' => 'Estos refugios ya están asignados a otro paquete en el nuevo período: '
+                    . 'paquete “Con refugio” (refugio Refugio Frey).',
+            ]);
+        $this->assertSame('2026-11-10', $this->salida->fresh()->fecha_inicio->format('Y-m-d'));
+
+        // En fechas libres se acepta: sus propios paquetes no cuentan como solapados
+        $this->modificar(['fecha_inicio' => '2026-11-15', 'fecha_fin' => '2026-11-17'])
+            ->assertSessionHasNoErrors();
+    }
+
+    // ---------- Pasos 6 y 7 (RN-02, RF-10) ----------
+
+    public function test_el_cupo_se_ajusta_al_stock_del_equipamiento_nuevo(): void
+    {
+        // Igual que en el CU 8: no se rechaza, el cupo baja al stock disponible
         $bastones = Equipamiento::factory()->create(['nombre' => 'Bastones', 'stock' => 5]);
 
         $this->modificar(['ids_equipamiento' => [$this->carpa->id, $bastones->id]])
-            ->assertSessionHasErrors([
-                'ids_equipamiento' => 'El stock disponible no alcanza para el cupo máximo ingresado: '
-                    . 'Bastones (stock disponible: 5).',
-            ]);
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('exito', fn ($mensaje) => str_contains($mensaje, 'se ajustó al stock'));
 
-        $this->assertSame([$this->carpa->id], $this->salida->equipoPrestado()->pluck('equipamientos.id')->all());
+        $salida = $this->salida->fresh();
+        $this->assertSame(5, $salida->cupo_maximo);
+        $this->assertEqualsCanonicalizing(
+            [$this->carpa->id, $bastones->id],
+            $salida->equipoPrestado()->pluck('equipamientos.id')->all(),
+        );
     }
 
     public function test_el_cupo_se_ajusta_al_stock_del_equipamiento_ya_incluido(): void
@@ -340,6 +383,26 @@ class ModificarSalidaProgramadaTest extends TestCase
         $this->assertSame(10, $this->salida->fresh()->cupo_maximo);
 
         $this->modificar(['cupo_maximo' => 3])->assertSessionHasNoErrors();
+    }
+
+    public function test_las_reservas_en_curso_retienen_cupos(): void
+    {
+        // Un cliente está registrando una reserva de 3 (CU 14): todavía sin participantes cargados
+        $paquete = $this->paquete();
+        $this->reserva($paquete, 'PENDIENTE', 2);
+        Reserva::factory()->create([
+            'cliente_id' => Cliente::factory()->create()->id,
+            'paquete_id' => $paquete->id,
+            'estado' => 'EN_CURSO',
+            'cantidad_participantes' => 3,
+        ]);
+
+        $this->modificar(['cupo_maximo' => 4])
+            ->assertSessionHasErrors([
+                'cupo_maximo' => 'El cupo no puede reducirse por debajo de la cantidad ya reservada (5 participantes).',
+            ]);
+
+        $this->modificar(['cupo_maximo' => 5])->assertSessionHasNoErrors();
     }
 
     // ---------- *a (RN-06): notificación a clientes con reservas activas ----------

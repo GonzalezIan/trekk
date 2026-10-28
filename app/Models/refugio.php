@@ -146,13 +146,16 @@ class Refugio extends Model
             ->first(fn (Convenio $convenio) => $convenio->cubre($fechaInicio, $fechaFin));
     }
 
-    /** DS CU 5: tienePaqueteSolapado(fechaInicio, fechaFin). */
-    private function tienePaqueteSolapado(DateTimeInterface $fechaInicio, DateTimeInterface $fechaFin): bool
+    /**
+     * DS CU 5: tienePaqueteSolapado(fechaInicio, fechaFin).
+     * CU 10: $idSalidaExcluida deja afuera los paquetes de la salida que se está modificando.
+     */
+    public function tienePaqueteSolapado(DateTimeInterface $fechaInicio, DateTimeInterface $fechaFin, ?int $idSalidaExcluida = null): bool
     {
         return $this->paquetes()
             ->where('estado', Paquete::ESTADO_DISPONIBLE)
             ->whereHas('salidaProgramada', fn ($consulta) => $consulta->superpuestasCon(
-                $fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d')))
+                $fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d'), $idSalidaExcluida))
             ->exists();
     }
 }

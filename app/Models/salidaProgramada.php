@@ -223,6 +223,42 @@ class SalidaProgramada extends Model
             ->update(['estado' => Paquete::ESTADO_CANCELADO]);
     }
 
+    // ========== CU 11 - CANCELAR SALIDA PROGRAMADA ==========
+
+    // RN-02: las reservas activas y las "En curso", que retienen cupos y camas (igual que el CU 6)
+    private const ESTADOS_RESERVA_A_CANCELAR = [...Paquete::ESTADOS_RESERVA_ACTIVA, Reserva::ESTADO_EN_CURSO];
+
+    /**
+     * DS CU 11: cancelarEnCascada(motivo): reservas canceladas. Pasos 4 a 6, todo o nada.
+     *  - Las reservas pasan a "Cancelada" con el motivo y devuelven el cupo y las camas (RN-02, RN-03).
+     *  - La salida pasa a "Cancelada" y sus paquetes disponibles a "Cancelado" (cancelar(), CU 2).
+     *  - El equipamiento incluido y el alquilado se liberan solos: el stock disponible
+     *    solo cuenta salidas "Programada" (scopeSuperpuestasCon).
+     * Devuelve las reservas canceladas, para notificar a sus clientes (paso 7, RN-05).
+     */
+    public function cancelarEnCascada(string $motivo): Collection
+    {
+        return DB::transaction(function () use ($motivo) {
+            $reservas = Reserva::whereIn('estado', self::ESTADOS_RESERVA_A_CANCELAR)
+                ->whereHas('paquete', fn ($consulta) => $consulta->where('salida_programada_id', $this->id))
+                ->with(['paquete.refugio.convenios', 'cliente.user'])
+                ->withCount('participantes')
+                ->get();
+
+            $reservas->each(function (Reserva $reserva) use ($motivo) {
+                // Todas devuelven el cupo a esta misma instancia, así no se pisan entre paquetes
+                $reserva->paquete->setRelation('salidaProgramada', $this);
+                // Una "En curso" puede no tener todavía los participantes cargados
+                $reserva->liberarCuposYCamas(max($reserva->cantidad_participantes, $reserva->participantes_count));
+                $reserva->cancelar($motivo);
+            });
+
+            $this->cancelar($motivo);
+
+            return $reservas;
+        });
+    }
+
     // ========== CU 8 - REGISTRAR SALIDA PROGRAMADA ==========
 
     public const ROL_GUIA = 'GUIA';

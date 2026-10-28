@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
 import ParticipantesSalidaModal from '@/Components/ParticipantesSalidaModal';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -30,6 +31,22 @@ export default function Listar({
     // CU 11 - Cancelar Salida Programada
     const [cancelando, setCancelando] = useState(null);
     const [motivo, setMotivo] = useState('');
+    const [errorMotivo, setErrorMotivo] = useState(null); // alternativo 4.1
+    const [procesando, setProcesando] = useState(false);
+
+    const confirmarCancelacion = () => {
+        router.post(
+            route('salidas.cancelar', cancelando.id),
+            { motivo },
+            {
+                preserveScroll: true,
+                onStart: () => setProcesando(true),
+                onFinish: () => setProcesando(false),
+                onError: (errores) => setErrorMotivo(errores.motivo ?? null),
+                onSuccess: () => setCancelando(null),
+            },
+        );
+    };
 
     return (
         <AuthenticatedLayout
@@ -82,6 +99,7 @@ export default function Listar({
                             onCancelar={() => {
                                 setCancelando(salidaSeleccionada);
                                 setMotivo('');
+                                setErrorMotivo(null);
                             }}
                         />                    
                     )}
@@ -123,14 +141,17 @@ export default function Listar({
                         </h2>
                         <p className="mt-1 text-sm text-gray-600">
                             Indicá el motivo de la cancelación. Se cancelarán las
-                            reservas activas asociadas y se notificará a los clientes.
+                            reservas asociadas y se notificará a los clientes.
+                            Esta operación no se puede deshacer.
                         </p>
                         <textarea
                             value={motivo}
                             onChange={(e) => setMotivo(e.target.value)}
                             className="mt-4 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             rows={4}
+                            maxLength={1000}
                         />
+                        <InputError message={errorMotivo} className="mt-2" />
                         <div className="mt-4 flex justify-end gap-2">
                             <button
                                 type="button"
@@ -141,16 +162,11 @@ export default function Listar({
                             </button>
                             <button
                                 type="button"
-                                onClick={() => {
-                                    router.post(
-                                        route('salidas.cancelar', cancelando.id),
-                                        { motivo },
-                                        { preserveScroll: true, onSuccess: () => setCancelando(null) },
-                                    );
-                                }}
-                                className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-red-700"
+                                onClick={confirmarCancelacion}
+                                disabled={procesando}
+                                className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-red-700 disabled:opacity-50"
                             >
-                                Confirmar cancelación
+                                {procesando ? 'Cancelando…' : 'Confirmar cancelación'}
                             </button>
                         </div>
                     </div>

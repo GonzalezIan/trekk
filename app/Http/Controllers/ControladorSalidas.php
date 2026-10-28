@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Empleado;
 use App\Models\Equipamiento;
 use App\Models\Excursion;
+use App\Models\Reserva;
 use App\Models\SalidaProgramada;
+use App\Notifications\ReservaCancelada;
 use App\Services\Notificador;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -261,6 +263,43 @@ class ControladorSalidas extends Controller
         }
 
         return redirect()->route('salidas.listar')->with('exito', $mensaje);
+    }
+
+    // ========== CU 11 - CANCELAR SALIDA PROGRAMADA ==========
+
+    private const ERROR_SALIDA_NO_PROGRAMADA_CANCELAR =
+        'Solo pueden cancelarse Salidas Programadas en estado “Programada”.';
+
+    /** CU 11 - pasos 3 a 8. */
+    public function cancelar(Request $request, SalidaProgramada $salida, Notificador $notificador)
+    {
+        // RN-01
+        if (! $salida->estaProgramada()) {
+            return redirect()->route('salidas.listar')
+                ->with('error', self::ERROR_SALIDA_NO_PROGRAMADA_CANCELAR);
+        }
+
+        // 4.1
+        $datos = $request->validate([
+            'motivo' => ['required', 'string', 'min:3', 'max:1000'],
+        ], [
+            'motivo.required' => 'El motivo de la cancelación es obligatorio.',
+            'motivo.min' => 'El motivo debe tener al menos 3 caracteres.',
+            'motivo.max' => 'El motivo no puede superar los 1000 caracteres.',
+        ]);
+
+        $reservas = $salida->cancelarEnCascada(trim($datos['motivo']));
+
+        // Paso 7 (RN-04 y RN-05): motivo y, si hubo pagos, el reembolso a gestionar ante la empresa
+        $reservas->each(fn (Reserva $reserva) =>
+            $notificador->notificarCancelacion($reserva, ReservaCancelada::ORIGEN_SALIDA));
+
+        // Paso 8
+        $clientes = $reservas->pluck('cliente_id')->unique()->count();
+
+        return redirect()->route('salidas.listar')
+            ->with('exito', 'La Salida Programada fue cancelada correctamente.'
+                . ($clientes ? " Se notificó a {$clientes} " . ($clientes === 1 ? 'cliente.' : 'clientes.') : ''));
     }
 
     // ========== PROCESOS AUTOMÁTICOS (los dispara el scheduler, ver routes/console.php) ==========

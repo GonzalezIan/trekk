@@ -357,7 +357,6 @@ class SalidaProgramada extends Model
     {
         return DB::transaction(function () use ($datosSalida, $guia, $asistentes, $equipamientos) {
             $datosAnteriores = $this->datosNotificables();
-            $idsEquipamientoAnterior = $this->equipoPrestado->pluck('id');
             $ocupados = $this->cupo_maximo - $this->cupo_disponible;
 
             $this->fill($datosSalida);
@@ -366,10 +365,9 @@ class SalidaProgramada extends Model
             // Paso 5 (RN-04)
             if ($cambioPeriodo) {
                 $this->verificarConvenios();
+                $this->verificarRefugiosLibres();
             }
-            // Paso 6: solo los elementos que se agregan a la salida
-            $this->verificarStock($equipamientos->whereNotIn('id', $idsEquipamientoAnterior));
-            // Paso 7 (RN-02)
+            // Pasos 6 y 7 (RN-02, RF-10): como en el CU 8, el cupo se ajusta al stock de todo el equipamiento incluido
             $this->cupo_maximo = $this->calcularCupoMaximo($equipamientos);
             // Paso 8 (RN-03)
             $this->verificarCupoMinimo();
@@ -419,13 +417,20 @@ class SalidaProgramada extends Model
         ];
     }
 
-    /** CU 10 - paso 8. Participantes registrados en reservas activas de la salida. */
+    /**
+     * CU 10 - paso 8. Participantes registrados en reservas activas de la salida, más los cupos
+     * que retienen las reservas "En curso" (CU 14) mientras el cliente termina de registrarlas.
+     */
     public function cantidadParticipantesActivos(): int
     {
+        $retenidos = Reserva::where('estado', Reserva::ESTADO_EN_CURSO)
+            ->whereHas('paquete', fn ($consulta) => $consulta->where('salida_programada_id', $this->id))
+            ->sum('cantidad_participantes');
+
         return Participante::whereHas('reserva', fn ($consulta) => $consulta
             ->whereIn('estado', Paquete::ESTADOS_RESERVA_ACTIVA)
             ->whereHas('paquete', fn ($consulta) => $consulta->where('salida_programada_id', $this->id)))
-            ->count();
+            ->count() + (int) $retenidos;
     }
 
     /** CU 10 - 5.1. Los refugios de los paquetes con alojamiento deben cubrir el nuevo período. */
@@ -448,23 +453,22 @@ class SalidaProgramada extends Model
         }
     }
 
-    /** CU 10 - 6.1. Cada elemento nuevo debe tener stock suficiente para el cupo ingresado. */
-    private function verificarStock(Collection $equipamientos): void
+    /** CU 10 - paso 5. Como en el CU 5, el refugio no puede estar en otro paquete de una salida superpuesta. */
+    private function verificarRefugiosLibres(): void
     {
-        [$fechaInicio, $fechaFin] = $this->getFechas();
+        $afectados = $this->paquetes()
+            ->where('estado', Paquete::ESTADO_DISPONIBLE)
+            ->whereNotNull('refugio_id')
+            ->with('refugio')
+            ->get()
+            ->filter(fn (Paquete $paquete) =>
+                $paquete->refugio->tienePaqueteSolapado($this->fecha_inicio, $this->fecha_fin, $this->id));
 
-        $sinStock = $equipamientos
-            ->map(fn (Equipamiento $equipamiento) => [
-                'nombre' => $equipamiento->nombre,
-                'stock' => $equipamiento->stockDisponible($fechaInicio, $fechaFin, $this->id),
-            ])
-            ->filter(fn (array $equipamiento) => $equipamiento['stock'] < $this->cupo_maximo);
-
-        if ($sinStock->isNotEmpty()) {
+        if ($afectados->isNotEmpty()) {
             throw ValidationException::withMessages([
-                'ids_equipamiento' => 'El stock disponible no alcanza para el cupo máximo ingresado: '
-                    . $sinStock->map(fn (array $equipamiento) =>
-                        "{$equipamiento['nombre']} (stock disponible: {$equipamiento['stock']})")->join(', ') . '.',
+                'fecha_inicio' => 'Estos refugios ya están asignados a otro paquete en el nuevo período: '
+                    . $afectados->map(fn (Paquete $paquete) =>
+                        "paquete “{$paquete->nombre}” (refugio {$paquete->refugio->nombre})")->join(', ') . '.',
             ]);
         }
     }

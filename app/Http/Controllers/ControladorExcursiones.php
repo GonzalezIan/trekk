@@ -70,7 +70,7 @@ class ControladorExcursiones extends Controller
             'excursion' => $excursion->only([
                 'id', 'nombre', 'descripcion', 'recorrido', 'etapas', 'dificultad', 'duracion',
                 'experiencia_requerida', 'acepta_menores', 'equipamiento_obligatorio',
-                'requiere_certificado_medico',
+                'punto_de_encuentro', 'requiere_certificado_medico',
             ]),
             'dificultades' => Excursion::DIFICULTADES,
         ]);

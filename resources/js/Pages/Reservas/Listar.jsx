@@ -3,8 +3,9 @@ import { PanelRegistrarPago } from '@/Components/RegistrarPago';
 import EstadoBadge, { etiquetaEstado } from '@/Components/EstadoBadge';
 import ParticipantesReserva from '@/Components/ParticipantesReserva';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import RegistrarConformidadModal from '@/Components/RegistrarConformidadModal';
 import { Head } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 
 // CU 15 - Listar reservas, extendido por el CU 16 - Cancelar reserva
 
@@ -19,18 +20,88 @@ const formatFecha = (fecha) =>
         year: 'numeric',
     });
 
-export default function Listar({ reservas, esAdministrativo }) {
+export default function Listar({ reservas, esAdministrativo, notificacion_cancelacion }) {
+    const [mostrarPopUp, setMostrarPopUp] = useState(false);
+    const [reservaACalificar, setReservaACalificar] = useState(null);
+
+    useEffect(() => {
+        if (notificacion_cancelacion) {
+            // Buscamos en el navegador si ya vimos esta reserva
+            const vistas = JSON.parse(localStorage.getItem('notificaciones_vistas') || '[]');
+            
+            // Si el ID de esta reserva NO está en las vistas, mostramos el cartel
+            if (!vistas.includes(notificacion_cancelacion.id)) {
+                setMostrarPopUp(true);
+            }
+        }
+    }, [notificacion_cancelacion]);
+
+    // 3. Función al tocar "Entendido"
+    const cerrarPopUp = () => {
+        // Guardamos el ID en la lista de vistas
+        const vistas = JSON.parse(localStorage.getItem('notificaciones_vistas') || '[]');
+        vistas.push(notificacion_cancelacion.id);
+        localStorage.setItem('notificaciones_vistas', JSON.stringify(vistas));
+        
+        // Ocultamos el cartel
+        setMostrarPopUp(false);
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title={esAdministrativo ? 'Reservas' : 'Mis reservas'} />
+            {!esAdministrativo&&mostrarPopUp && (
+                <div className="fixed bottom-6 right-6 z-50 max-w-md w-full bg-white shadow-2xl rounded-xl border-l-4 border-red-500 overflow-hidden">
+                    <div className="p-5">
+                        <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                                <span className="text-3xl">⚠️</span>
+                            </div>
+                            <div className="ml-3 w-full">
+                                <h3 className="text-lg font-bold text-gray-900">
+                                    Reserva Cancelada
+                                </h3>
+                                <div className="mt-2 text-sm text-gray-600">
+                                    <p className="mb-2">
+                                        Tu reserva <strong>R-{String(notificacion_cancelacion.id).padStart(4, '0')}</strong> ha sido cancelada por la administración.
+                                    </p>
+                                    <p className="mb-3 p-2 bg-red-50 text-red-700 rounded text-xs">
+                                        <strong>Motivo:</strong> {notificacion_cancelacion.motivo_cancelacion}
+                                    </p>
+                                    <p className="font-semibold text-gray-800">Contactate para gestionar tu reembolso:</p>
+                                    <ul className="list-disc pl-4 mt-1 space-y-1">
+                                        <li>📧 recepcion@trekk.com</li>
+                                        <li>📞 +54 297 1234567</li>
+                                        <li>📍 Acercate a nuestras oficinas.</li>
+                                    </ul>
+                                </div>
+                                {/* 👇 ACÁ LLAMAMOS A LA FUNCIÓN DE CERRAR 👇 */}
+                                <button 
+                                    onClick={cerrarPopUp}
+                                    className="mt-4 w-full bg-gray-900 text-white text-sm font-medium py-2 rounded hover:bg-gray-800 transition"
+                                >
+                                    Entendido
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <main className="mx-auto max-w-5xl px-4 py-12">
                 {esAdministrativo ? (
                     <ReservasAdministrativo reservas={reservas} />
                 ) : (
-                    <ReservasCliente reservas={reservas} />
+                    <ReservasCliente reservas={reservas}
+                    onCalificar={setReservaACalificar}/>
                 )}
             </main>
+            {reservaACalificar && (
+                <RegistrarConformidadModal
+                    reserva={reservaACalificar}
+                    onCerrar={() => setReservaACalificar(null)}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }
@@ -85,7 +156,7 @@ function BotonAccion({ children, cu }) {
 
 // ---------- Vista del Cliente (3.1) ----------
 
-function ReservasCliente({ reservas }) {
+function ReservasCliente({ reservas,onCalificar }) {
     const [aviso, setAviso] = useState('');
 
     return (
@@ -105,7 +176,12 @@ function ReservasCliente({ reservas }) {
             ) : (
                 <div className="flex flex-col gap-4">
                     {reservas.map((r) => (
-                        <TarjetaReserva key={r.id} reserva={r} onAviso={setAviso} />
+                        <TarjetaReserva 
+                            key={r.id} 
+                            reserva={r} 
+                            onAviso={setAviso} 
+                            onCalificar={onCalificar} // 👈 ACÁ LE PASAMOS LA FUNCIÓN
+                        />
                     ))}
                 </div>
             )}
@@ -113,7 +189,7 @@ function ReservasCliente({ reservas }) {
     );
 }
 
-function TarjetaReserva({ reserva: r, onAviso }) {
+function TarjetaReserva({ reserva: r, onAviso,onCalificar }) {
     // Panel desplegado debajo de la tarjeta: null | 'participantes' | 'cancelar' | 'pagar'
     const [panel, setPanel] = useState(null);
 
@@ -171,7 +247,13 @@ function TarjetaReserva({ reserva: r, onAviso }) {
                     </button>
                 )}
                 {r.estado === 'REALIZADA' && !r.tiene_conformidad && (
-                    <BotonAccion cu="CU 20">Registrar conformidad</BotonAccion>
+                <button
+                    type="button"
+                    onClick={() => onCalificar(r)} // 👈 Le pasamos la reserva
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                >
+                    ⭐ Registrar conformidad
+                </button>
                 )}
                 {/* CU 16 - Cancelar reserva (solo "Pendiente" o "Confirmada", lo decide el servidor) */}
                 {r.se_puede_cancelar && (

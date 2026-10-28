@@ -115,6 +115,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/reservas/{reserva}/conformidad', [ControladorReservas::class, 'solicitarConformidad'])->name('reservas.conformidad');
+    Route::post('/reservas/{reserva}/conformidad', [ControladorReservas::class, 'guardarConformidad'])->name('reservas.conformidad.guardar');
 });
 
 // ---------- Excursiones (CU 1 y CU 4) ----------
@@ -190,6 +192,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/salidas/{salida}', [ControladorSalidas::class, 'modificarSalida'])
             ->whereNumber('salida')
             ->name('salidas.actualizar');
+
+        // CU 11 - Cancelar Salida Programada (solo Administrativo)
+        Route::post('/salidas/{salida}/cancelar', [ControladorSalidas::class, 'cancelar'])
+            ->whereNumber('salida')
+            ->name('salidas.cancelar');
     });
 });
 
@@ -215,6 +222,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/salidas/{idSalida}/paquetes', [ControladorPaquetes::class, 'registrarPaquete'])
             ->whereNumber('idSalida')
             ->name('paquetes.registrar.confirmar');
+            // CU - Cancelar Paquete (solo Administrativo)
+        
+    Route::middleware('administrativo')->group(function () {
+        Route::get('/paquetes/{idPaquete}/cancelar', [ControladorPaquetes::class, 'solicitarCancelacion'])
+            ->name('paquetes.cancelar');
+        Route::post('/paquetes/{idPaquete}/cancelar', [ControladorPaquetes::class, 'confirmarCancelacion'])
+            ->name('paquetes.cancelar.confirmar');
+    });
     });
 });
 

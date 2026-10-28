@@ -13,8 +13,10 @@ use App\Models\Participante;
 use App\Models\Refugio;
 use App\Models\Reserva;
 use App\Models\SalidaProgramada;
+use App\Notifications\ReservaCancelada;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 /**
@@ -261,6 +263,31 @@ class CancelarReservaAutomaticamenteTest extends TestCase
         $this->correrProceso();
 
         $this->assertSame(7, $this->salida->fresh()->cupo_disponible);
+    }
+
+    // ---------- RF Notificar eventualidades ----------
+
+    public function test_se_notifica_al_cliente_la_cancelacion_con_el_motivo(): void
+    {
+        Notification::fake();
+        $reserva = $this->reserva(vencimiento: now()->subMinute());
+
+        $this->correrProceso();
+
+        Notification::assertSentTo($this->cliente->user, ReservaCancelada::class,
+            fn (ReservaCancelada $aviso) => $aviso->reserva->is($reserva)
+                && $aviso->origen === ReservaCancelada::ORIGEN_RESERVA
+                && $aviso->reserva->motivo_cancelacion === Reserva::MOTIVO_SALDO_NO_ABONADO);
+    }
+
+    public function test_la_reserva_en_curso_descartada_no_se_notifica(): void
+    {
+        Notification::fake();
+        $this->reserva(Reserva::ESTADO_EN_CURSO, vencimiento: now()->subMinute());
+
+        $this->correrProceso();
+
+        Notification::assertNothingSent();
     }
 
     public function test_el_proceso_esta_programado_cada_minuto(): void

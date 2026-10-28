@@ -44,6 +44,7 @@ export default function Modificar({ excursion, dificultades }) {
         experiencia_requerida: excursion.experiencia_requerida,
         acepta_menores: excursion.acepta_menores,
         equipamiento_obligatorio: excursion.equipamiento_obligatorio ?? '',
+        punto_de_encuentro: excursion.punto_de_encuentro ?? '',
         requiere_certificado_medico: excursion.requiere_certificado_medico,
     });
 
@@ -207,6 +208,29 @@ export default function Modificar({ excursion, dificultades }) {
                             />
                             <InputError
                                 message={errors.equipamiento_obligatorio}
+                                className="mt-2"
+                            />
+                        </div>
+
+                        <div>
+                            <InputLabel
+                                htmlFor="punto_de_encuentro"
+                                value="Punto de encuentro (opcional)"
+                            />
+                            <TextInput
+                                id="punto_de_encuentro"
+                                className="mt-1 block w-full"
+                                placeholder="Ej.: Terminal de ómnibus de El Chaltén, andén 3"
+                                value={data.punto_de_encuentro}
+                                onChange={(e) =>
+                                    setData('punto_de_encuentro', e.target.value)
+                                }
+                            />
+                            <p className="mt-1 text-xs text-gray-500">
+                                Se informa a los clientes en el recordatorio de la salida.
+                            </p>
+                            <InputError
+                                message={errors.punto_de_encuentro}
                                 className="mt-2"
                             />
                         </div>

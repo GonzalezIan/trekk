@@ -223,6 +223,42 @@ class SalidaProgramada extends Model
             ->update(['estado' => Paquete::ESTADO_CANCELADO]);
     }
 
+    // ========== CU 11 - CANCELAR SALIDA PROGRAMADA ==========
+
+    // RN-02: las reservas activas y las "En curso", que retienen cupos y camas (igual que el CU 6)
+    private const ESTADOS_RESERVA_A_CANCELAR = [...Paquete::ESTADOS_RESERVA_ACTIVA, Reserva::ESTADO_EN_CURSO];
+
+    /**
+     * DS CU 11: cancelarEnCascada(motivo): reservas canceladas. Pasos 4 a 6, todo o nada.
+     *  - Las reservas pasan a "Cancelada" con el motivo y devuelven el cupo y las camas (RN-02, RN-03).
+     *  - La salida pasa a "Cancelada" y sus paquetes disponibles a "Cancelado" (cancelar(), CU 2).
+     *  - El equipamiento incluido y el alquilado se liberan solos: el stock disponible
+     *    solo cuenta salidas "Programada" (scopeSuperpuestasCon).
+     * Devuelve las reservas canceladas, para notificar a sus clientes (paso 7, RN-05).
+     */
+    public function cancelarEnCascada(string $motivo): Collection
+    {
+        return DB::transaction(function () use ($motivo) {
+            $reservas = Reserva::whereIn('estado', self::ESTADOS_RESERVA_A_CANCELAR)
+                ->whereHas('paquete', fn ($consulta) => $consulta->where('salida_programada_id', $this->id))
+                ->with(['paquete.refugio.convenios', 'cliente.user'])
+                ->withCount('participantes')
+                ->get();
+
+            $reservas->each(function (Reserva $reserva) use ($motivo) {
+                // Todas devuelven el cupo a esta misma instancia, así no se pisan entre paquetes
+                $reserva->paquete->setRelation('salidaProgramada', $this);
+                // Una "En curso" puede no tener todavía los participantes cargados
+                $reserva->liberarCuposYCamas(max($reserva->cantidad_participantes, $reserva->participantes_count));
+                $reserva->cancelar($motivo);
+            });
+
+            $this->cancelar($motivo);
+
+            return $reservas;
+        });
+    }
+
     // ========== CU 8 - REGISTRAR SALIDA PROGRAMADA ==========
 
     public const ROL_GUIA = 'GUIA';
@@ -348,19 +384,15 @@ class SalidaProgramada extends Model
     }
 
     /**
-     * DS CU 10: modificar(datosSalida, guia, asistentes, eqs): cupoMaximo, clientesNotificados.
+     * DS CU 10: modificar(datosSalida, guia, asistentes, eqs): cupoMaximo, cambios.
      * Pasos 5 a 12, todo o nada. Los datos ya vienen revalidados (paso 4).
      * Si algo falla, lanza una ValidationException con el alternativo que corresponda.
+     * "cambios" son los datos que se notifican a los clientes (RN-08), con su valor anterior y el nuevo.
      */
     public function modificar(array $datosSalida, Empleado $guia, Collection $asistentes, Collection $equipamientos): array
     {
         return DB::transaction(function () use ($datosSalida, $guia, $asistentes, $equipamientos) {
-            $idsEquipamientoAnterior = $this->equipoPrestado->pluck('id');
-            $cambioPersonal = $this->idsDeEmpleados(self::ROL_GUIA)->first() !== $guia->id
-                || $this->idsDeEmpleados(self::ROL_ASISTENTE)->sort()->values()->all()
-                    !== $asistentes->pluck('id')->sort()->values()->all();
-            $cambioEquipamiento = $idsEquipamientoAnterior->sort()->values()->all()
-                !== $equipamientos->pluck('id')->sort()->values()->all();
+            $datosAnteriores = $this->datosNotificables();
             $ocupados = $this->cupo_maximo - $this->cupo_disponible;
 
             $this->fill($datosSalida);
@@ -369,10 +401,9 @@ class SalidaProgramada extends Model
             // Paso 5 (RN-04)
             if ($cambioPeriodo) {
                 $this->verificarConvenios();
+                $this->verificarRefugiosLibres();
             }
-            // Paso 6: solo los elementos que se agregan a la salida
-            $this->verificarStock($equipamientos->whereNotIn('id', $idsEquipamientoAnterior));
-            // Paso 7 (RN-02)
+            // Pasos 6 y 7 (RN-02, RF-10): como en el CU 8, el cupo se ajusta al stock de todo el equipamiento incluido
             $this->cupo_maximo = $this->calcularCupoMaximo($equipamientos);
             // Paso 8 (RN-03)
             $this->verificarCupoMinimo();
@@ -392,22 +423,50 @@ class SalidaProgramada extends Model
             // Paso 10 (RN-05)
             $this->recalcularPreciosDePaquetes();
 
-            // *a (RN-06)
-            $clientesNotificados = $cambioPeriodo || $cambioPersonal || $cambioEquipamiento
-                ? $this->cantidadClientesConReservasActivas()
-                : 0;
+            // *a (RN-06 / RN-08): qué cambió de lo que se notifica
+            $this->unsetRelation('empleados')->unsetRelation('equipoPrestado');
+            $datosNuevos = $this->datosNotificables();
+            $cambios = collect($datosNuevos)
+                ->filter(fn (string $valor, string $dato) => $valor !== $datosAnteriores[$dato])
+                ->map(fn (string $valor, string $dato) =>
+                    ['dato' => $dato, 'anterior' => $datosAnteriores[$dato], 'nuevo' => $valor])
+                ->values()
+                ->all();
 
-            return ['cupoMaximo' => $this->cupo_maximo, 'clientesNotificados' => $clientesNotificados];
+            return ['cupoMaximo' => $this->cupo_maximo, 'cambios' => $cambios];
         });
     }
 
-    /** CU 10 - paso 8. Participantes registrados en reservas activas de la salida. */
+    /**
+     * RN-08 del CU 10: período, hora de salida, personal asignado y equipamiento incluido,
+     * como se le muestran al cliente. El cupo y el precio no se notifican.
+     */
+    private function datosNotificables(): array
+    {
+        return [
+            'Fecha de inicio' => $this->fecha_inicio->format('d/m/Y'),
+            'Fecha de fin' => $this->fecha_fin->format('d/m/Y'),
+            'Hora de salida' => $this->hora_de_salida->format('H:i') . ' hs',
+            'Guía responsable' => $this->nombresDeEmpleados(self::ROL_GUIA)->first() ?? 'Sin asignar',
+            'Asistentes' => $this->nombresDeEmpleados(self::ROL_ASISTENTE)->sort()->join(', ') ?: 'Sin asistentes',
+            'Equipamiento incluido' => $this->equipoPrestado->pluck('nombre')->sort()->join(', ') ?: 'Sin equipamiento',
+        ];
+    }
+
+    /**
+     * CU 10 - paso 8. Participantes registrados en reservas activas de la salida, más los cupos
+     * que retienen las reservas "En curso" (CU 14) mientras el cliente termina de registrarlas.
+     */
     public function cantidadParticipantesActivos(): int
     {
+        $retenidos = Reserva::where('estado', Reserva::ESTADO_EN_CURSO)
+            ->whereHas('paquete', fn ($consulta) => $consulta->where('salida_programada_id', $this->id))
+            ->sum('cantidad_participantes');
+
         return Participante::whereHas('reserva', fn ($consulta) => $consulta
             ->whereIn('estado', Paquete::ESTADOS_RESERVA_ACTIVA)
             ->whereHas('paquete', fn ($consulta) => $consulta->where('salida_programada_id', $this->id)))
-            ->count();
+            ->count() + (int) $retenidos;
     }
 
     /** CU 10 - 5.1. Los refugios de los paquetes con alojamiento deben cubrir el nuevo período. */
@@ -430,23 +489,22 @@ class SalidaProgramada extends Model
         }
     }
 
-    /** CU 10 - 6.1. Cada elemento nuevo debe tener stock suficiente para el cupo ingresado. */
-    private function verificarStock(Collection $equipamientos): void
+    /** CU 10 - paso 5. Como en el CU 5, el refugio no puede estar en otro paquete de una salida superpuesta. */
+    private function verificarRefugiosLibres(): void
     {
-        [$fechaInicio, $fechaFin] = $this->getFechas();
+        $afectados = $this->paquetes()
+            ->where('estado', Paquete::ESTADO_DISPONIBLE)
+            ->whereNotNull('refugio_id')
+            ->with('refugio')
+            ->get()
+            ->filter(fn (Paquete $paquete) =>
+                $paquete->refugio->tienePaqueteSolapado($this->fecha_inicio, $this->fecha_fin, $this->id));
 
-        $sinStock = $equipamientos
-            ->map(fn (Equipamiento $equipamiento) => [
-                'nombre' => $equipamiento->nombre,
-                'stock' => $equipamiento->stockDisponible($fechaInicio, $fechaFin, $this->id),
-            ])
-            ->filter(fn (array $equipamiento) => $equipamiento['stock'] < $this->cupo_maximo);
-
-        if ($sinStock->isNotEmpty()) {
+        if ($afectados->isNotEmpty()) {
             throw ValidationException::withMessages([
-                'ids_equipamiento' => 'El stock disponible no alcanza para el cupo máximo ingresado: '
-                    . $sinStock->map(fn (array $equipamiento) =>
-                        "{$equipamiento['nombre']} (stock disponible: {$equipamiento['stock']})")->join(', ') . '.',
+                'fecha_inicio' => 'Estos refugios ya están asignados a otro paquete en el nuevo período: '
+                    . $afectados->map(fn (Paquete $paquete) =>
+                        "paquete “{$paquete->nombre}” (refugio {$paquete->refugio->nombre})")->join(', ') . '.',
             ]);
         }
     }
@@ -477,13 +535,13 @@ class SalidaProgramada extends Model
             });
     }
 
-    /** *a (RN-06). Clientes con reservas activas que reciben la notificación. */
-    private function cantidadClientesConReservasActivas(): int
+    /** *a (RN-06) y RF Notificar eventualidades. Reservas activas de la salida, a las que se notifica. */
+    public function reservasActivas(): Collection
     {
         return Reserva::whereIn('estado', Paquete::ESTADOS_RESERVA_ACTIVA)
             ->whereHas('paquete', fn ($consulta) => $consulta->where('salida_programada_id', $this->id))
-            ->distinct()
-            ->count('cliente_id');
+            ->with(['cliente.user', 'paquete.salidaProgramada.excursion'])
+            ->get();
     }
 
     /** Ids de los empleados asignados con ese rol (GUIA / ASISTENTE). */
@@ -499,6 +557,74 @@ class SalidaProgramada extends Model
     private function momentoDeSalida(): Carbon
     {
         return $this->fecha_inicio->copy()->setTimeFrom($this->hora_de_salida);
+    }
+
+    // ========== RF FINALIZAR SALIDA PROGRAMADA ==========
+
+    public const ESTADO_FINALIZADA = 'FINALIZADA';
+    /** Salidas "Programada" cuya fecha de fin ya transcurrió. */
+    public static function listarParaFinalizar(): Collection
+    {
+        return self::where('estado', self::ESTADO_PROGRAMADA)
+            ->whereDate('fecha_fin', '<', now()->toDateString())
+            ->orderBy('fecha_fin')
+            ->get();
+    }
+
+    /**
+     * DS RF Finalizar: finalizar(). Todo o nada; si la salida ya no está "Programada" no hace nada.
+     *  - La salida pasa a "Finalizada" y sus reservas "Confirmada" a "Realizada" (habilita el CU 20).
+     *  - Se liberan las camas de los convenios reservadas por las reservas activas.
+     *  - El equipamiento incluido y el de alquiler se liberan solos: su stock disponible
+     *    se calcula solo con salidas "Programada" (scopeSuperpuestasCon).
+     */
+    public function finalizar(): void
+    {
+        DB::transaction(function () {
+            $salida = self::lockForUpdate()->findOrFail($this->id);
+            if (! $salida->estaProgramada()) {
+                return;
+            }
+
+            $activas = Reserva::whereHas('paquete', fn ($consulta) => $consulta->where('salida_programada_id', $salida->id))
+                ->whereIn('estado', Paquete::ESTADOS_RESERVA_ACTIVA)
+                ->with('paquete.refugio.convenios')
+                ->withCount('participantes')
+                ->get();
+
+            $salida->liberarCamas($activas);
+
+            $activas->where('estado', Reserva::ESTADO_CONFIRMADA)
+                ->each(fn (Reserva $reserva) => $reserva->marcarRealizada());
+
+            $salida->update(['estado' => self::ESTADO_FINALIZADA]);
+            $this->setRawAttributes($salida->getAttributes(), true);
+        });
+    }
+
+    /** Devuelve a los convenios las camas que ocupaban las reservas, agrupadas por paquete con refugio. */
+    private function liberarCamas(Collection $reservas): void
+    {
+        $reservas->filter(fn (Reserva $reserva) => $reserva->paquete->refugio_id)
+            ->groupBy('paquete_id')
+            ->each(fn (Collection $delPaquete) => $delPaquete->first()->paquete->refugio
+                ->liberarCamas($this->fecha_inicio, $this->fecha_fin, $delPaquete->sum('participantes_count')));
+    }
+
+    // ========== RF NOTIFICAR EVENTUALIDADES - RECORDATORIO DE SALIDA ==========
+
+    // A definir por el grupo: el RF no dice con cuánta anticipación se envía
+    public const DIAS_ANTICIPACION_RECORDATORIO = 2;
+
+    /**
+     * Salidas "Programada" que empiezan dentro de N días. El recordatorio se envía una vez
+     * por día, así cada salida aparece un solo día y no hace falta registrar el envío.
+     */
+    public static function listarParaRecordar(): Collection
+    {
+        return self::where('estado', self::ESTADO_PROGRAMADA)
+            ->whereDate('fecha_inicio', now()->addDays(self::DIAS_ANTICIPACION_RECORDATORIO)->toDateString())
+            ->get();
     }
 
     /** "Nombre Apellido" de los empleados asignados con ese rol (GUIA / ASISTENTE). */

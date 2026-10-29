@@ -14,6 +14,25 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                // Títulos con el estilo del prototipo
+                display: ['Fraunces', ...defaultTheme.fontFamily.serif],
+            },
+            // Paleta del prototipo (web-page-creation/app/globals.css), pasada a hex
+            colors: {
+                trekk: {
+                    fondo: '#f9f6f1',
+                    texto: '#0f1e18',
+                    tarjeta: '#fffdfa',
+                    primario: '#1f533f',
+                    'primario-hover': '#124230',
+                    'primario-texto': '#fbf8f2',
+                    secundario: '#e1ebe3',
+                    suave: '#f0ece5',
+                    'texto-suave': '#596760',
+                    acento: '#da7134',
+                    error: '#d02c2a',
+                    borde: '#dedad2',
+                },
             },
         },
     },

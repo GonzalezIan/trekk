@@ -1,100 +1,20 @@
-import Checkbox from '@/Components/Checkbox';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import FormularioIngreso from '@/Components/Trekk/FormularioIngreso';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 
+// CU 28 - Login usuario (prototipo: web-page-creation/app/login/page.tsx)
 export default function Login({ status, canResetPassword }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        login: '',
-        password: '',
-        remember: false,
-    });
-
-    const submit = (e) => {
-        e.preventDefault();
-
-        post(route('login'), {
-            onFinish: () => reset('password'),
-        });
-    };
-
     return (
-        <GuestLayout>
-            <Head title="Log in" />
+        <GuestLayout titulo="Iniciar sesión" subtitulo="Ingresá con tu usuario o correo y tu contraseña.">
+            <Head title="Iniciar sesión" />
 
             {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
+                <div className="mb-4 rounded-lg bg-trekk-secundario px-3 py-2 text-sm font-medium text-trekk-primario">
                     {status}
                 </div>
             )}
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="login" value="Correo electrónico o nombre de usuario" />
-
-                    <TextInput
-                        id="login"
-                        type="text"
-                        name="login"
-                        value={data.login}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        isFocused={true}
-                        onChange={(e) => setData('login', e.target.value)}
-                    />
-
-                    <InputError message={errors.login} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Contraseña" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4 block">
-                    <label className="flex items-center">
-                        <Checkbox
-                            name="remember"
-                            checked={data.remember}
-                            onChange={(e) =>
-                                setData('remember', e.target.checked)
-                            }
-                        />
-                        <span className="ms-2 text-sm text-gray-600">
-                            Recordarme
-                        </span>
-                    </label>
-                </div>
-
-                <div className="mt-4 flex items-center justify-end">
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                        >
-                            ¿Olvidaste tu contraseña?
-                        </Link>
-                    )}
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Ingresar
-                    </PrimaryButton>
-                </div>
-            </form>
+            <FormularioIngreso canResetPassword={canResetPassword} enfocar />
         </GuestLayout>
     );
 }

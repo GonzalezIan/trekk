@@ -77,3 +77,30 @@ export const IconoEstetoscopio = (props) => (
         <circle cx="20" cy="10" r="2" />
     </Icono>
 );
+
+export const IconoPersonas = (props) => (
+    <Icono {...props}>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+    </Icono>
+);
+
+export const IconoCasa = (props) => (
+    <Icono {...props}>
+        <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+        <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    </Icono>
+);
+
+export const IconoCheck = (props) => (
+    <Icono {...props}>
+        <path d="M20 6 9 17l-5-5" />
+    </Icono>
+);
+
+export const IconoVolver = (props) => (
+    <Icono {...props}>
+        <path d="m12 19-7-7 7-7M19 12H5" />
+    </Icono>
+);

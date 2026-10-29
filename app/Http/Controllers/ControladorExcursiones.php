@@ -23,7 +23,7 @@ class ControladorExcursiones extends Controller
 
         return Inertia::render('Excursiones/Listar', [
             'excursiones' => $consulta->get([
-                'id', 'nombre', 'recorrido', 'dificultad', 'duracion', 'estado',
+                'id', 'nombre', 'recorrido', 'dificultad', 'duracion', 'estado', 'requiere_certificado_medico',
             ]),
             'esAdministrativo' => $request->user()->esAdministrativo(),
         ]);

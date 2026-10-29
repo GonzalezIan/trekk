@@ -33,7 +33,7 @@ export default function Editar({ cliente }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h2 className="font-display text-2xl font-semibold text-trekk-texto">
                     Mis datos
                 </h2>
             }

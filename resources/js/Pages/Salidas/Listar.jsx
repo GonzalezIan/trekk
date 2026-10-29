@@ -52,7 +52,7 @@ export default function Listar({
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                    <h2 className="font-display text-2xl font-semibold text-trekk-texto">
                         {esAdministrativo
                             ? 'Salidas Programadas'
                             : `Salidas de ${excursion.nombre}`}

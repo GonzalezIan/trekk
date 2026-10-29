@@ -56,7 +56,7 @@ export default function Modificar({ excursion, dificultades }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h2 className="font-display text-2xl font-semibold text-trekk-texto">
                     Modificar excursión
                 </h2>
             }

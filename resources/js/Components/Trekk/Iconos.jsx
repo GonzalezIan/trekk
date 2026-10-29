@@ -49,3 +49,31 @@ export const IconoFlecha = (props) => (
         <path d="M5 12h14M12 5l7 7-7 7" />
     </Icono>
 );
+
+export const IconoReloj = (props) => (
+    <Icono {...props}>
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 6v6l4 2" />
+    </Icono>
+);
+
+export const IconoUbicacion = (props) => (
+    <Icono {...props}>
+        <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+        <circle cx="12" cy="10" r="3" />
+    </Icono>
+);
+
+export const IconoTendencia = (props) => (
+    <Icono {...props}>
+        <path d="M16 7h6v6M22 7l-8.5 8.5-5-5L2 17" />
+    </Icono>
+);
+
+export const IconoEstetoscopio = (props) => (
+    <Icono {...props}>
+        <path d="M11 2v2M5 2v2M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1" />
+        <path d="M8 15a6 6 0 0 0 12 0v-3" />
+        <circle cx="20" cy="10" r="2" />
+    </Icono>
+);

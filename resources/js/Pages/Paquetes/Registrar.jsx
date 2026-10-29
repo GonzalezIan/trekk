@@ -3,12 +3,13 @@ import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import EncabezadoFormulario from '@/Components/Trekk/EncabezadoFormulario';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 const textarea =
-    'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    'mt-1 block w-full rounded-lg border-trekk-borde bg-trekk-tarjeta shadow-sm focus:border-trekk-primario focus:ring-trekk-primario';
 
 // "2026-10-27" -> "27/10/2026"
 const fecha = (valor) => valor.split('-').reverse().join('/');
@@ -73,18 +74,21 @@ export default function Registrar({ salida }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="font-display text-2xl font-semibold text-trekk-texto">
-                    Registrar paquete de {salida.excursion}
-                </h2>
+                <EncabezadoFormulario
+                    volverA={route('paquetes.listar', salida.id)}
+                    volverTexto="Paquetes de la salida"
+                    titulo="Registrar paquete"
+                    descripcion={salida.excursion}
+                />
             }
         >
             <Head title="Registrar paquete" />
 
             <div className="py-12">
-                <form onSubmit={confirmar} noValidate className="mx-auto max-w-3xl space-y-4 sm:px-6 lg:px-8">
+                <form onSubmit={confirmar} noValidate className="mx-auto max-w-3xl space-y-4 px-4 sm:px-6 lg:px-8">
                     <DatosSalida salida={salida} />
 
-                    <div className="space-y-6 bg-white p-6 shadow-sm sm:rounded-lg">
+                    <div className="space-y-6 border border-trekk-borde bg-trekk-tarjeta p-6 rounded-2xl">
                         <div>
                             <InputLabel htmlFor="nombre" value="Nombre del paquete *" />
                             <TextInput
@@ -144,7 +148,7 @@ export default function Registrar({ salida }) {
                         />
                     </Seccion>
 
-                    <div className="flex flex-wrap items-center justify-between gap-4 bg-white px-6 py-4 shadow-sm sm:rounded-lg">
+                    <div className="flex flex-wrap items-center justify-between gap-4 border border-trekk-borde bg-trekk-tarjeta px-6 py-4 rounded-2xl">
                         <div className="text-sm text-gray-700">
                             Precio del paquete: <strong>{precio(precioPaquete)}</strong>
                             <span className="block text-xs text-gray-500">
@@ -160,7 +164,7 @@ export default function Registrar({ salida }) {
                             {/* Flujo alternativo: cancelar sin registrar ningún dato */}
                             <Link
                                 href={route('salidas.listar')}
-                                className="text-sm text-gray-600 underline hover:text-gray-900"
+                                className="rounded-lg px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                             >
                                 Cancelar
                             </Link>
@@ -200,7 +204,7 @@ function DatosSalida({ salida }) {
     );
 
     return (
-        <dl className="grid gap-4 bg-white p-6 text-sm shadow-sm sm:grid-cols-3 sm:rounded-lg">
+        <dl className="grid gap-4 rounded-2xl border border-trekk-borde bg-trekk-tarjeta p-6 text-sm sm:grid-cols-3">
             {dato('Excursión', salida.excursion)}
             {dato(
                 'Período',
@@ -238,9 +242,9 @@ function useListado(url, clave) {
 
 function Seccion({ titulo, error, activo, onActivar, textoActivar, children }) {
     return (
-        <div className="space-y-3 bg-white p-6 shadow-sm sm:rounded-lg">
+        <div className="space-y-3 border border-trekk-borde bg-trekk-tarjeta p-6 rounded-2xl">
             <div className="flex items-center justify-between gap-3">
-                <h3 className="font-semibold text-gray-900">{titulo}</h3>
+                <h3 className="font-display text-lg font-semibold text-trekk-texto">{titulo}</h3>
                 <label className="flex items-center gap-2 text-sm text-gray-700">
                     <input
                         type="checkbox"
@@ -354,7 +358,7 @@ function ListarRefugiosModal({ listado, salida, seleccion, onElegir, onCerrar })
     return (
         <Modal show onClose={onCerrar} maxWidth="5xl">
             <div className="border-b border-gray-200 px-5 py-4">
-                <h2 className="text-xl font-semibold text-gray-900">Elegir refugio</h2>
+                <h2 className="font-display text-xl font-semibold text-trekk-texto">Elegir refugio</h2>
                 <p className="text-sm text-gray-500">
                     Refugios con convenio vigente del {fecha(salida.fecha_inicio)} al{' '}
                     {fecha(salida.fecha_fin)}
@@ -408,7 +412,7 @@ function ListaRefugios({ listado, noches, seleccion, onElegir }) {
                         'flex cursor-pointer flex-col gap-2 rounded-xl border p-4 text-sm transition-colors ' +
                         (seleccion === r.id
                             ? 'border-indigo-400 bg-indigo-50'
-                            : 'border-gray-200 bg-white hover:bg-gray-50')
+                            : 'border-gray-200 bg-trekk-tarjeta hover:bg-gray-50')
                     }
                 >
                     <div className="flex items-start gap-3">

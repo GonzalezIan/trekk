@@ -2,6 +2,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import EncabezadoFormulario from '@/Components/Trekk/EncabezadoFormulario';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
@@ -84,16 +85,19 @@ export default function Modificar({ salida }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="font-display text-2xl font-semibold text-trekk-texto">
-                    Modificar salida de {salida.excursion}
-                </h2>
+                <EncabezadoFormulario
+                    volverA={route('salidas.listar')}
+                    volverTexto="Salidas Programadas"
+                    titulo="Modificar salida"
+                    descripcion={salida.excursion}
+                />
             }
         >
             <Head title="Modificar salida" />
 
             <div className="py-12">
-                <form onSubmit={confirmar} noValidate className="mx-auto max-w-3xl space-y-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-wrap gap-x-6 gap-y-1 bg-white px-6 py-4 text-sm text-gray-600 shadow-sm sm:rounded-lg">
+                <form onSubmit={confirmar} noValidate className="mx-auto max-w-3xl space-y-4 px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-wrap gap-x-6 gap-y-1 border border-trekk-borde bg-trekk-tarjeta px-6 py-4 text-sm text-gray-600 rounded-2xl">
                         <span>
                             Excursión: <strong className="text-gray-900">{salida.excursion}</strong>
                         </span>
@@ -105,12 +109,12 @@ export default function Modificar({ salida }) {
                     </div>
 
                     {Object.keys(errors).length > 0 && (
-                        <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+                        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-trekk-error">
                             No se aplicó la modificación. Revisá los datos marcados en rojo.
                         </div>
                     )}
 
-                    <div className="space-y-6 bg-white p-6 shadow-sm sm:rounded-lg">
+                    <div className="space-y-6 border border-trekk-borde bg-trekk-tarjeta p-6 rounded-2xl">
                         <div className="grid gap-6 sm:grid-cols-3">
                             {campo('fecha_inicio', 'Fecha de inicio *', { type: 'date' })}
                             {campo('fecha_fin', 'Fecha de fin *', { type: 'date' })}
@@ -166,7 +170,7 @@ export default function Modificar({ salida }) {
                         )}
                     </Seccion>
 
-                    <div className="flex flex-wrap items-center justify-between gap-4 bg-white px-6 py-4 shadow-sm sm:rounded-lg">
+                    <div className="flex flex-wrap items-center justify-between gap-4 border border-trekk-borde bg-trekk-tarjeta px-6 py-4 rounded-2xl">
                         <p className="text-sm text-gray-700">
                             Cupo máximo de la salida: <strong>{cupoFinal}</strong>
                             {cupoFinal < Number(data.cupo_maximo) && (
@@ -185,7 +189,7 @@ export default function Modificar({ salida }) {
                             {/* Flujo alternativo: cancelar y conservar los valores originales */}
                             <Link
                                 href={route('salidas.listar')}
-                                className="text-sm text-gray-600 underline hover:text-gray-900"
+                                className="rounded-lg px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                             >
                                 Cancelar
                             </Link>
@@ -226,8 +230,8 @@ function useListado(url, clave) {
 
 function Seccion({ titulo, error, children }) {
     return (
-        <div className="space-y-3 bg-white p-6 shadow-sm sm:rounded-lg">
-            <h3 className="font-semibold text-gray-900">{titulo}</h3>
+        <div className="space-y-3 border border-trekk-borde bg-trekk-tarjeta p-6 rounded-2xl">
+            <h3 className="font-display text-lg font-semibold text-trekk-texto">{titulo}</h3>
             {children}
             <InputError message={error} />
         </div>

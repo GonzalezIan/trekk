@@ -2,11 +2,12 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import EncabezadoFormulario from '@/Components/Trekk/EncabezadoFormulario';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 const textarea =
-    'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
+    'mt-1 block w-full rounded-lg border-trekk-borde bg-trekk-tarjeta shadow-sm focus:border-trekk-primario focus:ring-trekk-primario';
 
 // Grupo de opciones Sí / No. Arranca sin elegir, para obligar a completarlo (RN-01).
 function SiNo({ nombre, valor, onChange, valorSi = true, valorNo = false }) {
@@ -56,21 +57,24 @@ export default function Modificar({ excursion, dificultades }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="font-display text-2xl font-semibold text-trekk-texto">
-                    Modificar excursión
-                </h2>
+                <EncabezadoFormulario
+                    volverA={route('excursiones.listar')}
+                    volverTexto="Excursiones"
+                    titulo="Modificar excursión"
+                    descripcion={excursion.nombre}
+                />
             }
         >
             <Head title="Modificar excursión" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
                     <form
                         onSubmit={confirmar}
-                        className="space-y-6 bg-white p-6 shadow-sm sm:rounded-lg"
+                        className="space-y-6 border border-trekk-borde bg-trekk-tarjeta p-6 rounded-2xl"
                     >
                         {Object.keys(errors).length > 0 && (
-                            <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+                            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-trekk-error">
                                 Revisá los campos marcados en rojo.
                             </div>
                         )}
@@ -235,11 +239,11 @@ export default function Modificar({ excursion, dificultades }) {
                             />
                         </div>
 
-                        <div className="flex items-center justify-end gap-4 border-t pt-6">
+                        <div className="flex items-center justify-end gap-4 border-t border-trekk-borde pt-6">
                             {/* Flujo alternativo: cancelar sin registrar nada */}
                             <Link
                                 href={route('excursiones.listar')}
-                                className="text-sm text-gray-600 underline hover:text-gray-900"
+                                className="rounded-lg px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                             >
                                 Cancelar
                             </Link>

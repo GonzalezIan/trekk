@@ -156,7 +156,7 @@ export default function Listar({
                             <button
                                 type="button"
                                 onClick={() => setCancelando(null)}
-                                className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                                className="rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                             >
                                 Volver
                             </button>
@@ -164,7 +164,7 @@ export default function Listar({
                                 type="button"
                                 onClick={confirmarCancelacion}
                                 disabled={procesando}
-                                className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-red-700 disabled:opacity-50"
+                                className="rounded-lg bg-trekk-error px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                             >
                                 {procesando ? 'Cancelando…' : 'Confirmar cancelación'}
                             </button>
@@ -242,14 +242,14 @@ function Filtros({ filtros, excursiones, estados }) {
             <div className="flex items-end gap-2">
                 <button
                     type="submit"
-                    className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700"
+                    className="rounded-lg bg-trekk-primario px-4 py-2 text-sm font-medium text-trekk-primario-texto hover:bg-trekk-primario-hover"
                 >
                     Filtrar
                 </button>
                 <button
                     type="button"
                     onClick={limpiar}
-                    className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                    className="rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                 >
                     Limpiar
                 </button>
@@ -271,7 +271,7 @@ function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
                     {/* CU 7 - Listar paquetes de la salida */}
                     <Link
                         href={route('paquetes.listar', salida.id)}
-                        className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700"
+                        className="rounded-lg bg-trekk-primario px-4 py-2 text-sm font-medium text-trekk-primario-texto hover:bg-trekk-primario-hover"
                     >
                         Listar paquetes
                     </Link>
@@ -279,7 +279,7 @@ function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
                     {salida.estado === 'PROGRAMADA' && (
                         <Link
                             href={route('paquetes.registrar', salida.id)}
-                            className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                            className="rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                         >
                             Registrar paquete
                         </Link>
@@ -288,7 +288,7 @@ function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
                     {salida.estado === 'PROGRAMADA' && (
                         <Link
                             href={route('salidas.modificar', salida.id)}
-                            className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                            className="rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                         >
                             Modificar
                         </Link>
@@ -297,7 +297,7 @@ function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
                     <button
                         type="button"
                         onClick={onListarParticipantes}
-                        className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                        className="rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                     >
                         Listar participantes
                     </button>
@@ -306,7 +306,7 @@ function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
                         <button
                             type="button"
                             onClick={onCancelar}
-                            className="rounded-md border border-red-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-red-700 hover:bg-red-50"
+                            className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
                         >
                             Cancelar
                         </button>

@@ -143,7 +143,7 @@ export function PanelRegistrarPago({ reserva, onPagado }) {
                 <button
                     type="submit"
                     disabled={procesando}
-                    className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700 disabled:opacity-50"
+                    className="rounded-lg bg-trekk-primario px-4 py-2 text-sm font-medium text-trekk-primario-texto hover:bg-trekk-primario-hover disabled:opacity-50"
                 >
                     {procesando ? 'Procesando pago…' : 'Confirmar pago'}
                 </button>

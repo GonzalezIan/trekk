@@ -78,7 +78,7 @@ export default function Listar({ reservas, esAdministrativo, notificacion_cancel
                                 {/* 👇 ACÁ LLAMAMOS A LA FUNCIÓN DE CERRAR 👇 */}
                                 <button 
                                     onClick={cerrarPopUp}
-                                    className="mt-4 w-full bg-gray-900 text-white text-sm font-medium py-2 rounded hover:bg-gray-800 transition"
+                                    className="mt-4 w-full bg-trekk-primario text-trekk-primario-texto text-sm font-medium py-2 rounded-lg hover:bg-trekk-primario-hover transition"
                                 >
                                     Entendido
                                 </button>

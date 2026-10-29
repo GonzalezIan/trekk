@@ -4,14 +4,22 @@ import EstadoBadge, { etiquetaEstado } from '@/Components/EstadoBadge';
 import ParticipantesReserva from '@/Components/ParticipantesReserva';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import RegistrarConformidadModal from '@/Components/RegistrarConformidadModal';
-import { Head } from '@inertiajs/react';
+import {
+    IconoAlerta,
+    IconoCancelar,
+    IconoEstrella,
+    IconoFlecha,
+    IconoPersonas,
+    IconoTarjeta,
+} from '@/Components/Trekk/Iconos';
+import { Head, Link } from '@inertiajs/react';
 import { useState,useEffect } from 'react';
 
 // CU 15 - Listar reservas, extendido por el CU 16 - Cancelar reserva
 
 const codigo = (id) => `R-${String(id).padStart(4, '0')}`;
 
-const usd = (monto) => `USD ${monto.toLocaleString('es-AR')}`;
+const usd = (monto) => `USD ${monto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const formatFecha = (fecha) =>
     new Date(`${fecha}T12:00:00`).toLocaleDateString('es-AR', {
@@ -50,39 +58,41 @@ export default function Listar({ reservas, esAdministrativo, notificacion_cancel
     return (
         <AuthenticatedLayout>
             <Head title={esAdministrativo ? 'Reservas' : 'Mis reservas'} />
-            {!esAdministrativo&&mostrarPopUp && (
-                <div className="fixed bottom-6 right-6 z-50 max-w-md w-full bg-white shadow-2xl rounded-xl border-l-4 border-red-500 overflow-hidden">
-                    <div className="p-5">
-                        <div className="flex items-start">
-                            <div className="flex-shrink-0">
-                                <span className="text-3xl">⚠️</span>
+            {!esAdministrativo && mostrarPopUp && (
+                <div
+                    role="alertdialog"
+                    aria-labelledby="aviso-cancelacion"
+                    className="fixed inset-x-4 bottom-4 z-50 overflow-hidden rounded-2xl border border-trekk-borde bg-trekk-tarjeta shadow-2xl sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-full sm:max-w-md"
+                >
+                    <div className="flex items-start gap-3 p-5">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-trekk-error/10 text-trekk-error">
+                            <IconoAlerta />
+                        </span>
+                        <div className="w-full">
+                            <h3 id="aviso-cancelacion" className="font-display text-lg font-semibold">
+                                Reserva cancelada
+                            </h3>
+                            <div className="mt-2 text-sm text-trekk-texto-suave">
+                                <p className="mb-2">
+                                    Tu reserva <strong className="text-trekk-texto">{codigo(notificacion_cancelacion.id)}</strong> fue
+                                    cancelada por la administración.
+                                </p>
+                                <p className="mb-3 rounded-lg bg-trekk-error/5 px-3 py-2 text-xs text-trekk-error">
+                                    <strong>Motivo:</strong> {notificacion_cancelacion.motivo_cancelacion}
+                                </p>
+                                <p className="font-medium text-trekk-texto">Contactate para gestionar tu reembolso:</p>
+                                <ul className="mt-1 list-disc space-y-1 pl-4">
+                                    <li>recepcion@trekk.com</li>
+                                    <li>+54 297 1234567</li>
+                                    <li>O acercate a nuestras oficinas.</li>
+                                </ul>
                             </div>
-                            <div className="ml-3 w-full">
-                                <h3 className="text-lg font-bold text-gray-900">
-                                    Reserva Cancelada
-                                </h3>
-                                <div className="mt-2 text-sm text-gray-600">
-                                    <p className="mb-2">
-                                        Tu reserva <strong>R-{String(notificacion_cancelacion.id).padStart(4, '0')}</strong> ha sido cancelada por la administración.
-                                    </p>
-                                    <p className="mb-3 p-2 bg-red-50 text-red-700 rounded text-xs">
-                                        <strong>Motivo:</strong> {notificacion_cancelacion.motivo_cancelacion}
-                                    </p>
-                                    <p className="font-semibold text-gray-800">Contactate para gestionar tu reembolso:</p>
-                                    <ul className="list-disc pl-4 mt-1 space-y-1">
-                                        <li>📧 recepcion@trekk.com</li>
-                                        <li>📞 +54 297 1234567</li>
-                                        <li>📍 Acercate a nuestras oficinas.</li>
-                                    </ul>
-                                </div>
-                                {/* 👇 ACÁ LLAMAMOS A LA FUNCIÓN DE CERRAR 👇 */}
-                                <button 
-                                    onClick={cerrarPopUp}
-                                    className="mt-4 w-full bg-trekk-primario text-trekk-primario-texto text-sm font-medium py-2 rounded-lg hover:bg-trekk-primario-hover transition"
-                                >
-                                    Entendido
-                                </button>
-                            </div>
+                            <button
+                                onClick={cerrarPopUp}
+                                className="mt-4 w-full rounded-lg bg-trekk-primario py-2 text-sm font-medium text-trekk-primario-texto transition hover:bg-trekk-primario-hover"
+                            >
+                                Entendido
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -109,11 +119,11 @@ export default function Listar({ reservas, esAdministrativo, notificacion_cancel
 function Encabezado({ eyebrow, titulo, descripcion }) {
     return (
         <div className="flex flex-col gap-2 pb-8">
-            <p className="text-xs font-semibold uppercase tracking-widest text-orange-600">
+            <p className="text-xs font-semibold uppercase tracking-widest text-trekk-acento">
                 {eyebrow}
             </p>
-            <h1 className="text-3xl font-semibold text-gray-900 md:text-4xl">{titulo}</h1>
-            <p className="max-w-2xl text-gray-500">{descripcion}</p>
+            <h1 className="font-display text-3xl font-semibold text-trekk-texto md:text-4xl">{titulo}</h1>
+            <p className="max-w-2xl text-trekk-texto-suave">{descripcion}</p>
         </div>
     );
 }
@@ -170,8 +180,14 @@ function ReservasCliente({ reservas,onCalificar }) {
             <AvisoExito mensaje={aviso} onCerrar={() => setAviso('')} />
 
             {reservas.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-gray-300 p-10 text-center">
-                    <p className="text-gray-500">No existen reservas todavía.</p>
+                <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-trekk-borde p-10 text-center">
+                    <p className="text-trekk-texto-suave">No existen reservas todavía.</p>
+                    <Link
+                        href={route('excursiones.listar')}
+                        className="flex items-center gap-1 text-sm font-medium text-trekk-primario hover:underline"
+                    >
+                        Explorar excursiones <IconoFlecha className="h-4 w-4" />
+                    </Link>
                 </div>
             ) : (
                 <div className="flex flex-col gap-4">
@@ -199,38 +215,39 @@ function TarjetaReserva({ reserva: r, onAviso,onCalificar }) {
     };
 
     return (
-        <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+        <article className="overflow-hidden rounded-2xl border border-trekk-borde bg-trekk-tarjeta">
             <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs text-gray-500">{codigo(r.id)}</span>
+                        <span className="font-mono text-xs text-trekk-texto-suave">{codigo(r.id)}</span>
                         <EstadoBadge valor={r.estado} />
                         <EstadoBadge valor={r.situacion_de_pago} />
                     </div>
-                    <h2 className="text-xl font-semibold text-gray-900">{r.excursion}</h2>
-                    <p className="text-sm text-gray-500">
+                    <h2 className="font-display text-xl font-semibold">{r.excursion}</h2>
+                    <p className="text-sm text-trekk-texto-suave">
                         {formatFecha(r.fecha_inicio)} · Paquete {r.paquete} ·{' '}
                         {r.cantidad_participantes}{' '}
                         {r.cantidad_participantes === 1 ? 'participante' : 'participantes'}
                     </p>
                 </div>
-                <span className="text-2xl font-semibold text-gray-900">
-                    {usd(r.importe_total)}
-                </span>
+                <div className="flex flex-col items-start gap-0.5 md:items-end">
+                    <span className="font-display text-2xl font-semibold">{usd(r.importe_total)}</span>
+                    {r.se_puede_pagar && <span className="text-xs text-amber-700">Tenés un pago pendiente</span>}
+                </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 border-t border-gray-200 px-5 py-3">
+            <div className="flex flex-wrap gap-2 border-t border-trekk-borde px-5 py-3">
                 {/* 4.1 - CU 21 Listar participantes */}
                 <button
                     type="button"
                     aria-expanded={panel === 'participantes'}
                     onClick={() => alternar('participantes')}
                     className={
-                        'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 ' +
-                        (panel === 'participantes' ? 'bg-gray-100' : '')
+                        'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-trekk-texto hover:bg-trekk-suave ' +
+                        (panel === 'participantes' ? 'bg-trekk-suave' : '')
                     }
                 >
-                    Participantes
+                    <IconoPersonas className="h-4 w-4" /> Participantes
                 </button>
                 {/* 4.2 - CU 22 Registrar pago (solo si la reserva tiene un importe pendiente) */}
                 {r.se_puede_pagar && (
@@ -239,21 +256,21 @@ function TarjetaReserva({ reserva: r, onAviso,onCalificar }) {
                         aria-expanded={panel === 'pagar'}
                         onClick={() => alternar('pagar')}
                         className={
-                            'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 ' +
-                            (panel === 'pagar' ? 'bg-gray-100' : '')
+                            'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-trekk-texto hover:bg-trekk-suave ' +
+                            (panel === 'pagar' ? 'bg-trekk-suave' : '')
                         }
                     >
-                        Registrar pago
+                        <IconoTarjeta className="h-4 w-4" /> Registrar pago
                     </button>
                 )}
                 {r.estado === 'REALIZADA' && !r.tiene_conformidad && (
-                <button
-                    type="button"
-                    onClick={() => onCalificar(r)} // 👈 Le pasamos la reserva
-                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
-                >
-                    ⭐ Registrar conformidad
-                </button>
+                    <button
+                        type="button"
+                        onClick={() => onCalificar(r)}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-trekk-secundario px-3 py-1.5 text-sm font-medium text-trekk-primario hover:bg-trekk-secundario/70"
+                    >
+                        <IconoEstrella className="h-4 w-4" /> Registrar conformidad
+                    </button>
                 )}
                 {/* CU 16 - Cancelar reserva (solo "Pendiente" o "Confirmada", lo decide el servidor) */}
                 {r.se_puede_cancelar && (
@@ -261,15 +278,15 @@ function TarjetaReserva({ reserva: r, onAviso,onCalificar }) {
                         type="button"
                         aria-expanded={panel === 'cancelar'}
                         onClick={() => alternar('cancelar')}
-                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-gray-100"
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-trekk-error hover:bg-trekk-error/5"
                     >
-                        Cancelar reserva
+                        <IconoCancelar className="h-4 w-4" /> Cancelar reserva
                     </button>
                 )}
             </div>
 
             {panel === 'participantes' && (
-                <div className="border-t border-gray-200 bg-gray-50 p-5">
+                <div className="border-t border-trekk-borde bg-trekk-suave/40 p-5">
                     <ParticipantesReserva reserva={r} />
                 </div>
             )}
@@ -295,7 +312,7 @@ function TarjetaReserva({ reserva: r, onAviso,onCalificar }) {
             )}
 
             {r.motivo_cancelacion && (
-                <p className="border-t border-gray-200 px-5 py-3 text-sm text-gray-500">
+                <p className="border-t border-trekk-borde px-5 py-3 text-sm text-trekk-texto-suave">
                     Motivo: {r.motivo_cancelacion}
                 </p>
             )}
@@ -363,7 +380,7 @@ function ReservasAdministrativo({ reservas }) {
             <AvisoExito mensaje={aviso} onCerrar={() => setAviso('')} />
 
             <div className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-trekk-borde bg-trekk-tarjeta px-4 py-3">
                     {reserva ? (
                         <>
                             <span className="text-sm text-gray-500">Seleccionado:</span>
@@ -400,7 +417,7 @@ function ReservasAdministrativo({ reservas }) {
                             : 'No se encontraron reservas.'}
                     </p>
                 ) : (
-                    <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+                    <div className="overflow-x-auto rounded-2xl border border-trekk-borde bg-trekk-tarjeta">
                         <table className="w-full text-sm">
                             <thead className="border-b border-gray-200 text-left text-gray-500">
                                 <tr>
@@ -420,7 +437,7 @@ function ReservasAdministrativo({ reservas }) {
                                         onClick={() => setSeleccionada(r.id)}
                                         className={
                                             'cursor-pointer transition-colors hover:bg-gray-50 ' +
-                                            (seleccionada === r.id ? 'bg-emerald-50 hover:bg-emerald-100' : '')
+                                            (seleccionada === r.id ? 'bg-trekk-secundario/60 hover:bg-trekk-secundario' : '')
                                         }
                                     >
                                         <td className="w-8">
@@ -430,7 +447,7 @@ function ReservasAdministrativo({ reservas }) {
                                                 checked={seleccionada === r.id}
                                                 onChange={() => setSeleccionada(r.id)}
                                                 aria-label={`Seleccionar ${codigo(r.id)}`}
-                                                className="text-emerald-700"
+                                                className="text-trekk-primario focus:ring-trekk-primario"
                                             />
                                         </td>
                                         <td className="font-mono text-xs">{codigo(r.id)}</td>

@@ -8,7 +8,9 @@ import { useEffect, useState } from 'react';
 const formatUsd = (monto) => `USD ${monto.toLocaleString('es-AR')}`;
 const formatArs = (monto) => `ARS ${monto.toLocaleString('es-AR')}`;
 
-const campo = 'mt-1 block w-full rounded-lg border-gray-200 text-sm';
+const campo =
+    'mt-1 block w-full rounded-lg border-trekk-borde bg-trekk-tarjeta text-sm focus:border-trekk-primario focus:ring-trekk-primario';
+const marca = 'text-trekk-primario focus:ring-trekk-primario';
 
 export function PanelRegistrarPago({ reserva, onPagado }) {
     const [datos, setDatos] = useState(null);
@@ -76,18 +78,18 @@ export function PanelRegistrarPago({ reserva, onPagado }) {
         <form onSubmit={confirmar} noValidate className="flex flex-col gap-4 border-t border-gray-200 bg-gray-50 p-5">
             <div className="flex items-baseline justify-between">
                 <span className="text-sm text-gray-600">{tipo}</span>
-                <span className="text-lg font-semibold text-gray-900">{formatUsd(importeUsd)}</span>
+                <span className="font-display text-xl font-semibold text-trekk-texto">{formatUsd(importeUsd)}</span>
             </div>
 
             {/* Alternativo 1.1: solo al registrar la reserva se puede abonar la seña */}
             {datos.importe_sena !== null && (
                 <div className="flex gap-6 text-sm">
                     <label className="flex items-center gap-2">
-                        <input type="radio" checked={!sena} onChange={() => setSena(false)} />
+                        <input type="radio" checked={!sena} onChange={() => setSena(false)} className={marca} />
                         Pago total
                     </label>
                     <label className="flex items-center gap-2">
-                        <input type="radio" checked={sena} onChange={() => setSena(true)} />
+                        <input type="radio" checked={sena} onChange={() => setSena(true)} className={marca} />
                         Solo la seña
                     </label>
                 </div>
@@ -118,7 +120,7 @@ export function PanelRegistrarPago({ reserva, onPagado }) {
                 </label>
             </div>
 
-            <p className="rounded-lg bg-white px-4 py-3 text-sm text-gray-700">
+            <p className="rounded-lg bg-trekk-tarjeta px-4 py-3 text-sm text-gray-700">
                 Se cobrarán{' '}
                 <strong>
                     {moneda === 'ARS'
@@ -131,6 +133,7 @@ export function PanelRegistrarPago({ reserva, onPagado }) {
             <label className="flex items-center gap-2 text-xs text-gray-500">
                 <input
                     type="checkbox"
+                    className={`rounded ${marca}`}
                     checked={simularRechazo}
                     onChange={(e) => setSimularRechazo(e.target.checked)}
                 />

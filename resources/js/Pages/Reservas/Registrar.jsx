@@ -12,7 +12,8 @@ const pasos = ['Participantes', 'Datos', 'Equipamiento', 'Resumen', 'Pago'];
 
 const codigo = (id) => `R-${String(id).padStart(4, '0')}`;
 
-const usd = (monto) => `USD ${Number(monto).toLocaleString('es-AR')}`;
+const usd = (monto) =>
+    `USD ${Number(monto).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const formatFecha = (fecha) =>
     new Date(`${fecha}T12:00:00`).toLocaleDateString('es-AR', {
@@ -31,13 +32,13 @@ const listarObligatorio = (texto) =>
 const participanteVacio = { dni: '', nombre: '', apellido: '', fecha_nacimiento: '' };
 
 const botonPrimario =
-    'inline-flex items-center justify-center rounded-lg bg-emerald-800 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800/80 disabled:cursor-not-allowed disabled:opacity-50';
+    'inline-flex items-center justify-center rounded-lg bg-trekk-primario px-4 py-2 text-sm font-medium text-trekk-primario-texto hover:bg-trekk-primario-hover disabled:cursor-not-allowed disabled:opacity-50';
 const botonSecundario =
-    'inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50';
+    'inline-flex items-center justify-center rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave disabled:cursor-not-allowed disabled:opacity-50';
 const botonFantasma =
-    'inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50';
+    'inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave disabled:cursor-not-allowed disabled:opacity-50';
 const campo =
-    'mt-1 block w-full rounded-lg border-gray-200 text-sm focus:border-emerald-700 focus:ring-emerald-700';
+    'mt-1 block w-full rounded-lg border-trekk-borde bg-trekk-tarjeta text-sm focus:border-trekk-primario focus:ring-trekk-primario';
 
 export default function Registrar({ paquete, salida, excursion, minutosRetencion }) {
     const [paso, setPaso] = useState(0);
@@ -203,21 +204,21 @@ export default function Registrar({ paquete, salida, excursion, minutosRetencion
                         <button
                             type="button"
                             onClick={cancelar}
-                            className="self-start text-sm text-gray-500 hover:text-gray-900"
+                            className="self-start text-sm text-trekk-texto-suave hover:text-trekk-texto"
                         >
                             ← Volver a los paquetes de {excursion.nombre}
                         </button>
-                        <h1 className="text-3xl font-semibold text-gray-900">Registrar reserva</h1>
+                        <h1 className="font-display text-3xl font-semibold text-trekk-texto">Registrar reserva</h1>
                     </div>
 
                     <ol className="grid grid-cols-5 gap-2" aria-label="Pasos">
                         {pasos.map((p, i) => (
                             <li key={p} aria-current={i === paso ? 'step' : undefined} className="flex flex-col gap-1.5">
-                                <span className={'h-1 rounded-full ' + (i <= paso ? 'bg-emerald-800' : 'bg-gray-200')} />
+                                <span className={'h-1 rounded-full ' + (i <= paso ? 'bg-trekk-primario' : 'bg-trekk-borde')} />
                                 <span
                                     className={
                                         'text-xs ' +
-                                        (i === paso ? 'font-medium text-gray-900' : 'hidden text-gray-500 sm:inline')
+                                        (i === paso ? 'whitespace-nowrap font-medium text-trekk-texto' : 'hidden text-trekk-texto-suave sm:inline')
                                     }
                                 >
                                     {i + 1}. {p}
@@ -235,7 +236,7 @@ export default function Registrar({ paquete, salida, excursion, minutosRetencion
                         />
                     )}
 
-                    <section className="flex flex-col gap-5 rounded-2xl border border-gray-200 bg-white p-4 sm:p-6">
+                    <section className="flex flex-col gap-5 rounded-2xl border border-trekk-borde bg-trekk-tarjeta p-4 sm:p-6">
                         {paso === 0 && (
                             <PasoCantidad
                                 cantidad={cantidad}
@@ -277,7 +278,7 @@ export default function Registrar({ paquete, salida, excursion, minutosRetencion
 
                         {paso === 4 && (
                             <div className="-mx-4 -mb-4 flex flex-col gap-3 sm:-mx-6 sm:-mb-6">
-                                <h2 className="px-4 text-xl font-semibold text-gray-900 sm:px-6">Pago</h2>
+                                <h2 className="px-4 font-display text-xl font-semibold text-trekk-texto sm:px-6">Pago</h2>
                                 <p className="px-4 text-sm text-gray-500 sm:px-6">
                                     Para registrar la reserva tenés que abonar al menos la seña del 50% del importe total.
                                 </p>
@@ -435,7 +436,7 @@ function PasoCantidad({ cantidad, onCantidad, paquete, minutosRetencion, error }
     return (
         <>
             <div>
-                <h2 className="text-xl font-semibold text-gray-900">¿Cuántas personas realizarán la excursión?</h2>
+                <h2 className="font-display text-xl font-semibold text-trekk-texto">¿Cuántas personas realizarán la excursión?</h2>
                 <p className="text-sm text-gray-500">
                     Cupos libres: {paquete.cupo_disponible}
                     {paquete.camas_disponibles !== null && ` · Camas libres en ${paquete.refugio}: ${paquete.camas_disponibles}`}
@@ -457,7 +458,7 @@ function PasoCantidad({ cantidad, onCantidad, paquete, minutosRetencion, error }
                     aria-label="Cantidad de participantes"
                     value={cantidad}
                     onChange={(e) => onCantidad(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-20 rounded-lg border-gray-200 text-center text-3xl font-semibold tabular-nums focus:border-emerald-700 focus:ring-emerald-700"
+                    className="w-20 rounded-lg border-gray-200 text-center text-3xl font-semibold tabular-nums focus:border-trekk-primario focus:ring-trekk-primario"
                 />
                 <button
                     type="button"
@@ -484,7 +485,7 @@ function PasoDatos({ participantes, onCambiar, errores }) {
     return (
         <>
             <div>
-                <h2 className="text-xl font-semibold text-gray-900">Datos de los participantes</h2>
+                <h2 className="font-display text-xl font-semibold text-trekk-texto">Datos de los participantes</h2>
                 <p className="text-sm text-gray-500">Debe viajar al menos un participante mayor de 18 años.</p>
             </div>
             {participantes.map((p, i) => (
@@ -549,7 +550,7 @@ function PasoEquipamiento({ cargados, quiereAlquilar, onNoAlquilar, onAbrirCatal
 
     return (
         <>
-            <h2 className="text-xl font-semibold text-gray-900">Equipamiento</h2>
+            <h2 className="font-display text-xl font-semibold text-trekk-texto">Equipamiento</h2>
 
             {/* El equipamiento obligatorio es texto informativo de la excursión: no está vinculado al catálogo de alquiler */}
             {obligatorio.length > 0 && (
@@ -572,7 +573,7 @@ function PasoEquipamiento({ cargados, quiereAlquilar, onNoAlquilar, onAbrirCatal
             )}
 
             <div className="flex flex-col gap-3 border-t border-gray-200 pt-5">
-                <h3 className="text-lg font-semibold text-gray-900">¿Querés agregar equipamiento de alquiler a la reserva?</h3>
+                <h3 className="font-display text-lg font-semibold text-trekk-texto">¿Querés agregar equipamiento de alquiler a la reserva?</h3>
                 <div role="radiogroup" aria-label="Equipamiento de alquiler" className="grid gap-3 sm:grid-cols-2">
                     <OpcionTarjeta
                         elegida={quiereAlquilar === false}
@@ -590,7 +591,7 @@ function PasoEquipamiento({ cargados, quiereAlquilar, onNoAlquilar, onAbrirCatal
             </div>
 
             {quiereAlquilar && seleccion.length > 0 && (
-                <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-emerald-50/50 p-4">
+                <div className="flex flex-col gap-3 rounded-xl border border-trekk-borde bg-trekk-secundario/50 p-4">
                     <div className="flex items-center justify-between gap-3">
                         <h3 className="text-sm font-semibold text-gray-900">Equipamiento de alquiler seleccionado</h3>
                         <button type="button" onClick={onAbrirCatalogo} className={botonSecundario + ' !px-3 !py-1.5'}>
@@ -621,8 +622,8 @@ function OpcionTarjeta({ elegida, onClick, titulo, texto }) {
             aria-checked={elegida}
             onClick={onClick}
             className={
-                'flex flex-col gap-1 rounded-xl border p-4 text-left transition-colors hover:border-emerald-700/50 ' +
-                (elegida ? 'border-emerald-800 ring-1 ring-emerald-800' : 'border-gray-200')
+                'flex flex-col gap-1 rounded-xl border p-4 text-left transition-colors hover:border-trekk-primario/50 ' +
+                (elegida ? 'border-trekk-primario ring-1 ring-trekk-primario' : 'border-trekk-borde')
             }
         >
             <span className="font-medium text-gray-900">{titulo}</span>
@@ -704,7 +705,7 @@ function CatalogoAlquiler({ reserva, seleccion, onCerrar, onConfirmado, onVencid
             <div className="flex h-[min(40rem,90dvh)] flex-col">
                 <div className="flex items-start justify-between gap-3 border-b border-gray-200 px-5 py-4">
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-900">Equipamiento disponible para alquiler</h2>
+                        <h2 className="font-display text-xl font-semibold text-trekk-texto">Equipamiento disponible para alquiler</h2>
                         <p className="text-sm text-gray-500">Indicá la cantidad y tocá + para sumarlo a tu selección.</p>
                     </div>
                     <button
@@ -743,7 +744,7 @@ function CatalogoAlquiler({ reserva, seleccion, onCerrar, onConfirmado, onVencid
                                                     </span>
                                                     {eq.stock_disponible} disponibles
                                                     {enSeleccion > 0 && (
-                                                        <span className="font-medium text-emerald-800">
+                                                        <span className="font-medium text-trekk-primario">
                                                             {' '}
                                                             · {enSeleccion} en tu selección
                                                         </span>
@@ -770,7 +771,7 @@ function CatalogoAlquiler({ reserva, seleccion, onCerrar, onConfirmado, onVencid
                                                     type="button"
                                                     aria-label={`Agregar ${eq.nombre}`}
                                                     onClick={() => agregar(eq)}
-                                                    className="flex size-8 items-center justify-center rounded-lg bg-emerald-800 text-white hover:bg-emerald-800/80"
+                                                    className="flex size-8 items-center justify-center rounded-lg bg-trekk-primario text-trekk-primario-texto hover:bg-trekk-primario-hover"
                                                 >
                                                     +
                                                 </button>
@@ -847,7 +848,7 @@ function PasoResumen({ cargados, importe }) {
     return (
         <>
             <div>
-                <h2 className="text-xl font-semibold text-gray-900">Resumen de la reserva</h2>
+                <h2 className="font-display text-xl font-semibold text-trekk-texto">Resumen de la reserva</h2>
                 <p className="text-sm text-gray-500">Revisá los datos antes de confirmar y pagar.</p>
             </div>
 
@@ -896,14 +897,14 @@ function PasoResumen({ cargados, importe }) {
                 </dl>
             </div>
 
-            <div className="flex flex-col gap-1 rounded-xl bg-gray-100 px-4 py-3 text-sm">
+            <div className="flex flex-col gap-1 rounded-xl bg-trekk-suave px-4 py-3 text-sm">
                 <p className="text-gray-500">
                     Importe total = ({usd(importe.precio_paquete)} × {importe.cantidad_participantes}{' '}
                     {importe.cantidad_participantes === 1 ? 'participante' : 'participantes'})
                     {importe.equipamiento.length > 0 &&
                         ` + ${usd(importe.equipamiento.reduce((t, e) => t + e.subtotal, 0))} de equipamiento de alquiler`}
                 </p>
-                <p className="text-2xl font-semibold text-gray-900">{usd(importe.importe_total)}</p>
+                <p className="font-display text-2xl font-semibold">{usd(importe.importe_total)}</p>
             </div>
         </>
     );
@@ -915,10 +916,10 @@ function Resumen({ paquete, salida, excursion, cantidad, seleccion, importeTotal
     const cantidadValida = Number(cantidad) || 0;
 
     return (
-        <aside className="flex h-fit flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 lg:sticky lg:top-24">
-            <p className="text-xs font-semibold uppercase tracking-widest text-orange-600">Resumen</p>
+        <aside className="flex h-fit flex-col gap-4 rounded-2xl border border-trekk-borde bg-trekk-tarjeta p-5 lg:sticky lg:top-24">
+            <p className="text-xs font-semibold uppercase tracking-widest text-trekk-acento">Resumen</p>
             <div>
-                <h2 className="text-xl font-semibold text-gray-900">{excursion.nombre}</h2>
+                <h2 className="font-display text-xl font-semibold text-trekk-texto">{excursion.nombre}</h2>
                 <p className="text-sm text-gray-500">
                     {formatFecha(salida.fecha_inicio)} · {salida.hora_de_salida} hs · Paquete {paquete.nombre}
                 </p>
@@ -976,12 +977,12 @@ function ReservaRegistrada({ reserva, registrada, excursion, seleccion }) {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="size-14 text-emerald-700"
+                    className="size-14 text-trekk-primario"
                 >
                     <circle cx="12" cy="12" r="10" />
                     <path d="m9 12 2 2 4-4" />
                 </svg>
-                <h1 className="text-3xl font-semibold text-gray-900">Reserva {codigo(reserva.id)} registrada</h1>
+                <h1 className="font-display text-3xl font-semibold text-trekk-texto">Reserva {codigo(reserva.id)} registrada</h1>
                 <div className="flex flex-wrap justify-center gap-2">
                     <EstadoBadge valor={registrada.estado} />
                     <EstadoBadge valor={registrada.situacion_de_pago} />

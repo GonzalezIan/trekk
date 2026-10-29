@@ -14,16 +14,16 @@ export default function ListarPendientes({ auth, certificados }) {
             
             <main className="mx-auto max-w-5xl px-4 py-12">
                 <div className="flex flex-col gap-2 pb-6">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-orange-600">Administración</p>
-                    <h1 className="text-3xl font-semibold text-gray-900 md:text-4xl">Certificados Médicos</h1>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-trekk-acento">Administración</p>
+                    <h1 className="font-display text-3xl font-semibold text-trekk-texto md:text-4xl">Certificados Médicos</h1>
                     <p className="max-w-2xl text-gray-500">Verificá los certificados médicos de las reservas pendientes.</p>
                 </div>
 
                 {/* Aviso de éxito tras verificar */}
                 {mensajeExito && (
-                    <div className="mb-4 flex items-start gap-2 rounded-xl border border-emerald-300/50 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                    <div className="mb-4 flex items-start gap-2 rounded-xl border border-trekk-primario/20 bg-trekk-secundario/60 px-4 py-3 text-sm text-trekk-primario-hover">
                         <span className="flex-1">{mensajeExito}</span>
-                        <button onClick={() => setMensajeExito('')} className="text-emerald-900/70 hover:text-emerald-900">✕</button>
+                        <button onClick={() => setMensajeExito('')} className="text-trekk-primario/70 hover:text-trekk-primario-hover">✕</button>
                     </div>
                 )}
 
@@ -32,7 +32,7 @@ export default function ListarPendientes({ auth, certificados }) {
                         <p className="text-gray-500">No hay certificados pendientes de verificación.</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+                    <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-trekk-tarjeta">
                         <table className="w-full text-sm">
                             <thead className="border-b border-gray-200 text-left text-gray-500">
                                 <tr>
@@ -57,7 +57,7 @@ export default function ListarPendientes({ auth, certificados }) {
                                                     reserva_id: cert.participante.reserva_id,
                                                     dni: cert.participante.dni
                                                 })}
-                                                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+                                                className="rounded-lg bg-trekk-primario px-3 py-1.5 text-sm font-medium text-trekk-primario-texto hover:bg-trekk-primario-hover"
                                             >
                                                 Verificar
                                             </button>

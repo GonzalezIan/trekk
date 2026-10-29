@@ -2,6 +2,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import EncabezadoFormulario from '@/Components/Trekk/EncabezadoFormulario';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
@@ -57,16 +58,19 @@ export default function Registrar({ excursion }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="font-display text-2xl font-semibold text-trekk-texto">
-                    Programar salida de {excursion.nombre}
-                </h2>
+                <EncabezadoFormulario
+                    volverA={route('excursiones.listar')}
+                    volverTexto="Excursiones"
+                    titulo="Programar salida"
+                    descripcion={excursion.nombre}
+                />
             }
         >
             <Head title="Programar salida" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-3xl space-y-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-wrap gap-x-6 gap-y-1 bg-white px-6 py-4 text-sm text-gray-600 shadow-sm sm:rounded-lg">
+                <div className="mx-auto max-w-3xl space-y-4 px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-wrap gap-x-6 gap-y-1 border border-trekk-borde bg-trekk-tarjeta px-6 py-4 text-sm text-gray-600 rounded-2xl">
                         <span>
                             Excursión: <strong className="text-gray-900">{excursion.nombre}</strong>
                         </span>
@@ -111,9 +115,9 @@ function FormularioDatos({ datos, errores, procesando, onCambiar, onConfirmar })
     );
 
     return (
-        <form onSubmit={onConfirmar} noValidate className="space-y-6 bg-white p-6 shadow-sm sm:rounded-lg">
+        <form onSubmit={onConfirmar} noValidate className="space-y-6 border border-trekk-borde bg-trekk-tarjeta p-6 rounded-2xl">
             {errores.general && (
-                <div role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+                <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-trekk-error">
                     {errores.general}
                 </div>
             )}
@@ -129,11 +133,11 @@ function FormularioDatos({ datos, errores, procesando, onCambiar, onConfirmar })
                 {campo('precio_base', 'Precio base (ARS) *', { type: 'number', min: '0', step: '0.01' })}
             </div>
 
-            <div className="flex items-center justify-end gap-4 border-t pt-6">
+            <div className="flex items-center justify-end gap-4 border-t border-trekk-borde pt-6">
                 {/* Flujo alternativo: cancelar sin registrar ningún dato */}
                 <Link
                     href={route('excursiones.listar')}
-                    className="text-sm text-gray-600 underline hover:text-gray-900"
+                    className="rounded-lg px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                 >
                     Cancelar
                 </Link>
@@ -190,15 +194,15 @@ function PersonalYEquipamiento({ datos, onModificarDatos }) {
     // Alternativo 5.1: no hay guías disponibles en el período ingresado
     if (guias.items && guias.items.length === 0) {
         return (
-            <div className="space-y-4 bg-white p-6 shadow-sm sm:rounded-lg">
-                <div role="alert" className="rounded-md bg-amber-50 p-4 text-sm text-amber-800">
+            <div className="space-y-4 border border-trekk-borde bg-trekk-tarjeta p-6 rounded-2xl">
+                <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                     No hay guías disponibles para el período del {fecha(datos.fecha_inicio)} al{' '}
                     {fecha(datos.fecha_fin)}.
                 </div>
                 <div className="flex items-center justify-end gap-4">
                     <Link
                         href={route('excursiones.listar')}
-                        className="text-sm text-gray-600 underline hover:text-gray-900"
+                        className="rounded-lg px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                     >
                         Cancelar
                     </Link>
@@ -212,7 +216,7 @@ function PersonalYEquipamiento({ datos, onModificarDatos }) {
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-white px-6 py-4 text-sm shadow-sm sm:rounded-lg">
+            <div className="flex flex-wrap items-center justify-between gap-3 border border-trekk-borde bg-trekk-tarjeta px-6 py-4 text-sm rounded-2xl">
                 <div className="flex flex-wrap gap-x-6 gap-y-1 text-gray-700">
                     <span>
                         {fecha(datos.fecha_inicio)} al {fecha(datos.fecha_fin)} · {datos.hora_de_salida} hs
@@ -277,7 +281,7 @@ function PersonalYEquipamiento({ datos, onModificarDatos }) {
                 )}
             </Seccion>
 
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-white px-6 py-4 shadow-sm sm:rounded-lg">
+            <div className="flex flex-wrap items-center justify-between gap-4 border border-trekk-borde bg-trekk-tarjeta px-6 py-4 rounded-2xl">
                 <p className="text-sm text-gray-700">
                     Cupo máximo de la salida: <strong>{cupoFinal}</strong>
                     {cupoFinal < Number(datos.cupo_maximo) && (
@@ -289,7 +293,7 @@ function PersonalYEquipamiento({ datos, onModificarDatos }) {
                 <div className="flex items-center gap-4">
                     <Link
                         href={route('excursiones.listar')}
-                        className="text-sm text-gray-600 underline hover:text-gray-900"
+                        className="rounded-lg px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                     >
                         Cancelar
                     </Link>
@@ -322,9 +326,9 @@ function useListado(url, clave, activoAlInicio = false) {
 
 function Seccion({ titulo, error, activo = true, onActivar, textoActivar, children }) {
     return (
-        <div className="space-y-3 bg-white p-6 shadow-sm sm:rounded-lg">
+        <div className="space-y-3 border border-trekk-borde bg-trekk-tarjeta p-6 rounded-2xl">
             <div className="flex items-center justify-between gap-3">
-                <h3 className="font-semibold text-gray-900">{titulo}</h3>
+                <h3 className="font-display text-lg font-semibold text-trekk-texto">{titulo}</h3>
                 {onActivar && (
                     <label className="flex items-center gap-2 text-sm text-gray-700">
                         <input

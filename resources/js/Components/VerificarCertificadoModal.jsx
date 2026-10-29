@@ -86,7 +86,7 @@ export default function VerificarCertificadoModal({ certificado: { reserva_id, d
         <Modal show onClose={onCerrar} maxWidth="5xl">
             <form onSubmit={confirmar} noValidate className="flex max-h-[90dvh] flex-col">
                 <div className="border-b border-gray-200 px-5 py-4">
-                    <h2 className="text-xl font-semibold text-gray-900">Verificar certificado médico</h2>
+                    <h2 className="font-display text-xl font-semibold text-trekk-texto">Verificar certificado médico</h2>
                     {datos && <p className="text-sm text-gray-500">{datos.archivo.nombre}</p>}
                 </div>
 
@@ -102,7 +102,7 @@ export default function VerificarCertificadoModal({ certificado: { reserva_id, d
                         <div className="grid gap-5 md:grid-cols-[1fr_22rem]">
                             {/* Paso 2: archivo adjunto */}
                             <figure className="flex flex-col gap-2">
-                                <div className="aspect-[3/4] max-h-[60dvh] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-inner">
+                                <div className="aspect-[3/4] max-h-[60dvh] overflow-hidden rounded-xl border border-gray-200 bg-trekk-tarjeta shadow-inner">
                                     {datos.archivo.es_pdf ? (
                                         <iframe
                                             src={datos.url_archivo}
@@ -153,9 +153,9 @@ export default function VerificarCertificadoModal({ certificado: { reserva_id, d
                                                 setError('');
                                             }}
                                             className={
-                                                'flex items-start gap-3 rounded-xl border p-3 text-left transition-colors hover:border-emerald-800/50 ' +
+                                                'flex items-start gap-3 rounded-xl border p-3 text-left transition-colors hover:border-trekk-primario/50 ' +
                                                 (decision === valor
-                                                    ? 'border-emerald-800 ring-1 ring-emerald-800'
+                                                    ? 'border-trekk-primario ring-1 ring-trekk-primario'
                                                     : 'border-gray-200')
                                             }
                                         >
@@ -163,7 +163,7 @@ export default function VerificarCertificadoModal({ certificado: { reserva_id, d
                                                 aria-hidden
                                                 className={
                                                     'mt-0.5 text-base leading-none ' +
-                                                    (valor === 'VALIDO' ? 'text-emerald-700' : 'text-red-600')
+                                                    (valor === 'VALIDO' ? 'text-trekk-primario' : 'text-red-600')
                                                 }
                                             >
                                                 {valor === 'VALIDO' ? '✓' : '✕'}
@@ -199,7 +199,7 @@ export default function VerificarCertificadoModal({ certificado: { reserva_id, d
                                             <p
                                                 className={
                                                     'rounded-lg px-3 py-2 text-sm ' +
-                                                    (cubre ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-700')
+                                                    (cubre ? 'bg-trekk-secundario/60 text-trekk-primario' : 'bg-red-50 text-red-700')
                                                 }
                                             >
                                                 Vigencia hasta el {formatFecha(vigencia)} (emisión +{' '}
@@ -260,7 +260,7 @@ export default function VerificarCertificadoModal({ certificado: { reserva_id, d
                             'inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 ' +
                             (decision === 'INVALIDO'
                                 ? 'bg-red-600/10 text-red-600 hover:bg-red-600/20'
-                                : 'bg-emerald-800 text-white hover:bg-emerald-800/80')
+                                : 'bg-trekk-primario text-trekk-primario-texto hover:bg-trekk-primario-hover')
                         }
                     >
                         {enviando

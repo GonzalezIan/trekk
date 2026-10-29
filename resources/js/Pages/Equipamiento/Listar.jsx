@@ -71,10 +71,10 @@ function ListarEquipamientoDisponibleAlquiler({ equipamientos }) {
             {/* Lista de equipos */}
             <div className="flex-1">
                 <div className="flex flex-col gap-2 pb-6">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-orange-600">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-trekk-acento">
                         Cliente
                     </p>
-                    <h1 className="text-3xl font-semibold text-gray-900 md:text-4xl">
+                    <h1 className="font-display text-3xl font-semibold text-trekk-texto md:text-4xl">
                         Equipamiento para Alquilar
                     </h1>
                     <p className="max-w-2xl text-gray-500">
@@ -84,9 +84,9 @@ function ListarEquipamientoDisponibleAlquiler({ equipamientos }) {
 
                 <div className="flex flex-col gap-4">
                     {equipamientos.map((eq) => (
-                        <article key={eq.id} className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-5">
+                        <article key={eq.id} className="flex items-center justify-between rounded-2xl border border-gray-200 bg-trekk-tarjeta p-5">
                             <div>
-                                <h2 className="text-lg font-semibold text-gray-900">{eq.nombre}</h2>
+                                <h2 className="font-display text-lg font-semibold text-trekk-texto">{eq.nombre}</h2>
                                 <p className="text-sm text-gray-500">{eq.descripcion}</p>
                                 <p className="text-xs text-gray-400 mt-1">{eq.stock} disponibles</p>
                             </div>
@@ -106,7 +106,7 @@ function ListarEquipamientoDisponibleAlquiler({ equipamientos }) {
                                     />
                                     <button
                                         onClick={() => agregarAlCarrito(eq)}
-                                        className="bg-emerald-600 px-3 py-2 text-white hover:bg-emerald-700 rounded-r-lg transition-colors"
+                                        className="bg-trekk-primario px-3 py-2 text-trekk-primario-texto hover:bg-trekk-primario-hover rounded-r-lg transition-colors"
                                     >
                                         +
                                     </button>
@@ -120,7 +120,7 @@ function ListarEquipamientoDisponibleAlquiler({ equipamientos }) {
             {/* Carrito */}
             <div className="w-full md:w-80">
                 <div className="sticky top-24 rounded-2xl border border-gray-200 bg-gray-50 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Vas a agregar</h3>
+                    <h3 className="font-display text-lg font-semibold text-trekk-texto mb-4">Vas a agregar</h3>
                     
                     {Object.keys(seleccionados).length === 0 ? (
                         <p className="text-sm text-gray-500">No has seleccionado nada aún.</p>
@@ -150,7 +150,7 @@ function ListarEquipamientoDisponibleAlquiler({ equipamientos }) {
                         </div>
                         <button 
                             onClick={confirmarAlquiler}
-                            className="w-full bg-emerald-600 text-white font-medium py-2 rounded-lg hover:bg-emerald-700 transition-colors"
+                            className="w-full bg-trekk-primario text-trekk-primario-texto font-medium py-2 rounded-lg hover:bg-trekk-primario-hover transition-colors"
                         >
                             Confirmar
                         </button>
@@ -190,14 +190,14 @@ function ListarEquipamientoDisponiblePrestar({ equipamientos, salida }) {
     }
 
     return (
-        <div className="flex flex-col gap-6 max-w-4xl mx-auto bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        <div className="flex flex-col gap-6 max-w-4xl mx-auto bg-trekk-tarjeta rounded-2xl border border-gray-200 p-6 shadow-sm">
             <div className="flex flex-col gap-2">
-                <h2 className="text-xl font-semibold text-gray-900">Asistentes (opcional)</h2>
+                <h2 className="font-display text-xl font-semibold text-trekk-texto">Asistentes (opcional)</h2>
                 <p className="text-sm text-gray-500">Ingresá el período para ver los asistentes disponibles.</p>
             </div>
 
             <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Equipamiento incluido sin costo (opcional)</h3>
+                <h3 className="font-display text-lg font-semibold text-trekk-texto mb-4">Equipamiento incluido sin costo (opcional)</h3>
                 
                 {/* Grilla de 2 columnas */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -210,7 +210,7 @@ function ListarEquipamientoDisponiblePrestar({ equipamientos, salida }) {
                                 key={eq.id} 
                                 className={`flex items-center justify-between rounded-xl border p-4 transition-colors
                                     ${stockSuficiente 
-                                        ? 'border-gray-200 bg-white hover:bg-gray-50 cursor-pointer' 
+                                        ? 'border-gray-200 bg-trekk-tarjeta hover:bg-gray-50 cursor-pointer' 
                                         : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'}`}
                             >
                                 <div className="flex items-center gap-3">
@@ -219,7 +219,7 @@ function ListarEquipamientoDisponiblePrestar({ equipamientos, salida }) {
                                         disabled={!stockSuficiente}
                                         checked={!!seleccionados[eq.id]}
                                         onChange={() => toggleEquipo(eq.id, eq.stock)}
-                                        className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                        className="h-4 w-4 rounded border-gray-300 text-trekk-primario focus:ring-trekk-primario"
                                     />
                                     <span className="text-sm font-medium text-gray-900">{eq.nombre}</span>
                                 </div>
@@ -249,7 +249,7 @@ function ListarEquipamientoDisponiblePrestar({ equipamientos, salida }) {
                             alert(`¡Excelente! Seleccionaste ${cantidad} equipos. (Vista visual funcionando)`);
                         }
                     }}
-                    className="px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                    className="px-4 py-2 text-sm font-medium bg-trekk-primario text-trekk-primario-texto rounded-lg hover:bg-trekk-primario-hover transition-colors"
                 >
                     Registrar salida
                 </button>

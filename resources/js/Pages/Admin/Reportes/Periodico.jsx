@@ -11,7 +11,7 @@ const formatFecha = (fecha) =>
     });
 
 const botonSecundario =
-    'inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100';
+    'inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100';
 
 export default function Periodico({ reporte = null, error = null }) {
     const form = useForm({
@@ -41,8 +41,8 @@ export default function Periodico({ reporte = null, error = null }) {
 
             <main className="mx-auto max-w-5xl px-4 py-12">
                 <div className="flex flex-col gap-2 pb-8">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-orange-600">Administración</p>
-                    <h1 className="text-3xl font-semibold text-gray-900 md:text-4xl">Generar reporte periódico</h1>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-trekk-acento">Administración</p>
+                    <h1 className="font-display text-3xl font-semibold text-trekk-texto md:text-4xl">Generar reporte periódico</h1>
                     <p className="max-w-2xl text-gray-500">
                         Clientes frecuentes, actividades frecuentes y conformidad, sobre las reservas realizadas en el
                         período.
@@ -52,7 +52,7 @@ export default function Periodico({ reporte = null, error = null }) {
                 <form
                     onSubmit={generar}
                     noValidate
-                    className="flex flex-wrap items-end gap-3 rounded-2xl border border-gray-200 bg-white p-4 print:hidden"
+                    className="flex flex-wrap items-end gap-3 rounded-2xl border border-gray-200 bg-trekk-tarjeta p-4 print:hidden"
                 >
                     <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-900">
                         Fecha de inicio
@@ -60,7 +60,7 @@ export default function Periodico({ reporte = null, error = null }) {
                             type="date"
                             value={form.data.fecha_inicio}
                             onChange={(e) => form.setData('fecha_inicio', e.target.value)}
-                            className="w-44 rounded-lg border-gray-200 text-sm focus:border-emerald-700 focus:ring-emerald-700"
+                            className="w-44 rounded-lg border-gray-200 text-sm focus:border-trekk-primario focus:ring-trekk-primario"
                         />
                     </label>
                     <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-900">
@@ -69,13 +69,13 @@ export default function Periodico({ reporte = null, error = null }) {
                             type="date"
                             value={form.data.fecha_fin}
                             onChange={(e) => form.setData('fecha_fin', e.target.value)}
-                            className="w-44 rounded-lg border-gray-200 text-sm focus:border-emerald-700 focus:ring-emerald-700"
+                            className="w-44 rounded-lg border-gray-200 text-sm focus:border-trekk-primario focus:ring-trekk-primario"
                         />
                     </label>
                     <button
                         type="submit"
                         disabled={form.processing}
-                        className="inline-flex items-center rounded-lg bg-emerald-800 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800/80 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center rounded-lg bg-trekk-primario px-4 py-2 text-sm font-medium text-trekk-primario-texto hover:bg-trekk-primario-hover disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {form.processing ? 'Generando…' : 'Generar reporte'}
                     </button>
@@ -110,7 +110,7 @@ export default function Periodico({ reporte = null, error = null }) {
 
                         {/* Paso 6 - RN-02 */}
                         <section className="flex flex-col gap-3">
-                            <h2 className="text-xl font-semibold text-gray-900">Clientes frecuentes</h2>
+                            <h2 className="font-display text-xl font-semibold text-trekk-texto">Clientes frecuentes</h2>
                             <Tabla encabezados={['Nombre', 'Apellido', 'DNI', 'Excursiones realizadas']}>
                                 {reporte.clientes_frecuentes.map((c) => (
                                     <tr key={c.dni}>
@@ -125,7 +125,7 @@ export default function Periodico({ reporte = null, error = null }) {
 
                         {/* Paso 7 - RN-03 */}
                         <section className="flex flex-col gap-3">
-                            <h2 className="text-xl font-semibold text-gray-900">Actividades frecuentes</h2>
+                            <h2 className="font-display text-xl font-semibold text-trekk-texto">Actividades frecuentes</h2>
                             <Tabla encabezados={['Excursión', 'Participantes']}>
                                 {reporte.actividades_frecuentes.map((a) => (
                                     <tr key={a.excursion}>
@@ -138,7 +138,7 @@ export default function Periodico({ reporte = null, error = null }) {
 
                         {/* Paso 8 - RN-04 */}
                         <section className="flex flex-col gap-3">
-                            <h2 className="text-xl font-semibold text-gray-900">Conformidad</h2>
+                            <h2 className="font-display text-xl font-semibold text-trekk-texto">Conformidad</h2>
                             {reporte.conformidad.length === 0 ? (
                                 <p className="rounded-xl border border-dashed border-gray-300 p-6 text-center text-gray-500">
                                     No hay valoraciones registradas en el período.
@@ -182,7 +182,7 @@ export default function Periodico({ reporte = null, error = null }) {
 
 function Tabla({ encabezados, children }) {
     return (
-        <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-trekk-tarjeta">
             <table className="w-full text-sm">
                 <thead className="border-b border-gray-200 text-left text-gray-500">
                     <tr>
@@ -201,7 +201,7 @@ function Tabla({ encabezados, children }) {
 
 function IconoEstrella() {
     return (
-        <svg aria-hidden viewBox="0 0 24 24" className="size-3.5 fill-orange-500 text-orange-500">
+        <svg aria-hidden viewBox="0 0 24 24" className="size-3.5 fill-orange-500 text-trekk-acento">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
     );

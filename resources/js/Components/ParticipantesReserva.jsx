@@ -41,7 +41,7 @@ export default function ParticipantesReserva({ reserva }) {
 
     return (
         <>
-            <ul className="flex flex-col divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white">
+            <ul className="flex flex-col divide-y divide-gray-200 rounded-xl border border-gray-200 bg-trekk-tarjeta">
                 {datos.participantes.map((p) => (
                     <li
                         key={p.dni}

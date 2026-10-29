@@ -110,7 +110,7 @@ export function CancelarReservaModal({ reserva, onCerrar, onCancelada }) {
         <Modal show onClose={onCerrar} maxWidth="lg">
             <form onSubmit={confirmar} noValidate className="flex flex-col">
                 <div className="border-b border-gray-200 px-5 py-4">
-                    <h2 className="text-xl font-semibold text-gray-900">Cancelar reserva</h2>
+                    <h2 className="font-display text-xl font-semibold text-trekk-texto">Cancelar reserva</h2>
                     <p className="text-sm text-gray-500">
                         R-{String(reserva.id).padStart(4, '0')} · {reserva.excursion}
                     </p>

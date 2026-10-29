@@ -48,7 +48,7 @@ export default function CargarCertificadoModal({ reserva, participante, onCerrar
         <Modal show onClose={onCerrar} maxWidth="lg">
             <form onSubmit={registrar} noValidate className="flex flex-col">
                 <div className="border-b border-gray-200 px-5 py-4">
-                    <h2 className="text-xl font-semibold text-gray-900">Cargar certificado médico</h2>
+                    <h2 className="font-display text-xl font-semibold text-trekk-texto">Cargar certificado médico</h2>
                     <p className="text-sm text-gray-500">
                         {participante.nombre} {participante.apellido} · DNI {participante.dni}
                     </p>
@@ -104,7 +104,7 @@ export default function CargarCertificadoModal({ reserva, participante, onCerrar
                     <button
                         type="submit"
                         disabled={!formatos || enviando}
-                        className="inline-flex items-center rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-800/80 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center rounded-lg bg-trekk-primario px-3 py-1.5 text-sm font-medium text-trekk-primario-texto hover:bg-trekk-primario-hover disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {enviando ? 'Cargando…' : 'Cargar certificado'}
                     </button>

@@ -26,8 +26,8 @@ export default function RegistrarConformidadModal({ reserva, onCerrar }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">Calificá tu experiencia</h2>
+            <div className="w-full max-w-lg rounded-2xl border border-trekk-borde bg-trekk-tarjeta p-6 shadow-xl">
+                <h2 className="font-display text-2xl font-semibold text-trekk-texto mb-1">Calificá tu experiencia</h2>
                 <p className="text-gray-500 text-sm mb-6">
                     Contanos cómo te fue en: <strong>{reserva.excursion}</strong>
                 </p>
@@ -44,7 +44,7 @@ export default function RegistrarConformidadModal({ reserva, onCerrar }) {
                                 onMouseLeave={() => setHover(0)}
                                 className="text-4xl transition-transform hover:scale-110 focus:outline-none"
                             >
-                                <span className={estrella <= (hover || valoracion) ? 'text-yellow-400' : 'text-gray-300'}>
+                                <span className={estrella <= (hover || valoracion) ? 'text-trekk-acento' : 'text-gray-300'}>
                                     ★
                                 </span>
                             </button>
@@ -56,7 +56,7 @@ export default function RegistrarConformidadModal({ reserva, onCerrar }) {
                             Comentario (Opcional)
                         </label>
                         <textarea
-                            className="w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            className="w-full rounded-lg border-gray-300 shadow-sm focus:border-trekk-primario focus:ring-trekk-primario"
                             rows="4"
                             placeholder="¿Qué te pareció la excursión, el guía, el refugio...?"
                             value={comentario}
@@ -71,7 +71,7 @@ export default function RegistrarConformidadModal({ reserva, onCerrar }) {
                         <button 
                             type="submit" 
                             disabled={procesando} 
-                            className="px-6 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+                            className="px-6 py-2 text-sm font-medium bg-trekk-primario text-trekk-primario-texto rounded-lg hover:bg-trekk-primario-hover disabled:opacity-50"
                         >
                             {procesando ? 'Enviando...' : 'Enviar Calificación'}
                         </button>

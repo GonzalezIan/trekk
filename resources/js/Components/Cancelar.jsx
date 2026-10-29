@@ -22,8 +22,8 @@ export default function Cancelar({ paquete, onCerrar }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-                <h2 className="text-xl font-bold text-gray-900 mb-2">Cancelar Paquete</h2>
+            <div className="w-full max-w-md rounded-2xl border border-trekk-borde bg-trekk-tarjeta p-6 shadow-xl">
+                <h2 className="font-display text-xl font-semibold text-trekk-texto mb-2">Cancelar Paquete</h2>
                 
                 <p className="text-gray-600 text-sm mb-4">
                     ¿Estás seguro de cancelar <strong>{paquete.nombre}</strong>?

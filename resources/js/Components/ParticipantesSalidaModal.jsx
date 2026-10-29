@@ -22,7 +22,7 @@ export default function ParticipantesSalidaModal({ salida, onCerrar }) {
         <Modal show onClose={onCerrar}>
             <div className="flex flex-col gap-4 p-6">
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-900">Participantes de la salida</h2>
+                    <h2 className="font-display text-lg font-semibold text-trekk-texto">Participantes de la salida</h2>
                     <p className="text-sm text-gray-500">
                         {salida.excursion} · {salida.fecha_inicio} · reservas confirmadas
                     </p>
@@ -39,7 +39,7 @@ export default function ParticipantesSalidaModal({ salida, onCerrar }) {
                 )}
 
                 {participantes?.length > 0 && (
-                    <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+                    <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-trekk-tarjeta">
                         <table className="w-full text-sm">
                             <thead className="border-b border-gray-200 text-left text-gray-500">
                                 <tr>

@@ -112,9 +112,11 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Cambiar contraseña del Administrativo. El cliente lo hace desde «Mis datos» (CU 13).
+    // La cuenta no se edita ni se elimina desde acá (ERS 2.3).
+    Route::get('/profile', [ProfileController::class, 'edit'])
+        ->middleware('administrativo')
+        ->name('profile.edit');
     Route::get('/reservas/{reserva}/conformidad', [ControladorReservas::class, 'solicitarConformidad'])->name('reservas.conformidad');
     Route::post('/reservas/{reserva}/conformidad', [ControladorReservas::class, 'guardarConformidad'])->name('reservas.conformidad.guardar');
 });

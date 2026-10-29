@@ -45,6 +45,9 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * El Administrativo es el usuario con rol 'admin' (ver UserSeeder).
+     */
     public function esAdministrativo(): bool
     {
         return $this->rol === 'admin';

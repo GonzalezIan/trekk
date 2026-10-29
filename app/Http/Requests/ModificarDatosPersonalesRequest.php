@@ -19,6 +19,14 @@ class ModificarDatosPersonalesRequest extends FormRequest
         return true;
     }
 
+    /** Igual que en el registro (CU 12): el correo se guarda en minúsculas y sin espacios. */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'email' => mb_strtolower(trim((string) $this->input('email'))),
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -30,12 +38,12 @@ class ModificarDatosPersonalesRequest extends FormRequest
             'email' => [
                 'required',
                 'string',
-                'lowercase',
                 'email:strict',
                 'max:255',
                 Rule::unique(User::class, 'email')->ignore($this->user()->id),
             ],
-            'telefono' => ['required', 'string', 'max:30'],
+            // Misma regla que en el registro (CU 12)
+            'telefono' => ['required', 'string', 'regex:/^[0-9 +()-]{6,30}$/'],
         ];
     }
 
@@ -59,7 +67,7 @@ class ModificarDatosPersonalesRequest extends FormRequest
             'string' => 'El campo :attribute debe ser texto.',
             'max' => 'El campo :attribute no puede superar los :max caracteres.',
             'email.email' => 'Ingresá un correo electrónico válido.',
-            'email.lowercase' => 'El correo electrónico debe estar escrito en minúsculas.',
+            'telefono.regex' => 'El teléfono solo puede tener números, espacios, +, - y paréntesis.',
             'email.unique' => 'Ese correo electrónico ya está en uso por otra cuenta.',
         ];
     }

@@ -105,11 +105,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                     </Dropdown.Trigger>
 
                                     <Dropdown.Content>
-                                        <Dropdown.Link
-                                            href={route('profile.edit')}
-                                        >
-                                            Profile
-                                        </Dropdown.Link>
+                                        {/* El cliente cambia su contraseña desde «Mis datos» (CU 13) */}
+                                        {user.rol === 'admin' && (
+                                            <Dropdown.Link
+                                                href={route('profile.edit')}
+                                            >
+                                                Cambiar contraseña
+                                            </Dropdown.Link>
+                                        )}
                                         <Dropdown.Link
                                             href={route('logout')}
                                             method="post"
@@ -235,9 +238,11 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
 
                         <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
-                            </ResponsiveNavLink>
+                            {user.rol === 'admin' && (
+                                <ResponsiveNavLink href={route('profile.edit')}>
+                                    Cambiar contraseña
+                                </ResponsiveNavLink>
+                            )}
                             <ResponsiveNavLink
                                 method="post"
                                 href={route('logout')}

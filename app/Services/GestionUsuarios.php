@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Cliente;
 use Illuminate\Support\Facades\DB;
 
+class GestionUsuarios
+{
     /**
      * Modifica los datos personales del cliente (CU 13, RF-13).
      *
@@ -13,10 +15,6 @@ use Illuminate\Support\Facades\DB;
      *
      * @param  array{email?: string, telefono?: string, nombre?: string, apellido?: string}  $datos
      */
-
-class GestionUsuarios
-{
-
     public function modificarDatosPersonales(Cliente $cliente, array $datos): Cliente
     {
         return DB::transaction(function () use ($cliente, $datos): Cliente {

@@ -166,6 +166,29 @@ class ModificarDatosPersonalesTest extends TestCase
             ->assertSessionHasErrors(['email' => 'Ingresá un correo electrónico válido.']);
     }
 
+    public function test_el_correo_se_guarda_en_minusculas(): void
+    {
+        // Igual que en el registro (CU 12)
+        $cliente = Cliente::factory()->create();
+
+        $this->actingAs($cliente->user)
+            ->patch(route('perfil.update'), $this->datosValidos(['email' => '  Carolina.Mendez@Mail.COM ']))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('carolina.mendez@mail.com', $cliente->user->refresh()->email);
+    }
+
+    public function test_el_telefono_debe_ser_valido(): void
+    {
+        $cliente = Cliente::factory()->create(['telefono' => '+54 280 455-1234']);
+
+        $this->actingAs($cliente->user)
+            ->patch(route('perfil.update'), $this->datosValidos(['telefono' => 'llamame']))
+            ->assertSessionHasErrors(['telefono' => 'El teléfono solo puede tener números, espacios, +, - y paréntesis.']);
+
+        $this->assertSame('+54 280 455-1234', $cliente->refresh()->telefono);
+    }
+
     public function test_solo_modifica_los_datos_del_cliente_autenticado(): void
     {
         $propio = Cliente::factory()->create(['nombre' => 'Carla']);

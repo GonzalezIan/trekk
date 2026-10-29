@@ -1,12 +1,13 @@
 import Modal from '@/Components/Modal';
+import { IconoEstetoscopio, IconoFlecha, IconoReloj, IconoTendencia, IconoUbicacion } from '@/Components/Trekk/Iconos';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 const botonOscuro =
-    'rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50';
+    'rounded-lg bg-trekk-primario px-4 py-2 text-sm font-medium text-trekk-primario-texto hover:bg-trekk-primario-hover disabled:cursor-not-allowed disabled:opacity-50';
 const botonClaro =
-    'rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50';
+    'rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave disabled:cursor-not-allowed disabled:opacity-50';
 
 // CU 4 - Listar excursiones
 export default function Listar({ excursiones, esAdministrativo }) {
@@ -23,9 +24,14 @@ export default function Listar({ excursiones, esAdministrativo }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Excursiones
-                    </h2>
+                    <div className="flex flex-col gap-1">
+                        <h2 className="font-display text-2xl font-semibold text-trekk-texto">
+                            {esAdministrativo ? 'Excursiones' : 'Catálogo de excursiones'}
+                        </h2>
+                        {!esAdministrativo && (
+                            <p className="text-trekk-texto-suave">Elegí una excursión para ver sus salidas programadas.</p>
+                        )}
+                    </div>
                     {esAdministrativo && (
                         <Link href={route('excursiones.alta')} className={botonOscuro}>
                             Nueva excursión
@@ -37,7 +43,7 @@ export default function Listar({ excursiones, esAdministrativo }) {
             <Head title="Excursiones" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-7xl space-y-4 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl space-y-4 px-4 sm:px-6 lg:px-8">
                     {flash.exito && (
                         <div className="rounded-md bg-green-50 p-4 text-sm text-green-800">
                             {flash.exito}
@@ -56,6 +62,9 @@ export default function Listar({ excursiones, esAdministrativo }) {
                         />
                     )}
 
+                    {!esAdministrativo ? (
+                        <Catalogo excursiones={excursiones} />
+                    ) : (
                     <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
                         {excursiones.length === 0 ? (
                             <p className="p-6 text-gray-600">No hay excursiones registradas.</p>
@@ -63,39 +72,34 @@ export default function Listar({ excursiones, esAdministrativo }) {
                             <table className="min-w-full divide-y divide-gray-200 text-sm">
                                 <thead className="bg-gray-50 text-left text-gray-600">
                                     <tr>
-                                        {esAdministrativo && <th className="w-8 px-4 py-3"></th>}
+                                        <th className="w-8 px-4 py-3"></th>
                                         <th className="px-4 py-3">Nombre</th>
                                         <th className="px-4 py-3">Recorrido</th>
                                         <th className="px-4 py-3">Dificultad</th>
                                         <th className="px-4 py-3">Duración</th>
                                         <th className="px-4 py-3">Estado</th>
-                                        {!esAdministrativo && <th className="px-4 py-3"></th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {excursiones.map((e) => (
                                         <tr
                                             key={e.id}
-                                            onClick={esAdministrativo ? () => setSeleccionada(e.id) : undefined}
+                                            onClick={() => setSeleccionada(e.id)}
                                             className={
-                                                esAdministrativo
-                                                    ? 'cursor-pointer ' +
-                                                      (e.id === seleccionada ? 'bg-indigo-50' : 'hover:bg-gray-50')
-                                                    : ''
+                                                'cursor-pointer ' +
+                                                (e.id === seleccionada ? 'bg-indigo-50' : 'hover:bg-gray-50')
                                             }
                                         >
-                                            {esAdministrativo && (
-                                                <td className="px-4 py-3">
-                                                    <input
-                                                        type="radio"
-                                                        name="excursion"
-                                                        checked={e.id === seleccionada}
-                                                        onChange={() => setSeleccionada(e.id)}
-                                                        aria-label={`Seleccionar la excursión ${e.nombre}`}
-                                                        className="text-indigo-600 focus:ring-indigo-500"
-                                                    />
-                                                </td>
-                                            )}
+                                            <td className="px-4 py-3">
+                                                <input
+                                                    type="radio"
+                                                    name="excursion"
+                                                    checked={e.id === seleccionada}
+                                                    onChange={() => setSeleccionada(e.id)}
+                                                    aria-label={`Seleccionar la excursión ${e.nombre}`}
+                                                    className="text-indigo-600 focus:ring-indigo-500"
+                                                />
+                                            </td>
                                             <td className="px-4 py-3 font-medium text-gray-900">
                                                 {e.nombre}
                                             </td>
@@ -116,23 +120,13 @@ export default function Listar({ excursiones, esAdministrativo }) {
                                                     {e.estado}
                                                 </span>
                                             </td>
-                                            {!esAdministrativo && (
-                                                // CU 4 - alternativo 4.1: el Cliente elige la excursión -> CU 9
-                                                <td className="px-4 py-3 text-right">
-                                                    <Link
-                                                        href={route('salidas.listar', { excursion: e.id })}
-                                                        className="text-indigo-600 hover:underline"
-                                                    >
-                                                        Ver salidas
-                                                    </Link>
-                                                </td>
-                                            )}
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         )}
                     </div>
+                    )}
                 </div>
             </div>
 
@@ -233,5 +227,71 @@ function BajaExcursionModal({ excursion, onCerrar }) {
                 </button>
             </div>
         </Modal>
+    );
+}
+// Fotos del prototipo; las excursiones no tienen imagen propia, así que se reparten por id
+const fotos = ['bosque', 'glaciar', 'laguna', 'refugio'];
+
+// CU 4 para el Cliente: las excursiones activas como tarjetas (prototipo: excursion-card.tsx)
+function Catalogo({ excursiones }) {
+    if (excursiones.length === 0) {
+        return (
+            <p className="rounded-xl border border-dashed border-trekk-borde p-6 text-center text-trekk-texto-suave">
+                No hay excursiones disponibles por el momento.
+            </p>
+        );
+    }
+
+    return (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {excursiones.map((e) => (
+                // CU 4 - alternativo 4.1: el Cliente elige la excursión -> CU 9
+                <Link
+                    key={e.id}
+                    href={route('salidas.listar', { excursion: e.id })}
+                    className="group flex flex-col overflow-hidden rounded-2xl border border-trekk-borde bg-trekk-tarjeta transition-shadow hover:shadow-lg"
+                >
+                    <div className="relative aspect-[16/10] overflow-hidden">
+                        <img
+                            src={`/images/excursiones/${fotos[e.id % fotos.length]}.jpg`}
+                            alt=""
+                            loading="lazy"
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+                            <span className="rounded-full bg-trekk-fondo/90 px-2 py-0.5 text-xs font-medium backdrop-blur">
+                                {e.dificultad.charAt(0) + e.dificultad.slice(1).toLowerCase()}
+                            </span>
+                            {e.requiere_certificado_medico && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-trekk-fondo/90 px-2 py-0.5 text-xs backdrop-blur">
+                                    <IconoEstetoscopio className="h-3 w-3" /> Certificado médico
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex flex-1 flex-col gap-3 p-5">
+                        <h3 className="font-display text-xl font-semibold">{e.nombre}</h3>
+                        <p className="flex items-start gap-1.5 text-sm text-trekk-texto-suave">
+                            <IconoUbicacion className="mt-0.5 h-4 w-4 shrink-0" />
+                            {e.recorrido}
+                        </p>
+                        <div className="mt-auto flex flex-wrap items-center gap-4 pt-2 text-sm">
+                            <span className="flex items-center gap-1.5">
+                                <IconoReloj className="h-4 w-4 text-trekk-texto-suave" />
+                                {e.duracion} {e.duracion === 1 ? 'día' : 'días'}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                                <IconoTendencia className="h-4 w-4 text-trekk-texto-suave" />
+                                Dificultad {e.dificultad.toLowerCase()}
+                            </span>
+                            <span className="ms-auto flex items-center gap-1 font-medium text-trekk-primario">
+                                Ver salidas
+                                <IconoFlecha className="h-4 w-4 transition group-hover:translate-x-1" />
+                            </span>
+                        </div>
+                    </div>
+                </Link>
+            ))}
+        </div>
     );
 }

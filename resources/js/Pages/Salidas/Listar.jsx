@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
 import ParticipantesSalidaModal from '@/Components/ParticipantesSalidaModal';
+import { IconoCalendario, IconoFlecha, IconoPersonas, IconoReloj, IconoVolver } from '@/Components/Trekk/Iconos';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -51,27 +52,26 @@ export default function Listar({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        {esAdministrativo
-                            ? 'Salidas Programadas'
-                            : `Salidas de ${excursion.nombre}`}
-                    </h2>
-                    {!esAdministrativo && (
+                esAdministrativo ? (
+                    <h2 className="font-display text-2xl font-semibold text-trekk-texto">Salidas Programadas</h2>
+                ) : (
+                    <div className="flex flex-col gap-1">
                         <Link
                             href={route('excursiones.listar')}
-                            className="text-sm text-gray-600 underline hover:text-gray-900"
+                            className="flex w-fit items-center gap-1 text-sm text-trekk-texto-suave hover:text-trekk-texto"
                         >
-                            Volver a excursiones
+                            <IconoVolver className="h-4 w-4" /> Excursiones
                         </Link>
-                    )}
-                </div>
+                        <h2 className="font-display text-2xl font-semibold text-trekk-texto">{excursion.nombre}</h2>
+                        <p className="text-trekk-texto-suave">Elegí una salida programada para ver sus paquetes.</p>
+                    </div>
+                )
             }
         >
             <Head title="Salidas Programadas" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-7xl space-y-4 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl space-y-4 px-4 sm:px-6 lg:px-8">
                     {/* CU 8 - paso 9: se informa que la salida fue registrada */}
                     {flash.exito && (
                         <div className="rounded-md bg-green-50 p-4 text-sm text-green-800">
@@ -104,24 +104,24 @@ export default function Listar({
                         />                    
                     )}
 
+                    {!esAdministrativo ? (
+                        <TarjetasCliente salidas={salidas} />
+                    ) : (
                     <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
                         {salidas.length === 0 ? (
                             // Alternativo 3.3
                             <p className="p-6 text-gray-600">
-                                {esAdministrativo
-                                    ? 'No existen Salidas Programadas que cumplan los filtros.'
-                                    : 'No existen Salidas Programadas para la excursión seleccionada.'}
+                                No existen Salidas Programadas que cumplan los filtros.
                             </p>
-                        ) : esAdministrativo ? (
+                        ) : (
                             <TablaAdministrativo
                                 salidas={salidas}
                                 seleccionada={seleccionada}
                                 onSeleccionar={setSeleccionada}
                             />
-                        ) : (
-                            <TablaCliente salidas={salidas} />
                         )}
                     </div>
+                    )}
                 </div>
             </div>
             {verParticipantes && salidaSeleccionada && (
@@ -156,7 +156,7 @@ export default function Listar({
                             <button
                                 type="button"
                                 onClick={() => setCancelando(null)}
-                                className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                                className="rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                             >
                                 Volver
                             </button>
@@ -164,7 +164,7 @@ export default function Listar({
                                 type="button"
                                 onClick={confirmarCancelacion}
                                 disabled={procesando}
-                                className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-red-700 disabled:opacity-50"
+                                className="rounded-lg bg-trekk-error px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                             >
                                 {procesando ? 'Cancelando…' : 'Confirmar cancelación'}
                             </button>
@@ -242,14 +242,14 @@ function Filtros({ filtros, excursiones, estados }) {
             <div className="flex items-end gap-2">
                 <button
                     type="submit"
-                    className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700"
+                    className="rounded-lg bg-trekk-primario px-4 py-2 text-sm font-medium text-trekk-primario-texto hover:bg-trekk-primario-hover"
                 >
                     Filtrar
                 </button>
                 <button
                     type="button"
                     onClick={limpiar}
-                    className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                    className="rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                 >
                     Limpiar
                 </button>
@@ -271,7 +271,7 @@ function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
                     {/* CU 7 - Listar paquetes de la salida */}
                     <Link
                         href={route('paquetes.listar', salida.id)}
-                        className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700"
+                        className="rounded-lg bg-trekk-primario px-4 py-2 text-sm font-medium text-trekk-primario-texto hover:bg-trekk-primario-hover"
                     >
                         Listar paquetes
                     </Link>
@@ -279,7 +279,7 @@ function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
                     {salida.estado === 'PROGRAMADA' && (
                         <Link
                             href={route('paquetes.registrar', salida.id)}
-                            className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                            className="rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                         >
                             Registrar paquete
                         </Link>
@@ -288,7 +288,7 @@ function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
                     {salida.estado === 'PROGRAMADA' && (
                         <Link
                             href={route('salidas.modificar', salida.id)}
-                            className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                            className="rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                         >
                             Modificar
                         </Link>
@@ -297,7 +297,7 @@ function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
                     <button
                         type="button"
                         onClick={onListarParticipantes}
-                        className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                        className="rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave"
                     >
                         Listar participantes
                     </button>
@@ -306,7 +306,7 @@ function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
                         <button
                             type="button"
                             onClick={onCancelar}
-                            className="rounded-md border border-red-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-red-700 hover:bg-red-50"
+                            className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
                         >
                             Cancelar
                         </button>
@@ -321,43 +321,55 @@ function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
     );
 }
 
-// Alternativo 4.1 - lo que ve el Cliente
-function TablaCliente({ salidas }) {
+// Alternativo 4.1 - lo que ve el Cliente (prototipo: salidas-explorer.tsx)
+function TarjetasCliente({ salidas }) {
+    if (salidas.length === 0) {
+        // Alternativo 3.3
+        return (
+            <p className="rounded-xl border border-dashed border-trekk-borde p-6 text-center text-trekk-texto-suave">
+                No existen Salidas Programadas para la excursión seleccionada.
+            </p>
+        );
+    }
+
     return (
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50 text-left text-gray-600">
-                <tr>
-                    <th className="px-4 py-3">Inicio</th>
-                    <th className="px-4 py-3">Fin</th>
-                    <th className="px-4 py-3">Hora de salida</th>
-                    <th className="px-4 py-3">Equipamiento incluido</th>
-                    <th className="px-4 py-3">Precio base</th>
-                    <th className="px-4 py-3">Cupo disponible</th>
-                    <th className="px-4 py-3"></th>
-                </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-                {salidas.map((s) => (
-                    <tr key={s.id}>
-                        <td className="px-4 py-3">{fecha(s.fecha_inicio)}</td>
-                        <td className="px-4 py-3">{fecha(s.fecha_fin)}</td>
-                        <td className="px-4 py-3">{s.hora_de_salida}</td>
-                        <td className="px-4 py-3">{s.equipamiento.join(', ') || '—'}</td>
-                        <td className="px-4 py-3">{precio(s.precio_base)}</td>
-                        <td className="px-4 py-3">{s.cupo_disponible}</td>
-                        {/* El Cliente elige la salida -> CU 7 */}
-                        <td className="px-4 py-3 text-right">
-                            <Link
-                                href={route('paquetes.listar', s.id)}
-                                className="text-indigo-600 hover:underline"
-                            >
-                                Ver paquetes
-                            </Link>
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {salidas.map((s) => (
+                // El Cliente elige la salida -> CU 7
+                <Link
+                    key={s.id}
+                    href={route('paquetes.listar', s.id)}
+                    className="group flex flex-col gap-3 rounded-2xl border border-trekk-borde bg-trekk-tarjeta p-5 transition hover:border-trekk-primario/50 hover:shadow-lg"
+                >
+                    <span className="flex items-center gap-2 font-medium">
+                        <IconoCalendario className="h-4 w-4 text-trekk-texto-suave" />
+                        {fecha(s.fecha_inicio)}
+                        {s.fecha_fin !== s.fecha_inicio && ` → ${fecha(s.fecha_fin)}`}
+                    </span>
+                    <div className="flex flex-wrap gap-4 text-sm text-trekk-texto-suave">
+                        <span className="flex items-center gap-1.5">
+                            <IconoReloj className="h-3.5 w-3.5" /> {s.hora_de_salida} hs
+                        </span>
+                        <span className={'flex items-center gap-1.5 ' + (s.cupo_disponible <= 3 ? 'text-trekk-acento' : '')}>
+                            <IconoPersonas className="h-3.5 w-3.5" />
+                            {s.cupo_disponible} {s.cupo_disponible === 1 ? 'cupo libre' : 'cupos libres'}
+                        </span>
+                    </div>
+                    <p className="text-xs text-trekk-texto-suave">
+                        Incluye: {s.equipamiento.join(', ') || 'sin equipamiento'}
+                    </p>
+                    <div className="mt-auto flex items-end justify-between gap-2 border-t border-trekk-borde pt-3">
+                        <span className="text-sm">
+                            desde <strong className="font-display text-lg">{precio(s.precio_base)}</strong>
+                        </span>
+                        <span className="flex items-center gap-1 text-sm font-medium text-trekk-primario">
+                            Ver paquetes
+                            <IconoFlecha className="h-4 w-4 transition group-hover:translate-x-1" />
+                        </span>
+                    </div>
+                </Link>
+            ))}
+        </div>
     );
 }
 

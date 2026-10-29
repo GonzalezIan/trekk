@@ -73,7 +73,7 @@ export default function Registrar({ salida }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h2 className="font-display text-2xl font-semibold text-trekk-texto">
                     Registrar paquete de {salida.excursion}
                 </h2>
             }
@@ -317,7 +317,7 @@ function ListaServicios({ listado, seleccion, onElegir }) {
 // Refugio elegido en el CU 26, con el botón para volver a abrir el listado
 function RefugioElegido({ refugio, noches, onCambiar }) {
     const boton =
-        'rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50';
+        'rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave';
 
     if (!refugio) {
         return (

@@ -3,6 +3,7 @@
 use App\Http\Controllers\ControladorPaquetes;
 use App\Http\Controllers\ControladorSalidas;
 use App\Http\Controllers\ControladorExcursiones;
+use App\Http\Controllers\controladorClientes;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ControladorReservas;
 use App\Http\Controllers\ControladorReportes;
@@ -22,6 +23,15 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+// ---------- Datos personales (CU 13) ----------
+Route::middleware('auth')->group(function () {
+    // CU 13 - Modificar datos personales: pantalla «Mis datos» (Cliente)
+    Route::get('/perfil', [controladorClientes::class, 'edit'])
+        ->name('perfil.edit');
+    Route::patch('/perfil', [controladorClientes::class, 'update'])
+        ->name('perfil.update');
+});
 
 // ---------- Reservas ----------
 Route::middleware('auth')->group(function () {
@@ -102,9 +112,11 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Cambiar contraseña del Administrativo. El cliente lo hace desde «Mis datos» (CU 13).
+    // La cuenta no se edita ni se elimina desde acá (ERS 2.3).
+    Route::get('/profile', [ProfileController::class, 'edit'])
+        ->middleware('administrativo')
+        ->name('profile.edit');
     Route::get('/reservas/{reserva}/conformidad', [ControladorReservas::class, 'solicitarConformidad'])->name('reservas.conformidad');
     Route::post('/reservas/{reserva}/conformidad', [ControladorReservas::class, 'guardarConformidad'])->name('reservas.conformidad.guardar');
 });

@@ -1,7 +1,4 @@
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
@@ -36,12 +33,14 @@ export default function Register() {
 
     const campo = (nombre, etiqueta, props = {}) => (
         <div>
-            <InputLabel htmlFor={nombre} value={etiqueta} />
-            <TextInput
+            <label htmlFor={nombre} className="block text-sm font-medium text-trekk-texto">
+                {etiqueta}
+            </label>
+            <input
                 id={nombre}
                 name={nombre}
                 value={data[nombre]}
-                className="mt-1 block w-full"
+                className="mt-1 block w-full rounded-lg border-trekk-borde bg-white text-trekk-texto shadow-sm focus:border-trekk-primario focus:ring-trekk-primario"
                 onChange={(e) => setData(nombre, e.target.value)}
                 required
                 {...props}
@@ -51,14 +50,14 @@ export default function Register() {
     );
 
     return (
-        <GuestLayout>
+        <GuestLayout titulo="Creá tu cuenta" subtitulo="Registrate como cliente. Solo necesitás hacerlo una vez.">
             <Head title="Registrarse" />
 
             <form onSubmit={submit} className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Datos personales</h2>
+                <h2 className="font-display text-lg font-semibold text-trekk-texto">Datos personales</h2>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                    {campo('nombre', 'Nombre', { autoComplete: 'given-name', isFocused: true, maxLength: 80 })}
+                    {campo('nombre', 'Nombre', { autoComplete: 'given-name', autoFocus: true, maxLength: 80 })}
                     {campo('apellido', 'Apellido', { autoComplete: 'family-name', maxLength: 80 })}
                 </div>
 
@@ -69,24 +68,31 @@ export default function Register() {
 
                 {campo('telefono', 'Teléfono', { type: 'tel', autoComplete: 'tel', maxLength: 30 })}
 
-                <h2 className="pt-2 text-lg font-semibold text-gray-900">Datos de acceso</h2>
+                <h2 className="pt-2 font-display text-lg font-semibold text-trekk-texto">Datos de acceso</h2>
 
                 {campo('email', 'Correo electrónico', { type: 'email', autoComplete: 'email' })}
                 {campo('usuario', 'Nombre de usuario', { autoComplete: 'username', maxLength: 30 })}
                 {campo('password', 'Contraseña', { type: 'password', autoComplete: 'new-password' })}
                 {campo('password_confirmation', 'Confirmar contraseña', { type: 'password', autoComplete: 'new-password' })}
 
-                <div className="flex items-center justify-end pt-2">
-                    <Link
-                        href={route('login')}
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                <div className="flex flex-col gap-3 pt-2">
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="rounded-lg bg-trekk-primario px-4 py-2.5 font-medium text-trekk-primario-texto transition hover:bg-trekk-primario-hover focus:outline-none focus:ring-2 focus:ring-trekk-primario focus:ring-offset-2 disabled:opacity-50"
                     >
-                        ¿Ya tenés cuenta?
-                    </Link>
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
                         {processing ? 'Registrando…' : 'Registrarme'}
-                    </PrimaryButton>
+                    </button>
+
+                    <p className="text-center text-sm text-trekk-texto-suave">
+                        ¿Ya tenés cuenta?{' '}
+                        <Link
+                            href={route('login')}
+                            className="font-medium text-trekk-primario underline-offset-4 hover:underline"
+                        >
+                            Iniciá sesión
+                        </Link>
+                    </p>
                 </div>
             </form>
         </GuestLayout>

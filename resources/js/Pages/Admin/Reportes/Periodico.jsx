@@ -111,13 +111,13 @@ export default function Periodico({ reporte = null, error = null }) {
                         {/* Paso 6 - RN-02 */}
                         <section className="flex flex-col gap-3">
                             <h2 className="font-display text-xl font-semibold text-trekk-texto">Clientes frecuentes</h2>
-                            <Tabla encabezados={['Nombre', 'Apellido', 'DNI', 'Excursiones realizadas']}>
+                            <Tabla encabezados={['Nombre', 'Apellido', 'DNI', 'Reservas realizadas']}>
                                 {reporte.clientes_frecuentes.map((c) => (
                                     <tr key={c.dni}>
                                         <td className="font-medium">{c.nombre}</td>
                                         <td>{c.apellido}</td>
                                         <td className="font-mono text-xs">{c.dni}</td>
-                                        <td className="tabular-nums">{c.excursiones}</td>
+                                        <td className="tabular-nums">{c.reservas}</td>
                                     </tr>
                                 ))}
                             </Tabla>

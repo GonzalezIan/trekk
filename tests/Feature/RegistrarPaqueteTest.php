@@ -295,4 +295,24 @@ class RegistrarPaqueteTest extends TestCase
 
         $this->assertSame(0, Paquete::count());
     }
+
+    public function test_una_salida_de_un_dia_no_puede_incluir_alojamiento(): void
+    {
+        $salidaDeUnDia = $this->salida('2026-11-10', '2026-11-10');
+        $refugio = $this->refugio('2026-11-01', '2026-11-30');
+
+        $this->registrar(['id_refugio' => $refugio->id], $salidaDeUnDia)
+            ->assertSessionHasErrors('id_refugio');
+
+        $this->assertSame(0, Paquete::count());
+    }
+
+    public function test_una_salida_de_un_dia_admite_paquetes_sin_alojamiento(): void
+    {
+        $salidaDeUnDia = $this->salida('2026-11-10', '2026-11-10');
+
+        $this->registrar([], $salidaDeUnDia)->assertSessionHasNoErrors();
+
+        $this->assertNull($salidaDeUnDia->paquetes()->sole()->refugio_id);
+    }
 }

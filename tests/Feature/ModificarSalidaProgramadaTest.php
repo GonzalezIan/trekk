@@ -65,7 +65,6 @@ class ModificarSalidaProgramadaTest extends TestCase
     {
         return [
             'fecha_inicio' => '2026-11-10',
-            'fecha_fin' => '2026-11-12',
             'hora_de_salida' => '08:30',
             'cupo_maximo' => 10,
             'precio_base' => 40000,
@@ -168,7 +167,6 @@ class ModificarSalidaProgramadaTest extends TestCase
 
         $this->modificar([
             'fecha_inicio' => '2026-11-15',
-            'fecha_fin' => '2026-11-17',
             'hora_de_salida' => '09:00',
             'cupo_maximo' => 12,
             'precio_base' => 50000,
@@ -241,13 +239,18 @@ class ModificarSalidaProgramadaTest extends TestCase
         $this->assertSame($this->guia->id, $this->salida->empleados()->sole()->id);
     }
 
-    // ---------- Alternativos 4.1 y 4.2 ----------
+    // ---------- Alternativo 4.1 ----------
 
-    public function test_el_periodo_debe_corresponderse_con_la_duracion(): void
+    public function test_el_periodo_debe_ser_futuro(): void
     {
-        $this->modificar(['fecha_fin' => '2026-11-11'])->assertSessionHasErrors('fecha_fin');
-        $this->modificar(['fecha_inicio' => '2026-10-01', 'fecha_fin' => '2026-10-03'])
-            ->assertSessionHasErrors('fecha_inicio');
+        $this->modificar(['fecha_inicio' => '2026-10-01'])->assertSessionHasErrors('fecha_inicio');
+
+        $this->assertSame('2026-11-12', $this->salida->fresh()->fecha_fin->format('Y-m-d'));
+    }
+
+    public function test_se_ignora_la_fecha_de_fin_enviada(): void
+    {
+        $this->modificar(['fecha_fin' => '2026-12-25'])->assertSessionHasNoErrors();
 
         $this->assertSame('2026-11-12', $this->salida->fresh()->fecha_fin->format('Y-m-d'));
     }
@@ -277,12 +280,12 @@ class ModificarSalidaProgramadaTest extends TestCase
         $paquete = $this->paquete(['nombre' => 'Con refugio', 'refugio_id' => $refugio->id]);
 
         // Dentro del convenio: se acepta y el precio suma 2 noches de alojamiento
-        $this->modificar(['fecha_inicio' => '2026-11-15', 'fecha_fin' => '2026-11-17'])
+        $this->modificar(['fecha_inicio' => '2026-11-15'])
             ->assertSessionHasNoErrors();
         $this->assertSame('50000.00', $paquete->fresh()->precio_calculado);
 
         // Fuera del convenio: se informa el paquete y el refugio afectados
-        $this->modificar(['fecha_inicio' => '2026-11-25', 'fecha_fin' => '2026-11-27'])
+        $this->modificar(['fecha_inicio' => '2026-11-25'])
             ->assertSessionHasErrors([
                 'fecha_inicio' => 'Los convenios de estos refugios no cubren el nuevo período: '
                     . 'paquete “Con refugio” (refugio Refugio Frey).',
@@ -317,7 +320,7 @@ class ModificarSalidaProgramadaTest extends TestCase
             'estado' => 'DISPONIBLE',
         ]);
 
-        $this->modificar(['fecha_inicio' => '2026-11-26', 'fecha_fin' => '2026-11-28'])
+        $this->modificar(['fecha_inicio' => '2026-11-26'])
             ->assertSessionHasErrors([
                 'fecha_inicio' => 'Estos refugios ya están asignados a otro paquete en el nuevo período: '
                     . 'paquete “Con refugio” (refugio Refugio Frey).',
@@ -325,7 +328,7 @@ class ModificarSalidaProgramadaTest extends TestCase
         $this->assertSame('2026-11-10', $this->salida->fresh()->fecha_inicio->format('Y-m-d'));
 
         // En fechas libres se acepta: sus propios paquetes no cuentan como solapados
-        $this->modificar(['fecha_inicio' => '2026-11-15', 'fecha_fin' => '2026-11-17'])
+        $this->modificar(['fecha_inicio' => '2026-11-15'])
             ->assertSessionHasNoErrors();
     }
 
@@ -450,7 +453,7 @@ class ModificarSalidaProgramadaTest extends TestCase
         Notification::fake();
         $reserva = $this->reserva($this->paquete(), 'PENDIENTE');
 
-        $this->modificar(['fecha_inicio' => '2026-11-15', 'fecha_fin' => '2026-11-17'])->assertSessionHasNoErrors();
+        $this->modificar(['fecha_inicio' => '2026-11-15'])->assertSessionHasNoErrors();
 
         Notification::assertSentTo($reserva->cliente->user, SalidaModificada::class,
             fn (SalidaModificada $aviso) => $aviso->cambios === [

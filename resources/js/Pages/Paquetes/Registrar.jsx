@@ -134,19 +134,22 @@ export default function Registrar({ salida }) {
                         )}
                     </Seccion>
 
-                    <Seccion
-                        titulo="Alojamiento (opcional)"
-                        error={errors.id_refugio}
-                        activo={refugios.activo}
-                        onActivar={alternarAlojamiento}
-                        textoActivar="Incluir alojamiento"
-                    >
-                        <RefugioElegido
-                            refugio={refugioElegido}
-                            noches={salida.noches}
-                            onCambiar={() => setVerRefugios(true)}
-                        />
-                    </Seccion>
+                    {/* Una salida de un solo día no tiene noches de alojamiento */}
+                    {salida.noches > 0 && (
+                        <Seccion
+                            titulo="Alojamiento (opcional)"
+                            error={errors.id_refugio}
+                            activo={refugios.activo}
+                            onActivar={alternarAlojamiento}
+                            textoActivar="Incluir alojamiento"
+                        >
+                            <RefugioElegido
+                                refugio={refugioElegido}
+                                noches={salida.noches}
+                                onCambiar={() => setVerRefugios(true)}
+                            />
+                        </Seccion>
+                    )}
 
                     <div className="flex flex-wrap items-center justify-between gap-4 border border-trekk-borde bg-trekk-tarjeta px-6 py-4 rounded-2xl">
                         <div className="text-sm text-gray-700">

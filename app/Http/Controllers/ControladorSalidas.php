@@ -95,14 +95,14 @@ class ControladorSalidas extends Controller
     /**
      * DSS CU 8 - 1: ingresarDatosSalida(idExcursion, datosSalida): datosValidos.
      * Pasos 3 y 4. Si la validación falla se responde 422 con los errores
-     * (alternativos 4.1, 4.2 y 4.3) y el formulario conserva lo ingresado.
+     * (alternativos 4.1 y 4.3) y el formulario conserva lo ingresado.
      */
     public function ingresarDatosSalida(Request $request, Excursion $excursion)
     {
         abort_unless($excursion->estaActiva(), 422, self::ERROR_EXCURSION_NO_ACTIVA);
 
         $datosSalida = $excursion->validarDatosSalida($request->only([
-            'fecha_inicio', 'fecha_fin', 'hora_de_salida', 'cupo_maximo', 'precio_base',
+            'fecha_inicio', 'hora_de_salida', 'cupo_maximo', 'precio_base',
         ]));
 
         $request->session()->put(self::SESION_DATOS_SALIDA, [
@@ -247,7 +247,7 @@ class ControladorSalidas extends Controller
         }
 
         $datosSalida = $salida->excursion->validarDatosSalida($request->only([
-            'fecha_inicio', 'fecha_fin', 'hora_de_salida', 'cupo_maximo', 'precio_base',
+            'fecha_inicio', 'hora_de_salida', 'cupo_maximo', 'precio_base',
         ]));
         $seleccion = $this->validarSeleccion($request);
 

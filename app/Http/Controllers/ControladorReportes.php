@@ -60,9 +60,9 @@ class ControladorReportes extends Controller
             fwrite($archivo, "\xEF\xBB\xBF");
 
             fputcsv($archivo, ['Reporte de clientes frecuentes']);
-            fputcsv($archivo, ['Nombre', 'Apellido', 'DNI', 'Excursiones realizadas']);
+            fputcsv($archivo, ['Nombre', 'Apellido', 'DNI', 'Reservas realizadas']);
             foreach ($reporte['clientes_frecuentes'] as $cliente) {
-                fputcsv($archivo, [$cliente['nombre'], $cliente['apellido'], $cliente['dni'], $cliente['excursiones']]);
+                fputcsv($archivo, [$cliente['nombre'], $cliente['apellido'], $cliente['dni'], $cliente['reservas']]);
             }
 
             fputcsv($archivo, []);
@@ -108,7 +108,7 @@ class ControladorReportes extends Controller
 
     /**
      * DS CU 27 pasos 4 a 6: calcularClientesFrecuentes(reservas) -> loop getCliente().
-     * RN-02: nombre, apellido, DNI y cantidad de excursiones realizadas, de mayor a menor.
+     * RN-02: nombre, apellido, DNI y cantidad de reservas realizadas, de mayor a menor.
      */
     private function calcularClientesFrecuentes(Collection $reservas): array
     {
@@ -121,10 +121,10 @@ class ControladorReportes extends Controller
                     'nombre' => $cliente->nombre,
                     'apellido' => $cliente->apellido,
                     'dni' => $cliente->dni,
-                    'excursiones' => $reservasDelCliente->count(),
+                    'reservas' => $reservasDelCliente->count(),
                 ];
             })
-            ->sortByDesc('excursiones')
+            ->sortByDesc('reservas')
             ->values()
             ->all();
     }

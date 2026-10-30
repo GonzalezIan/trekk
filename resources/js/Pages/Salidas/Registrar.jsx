@@ -14,6 +14,12 @@ const botonClaro =
 const fecha = (valor) => valor.split('-').reverse().join('/');
 const precio = (valor) =>
     Number(valor).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+// Se cuentan ambos extremos: una excursión de 1 día empieza y termina el mismo día
+const calcularFechaFin = (inicio, duracion) => {
+    const fin = new Date(`${inicio}T00:00:00Z`);
+    fin.setUTCDate(fin.getUTCDate() + duracion - 1);
+    return fin.toISOString().slice(0, 10);
+};
 
 // Laravel responde { errors: { campo: [mensaje] } } -> { campo: mensaje }
 const primerosErrores = (errores = {}) =>
@@ -25,18 +31,18 @@ export default function Registrar({ excursion }) {
     const [paso, setPaso] = useState(1);
     const [datos, setDatos] = useState({
         fecha_inicio: '',
-        fecha_fin: '',
         hora_de_salida: '',
         cupo_maximo: '',
         precio_base: '',
     });
     const [errores, setErrores] = useState({});
     const [procesando, setProcesando] = useState(false);
+    const fechaFin = datos.fecha_inicio ? calcularFechaFin(datos.fecha_inicio, excursion.duracion) : '';
 
     const cambiar = (e) => setDatos({ ...datos, [e.target.name]: e.target.value });
 
     // Pasos 3 y 4 (DSS 1: ingresarDatosSalida). Si los datos no son válidos se informa
-    // y se vuelve al paso 3 conservando lo ingresado (alternativos 4.1, 4.2 y 4.3).
+    // y se vuelve al paso 3 conservando lo ingresado (alternativos 4.1 y 4.3).
     const ingresarDatos = (e) => {
         e.preventDefault();
         setErrores({});
@@ -83,13 +89,14 @@ export default function Registrar({ excursion }) {
                     {paso === 1 ? (
                         <FormularioDatos
                             datos={datos}
+                            fechaFin={fechaFin}
                             errores={errores}
                             procesando={procesando}
                             onCambiar={cambiar}
                             onConfirmar={ingresarDatos}
                         />
                     ) : (
-                        <PersonalYEquipamiento datos={datos} onModificarDatos={() => setPaso(1)} />
+                        <PersonalYEquipamiento datos={datos} fechaFin={fechaFin} onModificarDatos={() => setPaso(1)} />
                     )}
                 </div>
             </div>
@@ -97,8 +104,8 @@ export default function Registrar({ excursion }) {
     );
 }
 
-// Pasos 2 y 3: fecha de inicio, fecha de fin, hora de salida, cupo máximo y precio base
-function FormularioDatos({ datos, errores, procesando, onCambiar, onConfirmar }) {
+// Pasos 2 y 3: fecha de inicio, hora de salida, cupo máximo y precio base. La fecha de fin se calcula
+function FormularioDatos({ datos, fechaFin, errores, procesando, onCambiar, onConfirmar }) {
     const campo = (nombre, etiqueta, props = {}) => (
         <div>
             <InputLabel htmlFor={nombre} value={etiqueta} />
@@ -124,9 +131,17 @@ function FormularioDatos({ datos, errores, procesando, onCambiar, onConfirmar })
 
             <div className="grid gap-6 sm:grid-cols-3">
                 {campo('fecha_inicio', 'Fecha de inicio *', { type: 'date' })}
-                {campo('fecha_fin', 'Fecha de fin *', { type: 'date' })}
+                {campo('fecha_fin', 'Fecha de fin', {
+                    type: 'date',
+                    value: fechaFin,
+                    disabled: true,
+                    className: 'mt-1 block w-full cursor-not-allowed opacity-60',
+                })}
                 {campo('hora_de_salida', 'Hora de salida *', { type: 'time' })}
             </div>
+            <p className="text-xs text-gray-500">
+                La fecha de fin se calcula a partir de la fecha de inicio y la duración de la excursión.
+            </p>
 
             <div className="grid gap-6 sm:grid-cols-2">
                 {campo('cupo_maximo', 'Cupo máximo *', { type: 'number', min: '1' })}
@@ -150,7 +165,7 @@ function FormularioDatos({ datos, errores, procesando, onCambiar, onConfirmar })
 }
 
 // Pasos 5 a 9: guía responsable, asistentes (6.1) y equipamiento incluido (6.2)
-function PersonalYEquipamiento({ datos, onModificarDatos }) {
+function PersonalYEquipamiento({ datos, fechaFin, onModificarDatos }) {
     const [idGuia, setIdGuia] = useState(null);
     const [idsAsistentes, setIdsAsistentes] = useState([]);
     const [idsEquipamiento, setIdsEquipamiento] = useState([]);
@@ -197,7 +212,7 @@ function PersonalYEquipamiento({ datos, onModificarDatos }) {
             <div className="space-y-4 border border-trekk-borde bg-trekk-tarjeta p-6 rounded-2xl">
                 <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                     No hay guías disponibles para el período del {fecha(datos.fecha_inicio)} al{' '}
-                    {fecha(datos.fecha_fin)}.
+                    {fecha(fechaFin)}.
                 </div>
                 <div className="flex items-center justify-end gap-4">
                     <Link
@@ -219,7 +234,7 @@ function PersonalYEquipamiento({ datos, onModificarDatos }) {
             <div className="flex flex-wrap items-center justify-between gap-3 border border-trekk-borde bg-trekk-tarjeta px-6 py-4 text-sm rounded-2xl">
                 <div className="flex flex-wrap gap-x-6 gap-y-1 text-gray-700">
                     <span>
-                        {fecha(datos.fecha_inicio)} al {fecha(datos.fecha_fin)} · {datos.hora_de_salida} hs
+                        {fecha(datos.fecha_inicio)} al {fecha(fechaFin)} · {datos.hora_de_salida} hs
                     </span>
                     <span>Cupo ingresado: {datos.cupo_maximo}</span>
                     <span>Precio base: {precio(datos.precio_base)}</span>

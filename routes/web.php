@@ -89,6 +89,7 @@ Route::middleware('auth')->group(function () {
         ->name('reservas.certificado.registrar');
     // CU 18 listar certificados medicos pendientes
     Route::get('/certificados/pendientes', [ControladorReservas::class, 'listarCertificadosPendientes'])
+        ->middleware('administrativo')
         ->name('certificados.pendientes');
 
     // CU 19 - Verificar certificado médico de un participante (solo Administrativo)

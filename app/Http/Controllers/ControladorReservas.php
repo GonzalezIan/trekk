@@ -852,6 +852,9 @@ class ControladorReservas extends Controller
      */
     public function solicitarConformidad(Reserva $reserva)
     {
+        if (! $reserva->perteneceA($request->user())) {
+            abort(403, 'No tenés permiso para calificar esta reserva.');
+        }
         // Validaciones (RN)
         if ($reserva->estado !== 'REALIZADA') {
             return response()->json(['error' => 'Solo podés calificar reservas que hayan sido realizadas.'], 403);

@@ -2,7 +2,7 @@ import InputError from '@/Components/InputError';
 import { Link, useForm } from '@inertiajs/react';
 
 const estiloCampo =
-    'mt-1 block w-full rounded-lg border-trekk-borde bg-white text-trekk-texto shadow-sm focus:border-trekk-primario focus:ring-trekk-primario';
+    'mt-1 block w-full rounded-lg border-trekk-borde bg-trekk-tarjeta text-trekk-texto shadow-sm focus:border-trekk-primario focus:ring-trekk-primario';
 
 /**
  * CU 28 - Login usuario: formulario de ingreso con usuario o correo.

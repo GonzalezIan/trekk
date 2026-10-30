@@ -43,7 +43,7 @@ export default function Modal({
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="absolute inset-0 bg-trekk-texto/50 backdrop-blur-sm" />
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                 </TransitionChild>
 
                 <TransitionChild

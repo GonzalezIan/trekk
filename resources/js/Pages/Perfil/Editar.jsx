@@ -42,7 +42,7 @@ export default function Editar({ cliente }) {
 
             <div className="py-12">
                 <div className="mx-auto max-w-2xl space-y-6 sm:px-6 lg:px-8">
-                    <section className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+                    <section className="bg-trekk-tarjeta p-4 shadow sm:rounded-lg sm:p-8">
                         <header>
                             <h2 className="text-lg font-medium text-gray-900">
                                 Datos personales
@@ -183,7 +183,7 @@ export default function Editar({ cliente }) {
                         </form>
                     </section>
 
-                    <section className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+                    <section className="bg-trekk-tarjeta p-4 shadow sm:rounded-lg sm:p-8">
                         <UpdatePasswordForm />
                     </section>
                 </div>

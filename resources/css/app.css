@@ -1,3 +1,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    /* Tema oscuro: calendarios, barras de scroll y autocompletado del navegador */
+    html {
+        color-scheme: dark;
+    }
+
+    body {
+        @apply bg-trekk-fondo text-trekk-texto;
+    }
+
+    /* @tailwindcss/forms pinta los campos de blanco */
+    [type='text'], [type='email'], [type='password'], [type='number'], [type='date'],
+    [type='time'], [type='search'], [type='tel'], [type='url'], textarea, select {
+        @apply border-trekk-borde bg-trekk-tarjeta text-trekk-texto placeholder:text-trekk-texto-suave;
+    }
+
+    [type='checkbox'], [type='radio'] {
+        @apply border-trekk-borde bg-trekk-tarjeta;
+    }
+}

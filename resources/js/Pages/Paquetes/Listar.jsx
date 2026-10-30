@@ -78,7 +78,7 @@ export default function Listar({ paquetes, salida, esAdministrativo }) {
                     {!esAdministrativo ? (
                         <TarjetasPaquetes paquetes={paquetes} />
                     ) : (
-                    <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
+                    <div className="overflow-x-auto bg-trekk-tarjeta shadow-sm sm:rounded-lg">
                         {paquetes.length === 0 ? (
                             <p className="p-6 text-gray-600">
                                 La Salida Programada no tiene paquetes registrados.

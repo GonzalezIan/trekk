@@ -40,7 +40,7 @@ export default function Register() {
                 id={nombre}
                 name={nombre}
                 value={data[nombre]}
-                className="mt-1 block w-full rounded-lg border-trekk-borde bg-white text-trekk-texto shadow-sm focus:border-trekk-primario focus:ring-trekk-primario"
+                className="mt-1 block w-full rounded-lg border-trekk-borde bg-trekk-tarjeta text-trekk-texto shadow-sm focus:border-trekk-primario focus:ring-trekk-primario"
                 onChange={(e) => setData(nombre, e.target.value)}
                 required
                 {...props}

@@ -48,7 +48,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     <Link href="/" className="flex shrink-0 items-center gap-2 rounded-lg">
                         <Logo />
                         {esAdministrativo && (
-                            <span className="rounded-md bg-trekk-acento px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                            <span className="rounded-md bg-trekk-acento px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-trekk-primario-texto">
                                 Admin
                             </span>
                         )}

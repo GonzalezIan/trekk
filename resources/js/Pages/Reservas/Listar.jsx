@@ -398,7 +398,7 @@ function ReservasAdministrativo({ reservas }) {
                                     setAviso('');
                                     setCancelando(true);
                                 }}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-trekk-tarjeta px-2.5 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 Cancelar reserva
                             </button>

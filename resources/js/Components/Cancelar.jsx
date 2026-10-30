@@ -56,7 +56,7 @@ export default function Cancelar({ paquete, onCerrar }) {
                         <button 
                             type="submit" 
                             disabled={procesando || motivo.trim().length < 5} 
-                            className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 text-sm font-medium bg-trekk-error text-trekk-primario-texto rounded-md hover:bg-trekk-error/90 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {procesando ? 'Cancelando...' : 'Confirmar Cancelación'}
                         </button>

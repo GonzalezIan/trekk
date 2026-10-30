@@ -66,7 +66,7 @@ export default function Listar({ excursiones, esAdministrativo }) {
                     {!esAdministrativo ? (
                         <Catalogo excursiones={excursiones} />
                     ) : (
-                    <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
+                    <div className="overflow-x-auto bg-trekk-tarjeta shadow-sm sm:rounded-lg">
                         {excursiones.length === 0 ? (
                             <p className="p-6 text-gray-600">No hay excursiones registradas.</p>
                         ) : (
@@ -145,7 +145,7 @@ export default function Listar({ excursiones, esAdministrativo }) {
 function BarraAcciones({ excursion, onDarDeBaja }) {
     if (!excursion) {
         return (
-            <div className="bg-white px-4 py-3 text-sm text-gray-600 shadow-sm sm:rounded-lg">
+            <div className="bg-trekk-tarjeta px-4 py-3 text-sm text-gray-600 shadow-sm sm:rounded-lg">
                 Seleccioná una excursión para modificarla, darla de baja o programar una salida.
             </div>
         );
@@ -155,7 +155,7 @@ function BarraAcciones({ excursion, onDarDeBaja }) {
     const activa = excursion.estado === 'ACTIVA';
 
     return (
-        <div className="flex flex-wrap items-center gap-3 bg-white px-4 py-3 text-sm shadow-sm sm:rounded-lg">
+        <div className="flex flex-wrap items-center gap-3 bg-trekk-tarjeta px-4 py-3 text-sm shadow-sm sm:rounded-lg">
             <span className="text-gray-600">Seleccionada:</span>
             <span className="font-medium text-gray-900">{excursion.nombre}</span>
             {/* Alternativo 4.2 -> CU 3 - Modificar excursión */}

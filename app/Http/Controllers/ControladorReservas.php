@@ -850,7 +850,7 @@ class ControladorReservas extends Controller
     /**
      * Muestra el modal para registrar la conformidad de una reserva realizada.
      */
-    public function solicitarConformidad(Reserva $reserva)
+    public function solicitarConformidad(Request $request, Reserva $reserva)
     {
         if (! $reserva->perteneceA($request->user())) {
             abort(403, 'No tenés permiso para calificar esta reserva.');
@@ -875,6 +875,11 @@ class ControladorReservas extends Controller
      */
     public function guardarConformidad(Request $request, Reserva $reserva)
     {
+        // 🛡️ VERIFICACIÓN DE SEGURIDAD
+        if (! $reserva->perteneceA($request->user())) {
+            return redirect()->back()->with('error', 'No tenés permiso para calificar esta reserva.');
+        }
+        
         if ($reserva->estado !== 'REALIZADA' || $reserva->conformidad()->exists()) {
             return redirect()->back()->with('error', 'No se puede registrar la conformidad en este momento.');
         }

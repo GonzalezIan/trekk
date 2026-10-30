@@ -5,7 +5,12 @@ import { Link, usePage } from '@inertiajs/react';
 // Secciones del menú según el rol (prototipo: web-page-creation/components/site-header.tsx)
 const secciones = (esAdministrativo) => [
     { nombre: 'Inicio', ruta: 'dashboard', activa: 'dashboard' },
-    { nombre: 'Excursiones', ruta: 'excursiones.listar', activa: 'excursiones.*' },
+    // El Cliente sigue en «Excursiones» mientras ve la ficha, sus salidas y paquetes
+    {
+        nombre: 'Excursiones',
+        ruta: 'excursiones.listar',
+        activa: esAdministrativo ? ['excursiones.*'] : ['excursiones.*', 'salidas.listar', 'paquetes.listar'],
+    },
     esAdministrativo && { nombre: 'Salidas', ruta: 'salidas.listar', activa: 'salidas.*' },
     { nombre: esAdministrativo ? 'Reservas' : 'Mis reservas', ruta: 'reservas.listar', activa: 'reservas.*' },
     ! esAdministrativo && { nombre: 'Mis datos', ruta: 'perfil.edit', activa: 'perfil.*' },
@@ -14,7 +19,7 @@ const secciones = (esAdministrativo) => [
 ].filter(Boolean);
 
 function Seccion({ seccion, className = '' }) {
-    const activa = route().current(seccion.activa);
+    const activa = [].concat(seccion.activa).some((patron) => route().current(patron));
 
     return (
         <Link

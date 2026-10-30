@@ -48,10 +48,20 @@ class ControladorSalidas extends Controller
         }
 
         $excursion = Excursion::buscar((int) $request->query('excursion'));
+        $salidas = $excursion->getSalidasReservables();
 
         return Inertia::render('Salidas/Listar', [
-            'salidas' => $excursion->getSalidasReservables(),
-            'excursion' => $excursion->only(['id', 'nombre']),
+            'salidas' => $salidas,
+            // Ficha de la excursión elegida en el CU 4
+            'excursion' => $excursion->only([
+                'id', 'nombre', 'descripcion', 'recorrido', 'etapas', 'dificultad', 'duracion',
+                'experiencia_requerida', 'acepta_menores', 'requiere_certificado_medico',
+                'equipamiento_obligatorio', 'punto_de_encuentro',
+            ]),
+            // CU 7: los paquetes de cada salida, para elegirlos en la misma pantalla
+            'paquetes' => $salidas->mapWithKeys(fn (array $salida) => [
+                $salida['id'] => SalidaProgramada::buscar($salida['id'])->getPaquetesDisponibles(),
+            ]),
             'esAdministrativo' => false,
         ]);
     }

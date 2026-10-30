@@ -1,4 +1,5 @@
 import Modal from '@/Components/Modal';
+import { fotoExcursion } from '@/Components/Trekk/fotos';
 import { IconoEstetoscopio, IconoFlecha, IconoReloj, IconoTendencia, IconoUbicacion } from '@/Components/Trekk/Iconos';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -229,9 +230,6 @@ function BajaExcursionModal({ excursion, onCerrar }) {
         </Modal>
     );
 }
-// Fotos del prototipo; las excursiones no tienen imagen propia, así que se reparten por id
-const fotos = ['bosque', 'glaciar', 'laguna', 'refugio'];
-
 // CU 4 para el Cliente: las excursiones activas como tarjetas (prototipo: excursion-card.tsx)
 function Catalogo({ excursiones }) {
     if (excursiones.length === 0) {
@@ -253,7 +251,7 @@ function Catalogo({ excursiones }) {
                 >
                     <div className="relative aspect-[16/10] overflow-hidden">
                         <img
-                            src={`/images/excursiones/${fotos[e.id % fotos.length]}.jpg`}
+                            src={fotoExcursion(e.id)}
                             alt=""
                             loading="lazy"
                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"

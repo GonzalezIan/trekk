@@ -2,7 +2,16 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
 import ParticipantesSalidaModal from '@/Components/ParticipantesSalidaModal';
-import { IconoCalendario, IconoFlecha, IconoPersonas, IconoReloj, IconoVolver } from '@/Components/Trekk/Iconos';
+import {
+    IconoCalendario,
+    IconoCheck,
+    IconoPersonas,
+    IconoReloj,
+    IconoUbicacion,
+    IconoVolver,
+} from '@/Components/Trekk/Iconos';
+import { fotoExcursion } from '@/Components/Trekk/fotos';
+import TarjetasPaquetes from '@/Components/Trekk/TarjetasPaquetes';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -12,14 +21,12 @@ const precio = (valor) =>
     Number(valor).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
 
 // CU 9 - Listar Salidas Programadas
-export default function Listar({
-    salidas,
-    esAdministrativo,
-    excursion = null,
-    excursiones = [],
-    estados = [],
-    filtros = {},
-}) {
+export default function Listar(props) {
+    return props.esAdministrativo ? <ListarAdministrativo {...props} /> : <FichaExcursion {...props} />;
+}
+
+// Alternativo 4.2 - lo que ve el Administrativo
+function ListarAdministrativo({ salidas, excursiones, estados, filtros }) {
     const { flash } = usePage().props;
 
     // Salida elegida por el Administrativo para operar sobre ella
@@ -51,22 +58,7 @@ export default function Listar({
 
     return (
         <AuthenticatedLayout
-            header={
-                esAdministrativo ? (
-                    <h2 className="font-display text-2xl font-semibold text-trekk-texto">Salidas Programadas</h2>
-                ) : (
-                    <div className="flex flex-col gap-1">
-                        <Link
-                            href={route('excursiones.listar')}
-                            className="flex w-fit items-center gap-1 text-sm text-trekk-texto-suave hover:text-trekk-texto"
-                        >
-                            <IconoVolver className="h-4 w-4" /> Excursiones
-                        </Link>
-                        <h2 className="font-display text-2xl font-semibold text-trekk-texto">{excursion.nombre}</h2>
-                        <p className="text-trekk-texto-suave">Elegí una salida programada para ver sus paquetes.</p>
-                    </div>
-                )
-            }
+            header={<h2 className="font-display text-2xl font-semibold text-trekk-texto">Salidas Programadas</h2>}
         >
             <Head title="Salidas Programadas" />
 
@@ -84,15 +76,9 @@ export default function Listar({
                         </div>
                     )}
 
-                    {esAdministrativo && (
-                        <Filtros
-                            filtros={filtros}
-                            excursiones={excursiones}
-                            estados={estados}
-                        />
-                    )}
+                    <Filtros filtros={filtros} excursiones={excursiones} estados={estados} />
 
-                    {esAdministrativo && salidas.length > 0 && (
+                    {salidas.length > 0 && (
                         <BarraAcciones
                             salida={salidaSeleccionada}
                             onListarParticipantes={() => setVerParticipantes(true)}
@@ -104,9 +90,6 @@ export default function Listar({
                         />                    
                     )}
 
-                    {!esAdministrativo ? (
-                        <TarjetasCliente salidas={salidas} />
-                    ) : (
                     <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
                         {salidas.length === 0 ? (
                             // Alternativo 3.3
@@ -121,7 +104,6 @@ export default function Listar({
                             />
                         )}
                     </div>
-                    )}
                 </div>
             </div>
             {verParticipantes && salidaSeleccionada && (
@@ -321,8 +303,76 @@ function BarraAcciones({ salida, onListarParticipantes, onCancelar }) {
     );
 }
 
-// Alternativo 4.1 - lo que ve el Cliente (prototipo: salidas-explorer.tsx)
-function TarjetasCliente({ salidas }) {
+// Alternativo 4.1 - lo que ve el Cliente: la ficha de la excursión con sus salidas (CU 9)
+// y los paquetes de la salida elegida (CU 7), en una sola pantalla como en el prototipo
+// (web-page-creation/components/trekk/excursion-detalle.tsx y salidas-explorer.tsx)
+function FichaExcursion({ excursion, salidas, paquetes }) {
+    const [seleccion, setSeleccion] = useState(salidas[0]?.id ?? null);
+
+    return (
+        <AuthenticatedLayout>
+            <Head title={excursion.nombre} />
+
+            <section className="relative h-64 md:h-80">
+                <img src={fotoExcursion(excursion.id)} alt="" className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-trekk-fondo via-trekk-fondo/30 to-transparent" />
+            </section>
+
+            <div className="relative mx-auto -mt-24 max-w-6xl px-4 pb-16 sm:px-6 lg:px-8">
+                <div className="flex flex-col gap-3">
+                    <Link
+                        href={route('excursiones.listar')}
+                        className="flex w-fit items-center gap-1 rounded-full bg-trekk-fondo/90 px-3 py-1 text-sm text-trekk-texto-suave backdrop-blur hover:text-trekk-texto"
+                    >
+                        <IconoVolver className="h-4 w-4" /> Excursiones
+                    </Link>
+                    <h1 className="font-display text-4xl font-semibold text-trekk-texto md:text-5xl">{excursion.nombre}</h1>
+                    <p className="flex items-start gap-1.5 text-trekk-texto-suave">
+                        <IconoUbicacion className="mt-0.5 h-4 w-4 shrink-0" />
+                        {excursion.recorrido}
+                    </p>
+                </div>
+
+                <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
+                    <div className="flex min-w-0 flex-col gap-10">
+                        <p className="text-lg leading-relaxed">{excursion.descripcion}</p>
+
+                        <section aria-labelledby="salidas-titulo" className="flex flex-col gap-4">
+                            <div>
+                                <h2 id="salidas-titulo" className="font-display text-2xl font-semibold">
+                                    Salidas programadas
+                                </h2>
+                                <p className="text-sm text-trekk-texto-suave">
+                                    Solo se muestran salidas con más de 48 horas de anticipación.
+                                </p>
+                            </div>
+                            <SalidasCliente salidas={salidas} seleccion={seleccion} onElegir={setSeleccion} />
+                        </section>
+
+                        {seleccion && (
+                            <section aria-labelledby="paquetes-titulo" className="flex flex-col gap-4">
+                                <div>
+                                    <h2 id="paquetes-titulo" className="font-display text-2xl font-semibold">
+                                        Paquetes disponibles
+                                    </h2>
+                                    <p className="text-sm text-trekk-texto-suave">
+                                        Precio por participante. Elegí la modalidad de contratación.
+                                    </p>
+                                </div>
+                                <TarjetasPaquetes paquetes={paquetes[seleccion] ?? []} />
+                            </section>
+                        )}
+                    </div>
+
+                    <FichaTecnica excursion={excursion} />
+                </div>
+            </div>
+        </AuthenticatedLayout>
+    );
+}
+
+// Salidas reservables como opciones: al elegir una se muestran sus paquetes
+function SalidasCliente({ salidas, seleccion, onElegir }) {
     if (salidas.length === 0) {
         // Alternativo 3.3
         return (
@@ -333,43 +383,104 @@ function TarjetasCliente({ salidas }) {
     }
 
     return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {salidas.map((s) => (
-                // El Cliente elige la salida -> CU 7
-                <Link
-                    key={s.id}
-                    href={route('paquetes.listar', s.id)}
-                    className="group flex flex-col gap-3 rounded-2xl border border-trekk-borde bg-trekk-tarjeta p-5 transition hover:border-trekk-primario/50 hover:shadow-lg"
-                >
-                    <span className="flex items-center gap-2 font-medium">
-                        <IconoCalendario className="h-4 w-4 text-trekk-texto-suave" />
-                        {fecha(s.fecha_inicio)}
-                        {s.fecha_fin !== s.fecha_inicio && ` → ${fecha(s.fecha_fin)}`}
-                    </span>
-                    <div className="flex flex-wrap gap-4 text-sm text-trekk-texto-suave">
-                        <span className="flex items-center gap-1.5">
-                            <IconoReloj className="h-3.5 w-3.5" /> {s.hora_de_salida} hs
+        <div role="radiogroup" aria-label="Salidas" className="grid gap-3 sm:grid-cols-2">
+            {salidas.map((s) => {
+                const activa = s.id === seleccion;
+                return (
+                    <button
+                        key={s.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={activa}
+                        onClick={() => onElegir(s.id)}
+                        className={
+                            'flex flex-col gap-3 rounded-xl border bg-trekk-tarjeta p-4 text-left transition-colors hover:border-trekk-primario/50 ' +
+                            (activa ? 'border-trekk-primario ring-1 ring-trekk-primario' : 'border-trekk-borde')
+                        }
+                    >
+                        <span className="flex items-center justify-between gap-2 font-medium">
+                            <span className="flex items-center gap-2">
+                                <IconoCalendario className="h-4 w-4 text-trekk-texto-suave" />
+                                {fecha(s.fecha_inicio)}
+                                {s.fecha_fin !== s.fecha_inicio && ` → ${fecha(s.fecha_fin)}`}
+                            </span>
+                            {activa && <IconoCheck className="h-4 w-4 text-trekk-primario" />}
                         </span>
-                        <span className={'flex items-center gap-1.5 ' + (s.cupo_disponible <= 3 ? 'text-trekk-acento' : '')}>
-                            <IconoPersonas className="h-3.5 w-3.5" />
-                            {s.cupo_disponible} {s.cupo_disponible === 1 ? 'cupo libre' : 'cupos libres'}
+                        <span className="flex flex-wrap gap-4 text-sm text-trekk-texto-suave">
+                            <span className="flex items-center gap-1.5">
+                                <IconoReloj className="h-3.5 w-3.5" /> {s.hora_de_salida} hs
+                            </span>
+                            <span className={'flex items-center gap-1.5 ' + (s.cupo_disponible <= 3 ? 'text-trekk-acento' : '')}>
+                                <IconoPersonas className="h-3.5 w-3.5" />
+                                {s.cupo_disponible} {s.cupo_disponible === 1 ? 'cupo libre' : 'cupos libres'}
+                            </span>
                         </span>
-                    </div>
-                    <p className="text-xs text-trekk-texto-suave">
-                        Incluye: {s.equipamiento.join(', ') || 'sin equipamiento'}
-                    </p>
-                    <div className="mt-auto flex items-end justify-between gap-2 border-t border-trekk-borde pt-3">
-                        <span className="text-sm">
-                            desde <strong className="font-display text-lg">{precio(s.precio_base)}</strong>
+                        <span className="flex items-end justify-between gap-2 border-t border-trekk-borde pt-3">
+                            <span className="text-xs text-trekk-texto-suave">
+                                Incluye: {s.equipamiento.join(', ') || 'sin equipamiento'}
+                            </span>
+                            <span className="shrink-0 text-sm">
+                                desde <strong className="font-display text-lg">{precio(s.precio_base)}</strong>
+                            </span>
                         </span>
-                        <span className="flex items-center gap-1 text-sm font-medium text-trekk-primario">
-                            Ver paquetes
-                            <IconoFlecha className="h-4 w-4 transition group-hover:translate-x-1" />
-                        </span>
-                    </div>
-                </Link>
-            ))}
+                    </button>
+                );
+            })}
         </div>
+    );
+}
+
+// Datos de la excursión cargados por el Administrativo (CU 1)
+function FichaTecnica({ excursion }) {
+    const datos = [
+        ['Dificultad', excursion.dificultad.charAt(0) + excursion.dificultad.slice(1).toLowerCase()],
+        ['Duración', `${excursion.duracion} ${excursion.duracion === 1 ? 'día' : 'días'}`],
+        ['Acepta menores', excursion.acepta_menores ? 'Sí' : 'No'],
+        ['Certificado médico', excursion.requiere_certificado_medico ? 'Requerido' : 'No requerido'],
+    ];
+    const equipamiento = (excursion.equipamiento_obligatorio ?? '')
+        .split(',')
+        .map((e) => e.trim())
+        .filter(Boolean);
+
+    return (
+        <aside className="flex h-fit flex-col gap-5 rounded-2xl border border-trekk-borde bg-trekk-tarjeta p-5 lg:sticky lg:top-24">
+            <h2 className="font-display text-lg font-semibold">Ficha técnica</h2>
+            <dl className="grid grid-cols-2 gap-4 text-sm">
+                {datos.map(([clave, valor]) => (
+                    <div key={clave} className="flex flex-col gap-0.5">
+                        <dt className="text-trekk-texto-suave">{clave}</dt>
+                        <dd className="font-medium">{valor}</dd>
+                    </div>
+                ))}
+            </dl>
+            <div className="flex flex-col gap-1 border-t border-trekk-borde pt-4 text-sm">
+                <h3 className="font-semibold">Etapas</h3>
+                <p className="text-trekk-texto-suave">{excursion.etapas}</p>
+            </div>
+            <div className="flex flex-col gap-1 text-sm">
+                <h3 className="font-semibold">Experiencia requerida</h3>
+                <p className="text-trekk-texto-suave">{excursion.experiencia_requerida === 'SI' ? 'Sí' : 'No'}</p>
+            </div>
+            {excursion.punto_de_encuentro && (
+                <div className="flex flex-col gap-1 text-sm">
+                    <h3 className="font-semibold">Punto de encuentro</h3>
+                    <p className="text-trekk-texto-suave">{excursion.punto_de_encuentro}</p>
+                </div>
+            )}
+            {equipamiento.length > 0 && (
+                <div className="flex flex-col gap-2 border-t border-trekk-borde pt-4">
+                    <h3 className="text-sm font-semibold">Equipamiento obligatorio</h3>
+                    <ul className="flex flex-wrap gap-1.5">
+                        {equipamiento.map((e) => (
+                            <li key={e} className="rounded-md bg-trekk-suave px-2 py-1 text-xs">
+                                {e}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </aside>
     );
 }
 

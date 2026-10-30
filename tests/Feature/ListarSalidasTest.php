@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Excursion;
+use App\Models\Paquete;
 use App\Models\SalidaProgramada;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -67,6 +68,21 @@ class ListarSalidasTest extends TestCase
                 ->has('salidas', 2)
                 ->where('salidas.0.id', $dentroDe49Hs->id)   // ordenadas por fecha y hora
                 ->where('salidas.1.id', $dentroDe5Dias->id));
+    }
+
+    public function test_cliente_recibe_la_ficha_de_la_excursion_y_los_paquetes_disponibles_de_cada_salida(): void
+    {
+        $salida = $this->salida('2026-10-25', '08:00:00');
+        $disponible = Paquete::factory()->create(['salida_programada_id' => $salida->id, 'estado' => 'DISPONIBLE']);
+        Paquete::factory()->create(['salida_programada_id' => $salida->id, 'estado' => 'CANCELADO']);
+
+        $this->actingAs($this->cliente())
+            ->get(route('salidas.listar', ['excursion' => $this->excursion->id]))
+            ->assertInertia(fn (Pagina $pagina) => $pagina
+                ->where('excursion.descripcion', $this->excursion->descripcion)
+                ->where('excursion.etapas', $this->excursion->etapas)
+                ->has("paquetes.{$salida->id}", 1)
+                ->where("paquetes.{$salida->id}.0.id", $disponible->id));
     }
 
     public function test_cliente_sin_excursion_seleccionada_vuelve_al_listado_de_excursiones(): void

@@ -121,6 +121,13 @@ class ControladorPaquetes extends Controller
         $servicios = Servicio::buscar($datos['ids_servicios'] ?? []);
         $refugio = isset($datos['id_refugio']) ? Refugio::buscar((int) $datos['id_refugio']) : null;
 
+        // Una salida de un solo día no tiene noches de alojamiento
+        if ($refugio && $salida->cantidadNoches() === 0) {
+            throw ValidationException::withMessages([
+                'id_refugio' => 'Una salida de un solo día no puede incluir alojamiento.',
+            ]);
+        }
+
         if ($refugio && ! $refugio->esAdmisible($salida->fecha_inicio, $salida->fecha_fin)) {
             throw ValidationException::withMessages([
                 'id_refugio' => 'El refugio seleccionado ya no tiene un convenio admisible para el período de la salida.',

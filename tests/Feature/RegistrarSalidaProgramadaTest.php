@@ -39,7 +39,6 @@ class RegistrarSalidaProgramadaTest extends TestCase
     {
         return [
             'fecha_inicio' => '2026-11-10',
-            'fecha_fin' => '2026-11-12',
             'hora_de_salida' => '08:30',
             'cupo_maximo' => 12,
             'precio_base' => 45000,
@@ -116,34 +115,35 @@ class RegistrarSalidaProgramadaTest extends TestCase
         $this->assertSame($this->excursion->id, session('cu8.datosSalida.excursion_id'));
     }
 
-    public function test_periodo_no_futuro_o_fin_anterior_al_inicio_no_es_valido(): void
+    public function test_periodo_no_futuro_no_es_valido(): void
     {
         // Alternativo 4.1
-        $this->ingresarDatos(['fecha_inicio' => '2026-10-20', 'fecha_fin' => '2026-10-22'])
+        $this->ingresarDatos(['fecha_inicio' => '2026-10-20'])
             ->assertStatus(422)
             ->assertJsonValidationErrors(['fecha_inicio']);
-
-        $this->ingresarDatos(['fecha_inicio' => '2026-11-12', 'fecha_fin' => '2026-11-10'])
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['fecha_fin']);
     }
 
-    public function test_la_cantidad_de_dias_debe_coincidir_con_la_duracion(): void
+    public function test_la_fecha_de_fin_se_calcula_con_la_duracion(): void
     {
-        // Alternativo 4.2: 2 días para una excursión de 3
-        $this->ingresarDatos(['fecha_fin' => '2026-11-11'])
-            ->assertStatus(422)
-            ->assertJsonValidationErrors([
-                'fecha_fin' => 'El período debe corresponderse con la duración de la excursión (3 días).',
-            ]);
+        $this->ingresarDatos()->assertOk();
+
+        $this->assertSame('2026-11-12', session('cu8.datosSalida.fecha_fin'));
+    }
+
+    public function test_se_ignora_la_fecha_de_fin_enviada(): void
+    {
+        $this->ingresarDatos(['fecha_fin' => '2026-12-25'])->assertOk();
+
+        $this->assertSame('2026-11-12', session('cu8.datosSalida.fecha_fin'));
     }
 
     public function test_excursion_de_un_dia_empieza_y_termina_el_mismo_dia(): void
     {
         $this->excursion->update(['duracion' => 1]);
 
-        $this->ingresarDatos(['fecha_inicio' => '2026-11-10', 'fecha_fin' => '2026-11-10'])
-            ->assertOk();
+        $this->ingresarDatos(['fecha_inicio' => '2026-11-10'])->assertOk();
+
+        $this->assertSame('2026-11-10', session('cu8.datosSalida.fecha_fin'));
     }
 
     public function test_cupo_y_precio_deben_ser_mayores_a_cero(): void

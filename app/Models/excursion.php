@@ -53,10 +53,12 @@ class Excursion extends Model
     /**
      * DS CU 9 (Cliente): getSalidasReservables().
      * Recorre las salidas de la excursión y devuelve los datos de las reservables.
+     * Las salidas sin paquetes disponibles no se muestran: el cliente reserva sobre un paquete.
      */
     public function getSalidasReservables(): Collection
     {
         return $this->salidasProgramadas()
+            ->whereHas('paquetes', fn ($consulta) => $consulta->where('estado', Paquete::ESTADO_DISPONIBLE))
             ->with(['excursion:id,nombre', 'empleados', 'equipoPrestado'])
             ->withCount('paquetes')
             ->orderBy('fecha_inicio')
@@ -210,47 +212,37 @@ class Excursion extends Model
     /**
      * DS CU 8: validarDatosSalida(datosSalida). Paso 4.
      * Si algo falla, lanza una ValidationException con el mensaje del alternativo que corresponda.
-     *  RN-01 (4.1 y 4.2): período futuro, fin >= inicio y cantidad de días = duración de la excursión.
+     *  RN-01 (4.1): período futuro. La fecha de fin no se ingresa: se calcula con la duración de la excursión.
      *  RN-02 (4.3): cupo máximo y precio base mayores a cero.
      */
     public function validarDatosSalida(array $datosSalida): array
     {
-        $periodoInvalido = 'El período ingresado no es válido.';
         $noPositivos = 'El cupo máximo y el precio base deben ser mayores a cero.';
 
-        return Validator::make($datosSalida, [
+        $datosValidos = Validator::make($datosSalida, [
             'fecha_inicio' => ['required', 'date_format:Y-m-d', 'after:today'],
-            'fecha_fin' => ['required', 'date_format:Y-m-d', 'after_or_equal:fecha_inicio'],
             'hora_de_salida' => ['required', 'date_format:H:i'],
             'cupo_maximo' => ['required', 'integer', 'min:1', 'max:1000'],
             'precio_base' => ['required', 'numeric', 'gt:0', 'max:99999999'],
         ], [
             'required' => 'Este campo es obligatorio.',
             'date_format' => 'El formato ingresado no es válido.',
-            'fecha_inicio.after' => $periodoInvalido . ' La fecha de inicio debe ser futura.',
-            'fecha_fin.after_or_equal' => $periodoInvalido . ' La fecha de fin no puede ser anterior a la de inicio.',
+            'fecha_inicio.after' => 'El período ingresado no es válido. La fecha de inicio debe ser futura.',
             'cupo_maximo.integer' => 'El cupo máximo debe ser un número entero.',
             'cupo_maximo.min' => $noPositivos,
             'cupo_maximo.max' => 'El cupo máximo no puede superar las 1000 personas.',
             'precio_base.numeric' => 'El precio base debe ser un número.',
             'precio_base.gt' => $noPositivos,
             'precio_base.max' => 'El precio base ingresado es demasiado alto.',
-        ])->after(function ($validator) use ($datosSalida) {
-            // Alternativo 4.2: solo tiene sentido si el período ya es válido (4.1)
-            if ($validator->errors()->hasAny(['fecha_inicio', 'fecha_fin'])) {
-                return;
-            }
+        ])->validate();
 
-            // Se cuentan ambos extremos: una excursión de 1 día empieza y termina el mismo día
-            $dias = (int) Carbon::parse($datosSalida['fecha_inicio'])
-                ->diffInDays(Carbon::parse($datosSalida['fecha_fin'])) + 1;
+        return [...$datosValidos, 'fecha_fin' => $this->calcularFechaFin($datosValidos['fecha_inicio'])];
+    }
 
-            if ($dias !== $this->duracion) {
-                $validator->errors()->add('fecha_fin',
-                    "El período debe corresponderse con la duración de la excursión ({$this->duracion} "
-                    . ($this->duracion === 1 ? 'día' : 'días') . ').');
-            }
-        })->validate();
+    /** Se cuentan ambos extremos: una excursión de 1 día empieza y termina el mismo día. */
+    private function calcularFechaFin(string $fechaInicio): string
+    {
+        return Carbon::parse($fechaInicio)->addDays($this->duracion - 1)->format('Y-m-d');
     }
 
     /**

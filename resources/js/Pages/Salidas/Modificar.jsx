@@ -12,13 +12,18 @@ const fecha = (valor) => valor.split('-').reverse().join('/');
 const precio = (valor) =>
     Number(valor).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
 const esFecha = (valor) => /^\d{4}-\d{2}-\d{2}$/.test(valor);
+// Se cuentan ambos extremos: una excursión de 1 día empieza y termina el mismo día
+const calcularFechaFin = (inicio, duracion) => {
+    const fin = new Date(`${inicio}T00:00:00Z`);
+    fin.setUTCDate(fin.getUTCDate() + duracion - 1);
+    return fin.toISOString().slice(0, 10);
+};
 
 // CU 10 - Modificar Salida Programada
 export default function Modificar({ salida }) {
     // Paso 2: se muestran los datos actuales de la salida
     const { data, setData, put, processing, errors } = useForm({
         fecha_inicio: salida.fecha_inicio,
-        fecha_fin: salida.fecha_fin,
         hora_de_salida: salida.hora_de_salida,
         cupo_maximo: salida.cupo_maximo,
         precio_base: salida.precio_base,
@@ -29,10 +34,8 @@ export default function Modificar({ salida }) {
 
     // Personal y equipamiento disponibles en el período ingresado (sin contar esta salida).
     // Se vuelven a consultar cada vez que cambia el período.
-    const periodo =
-        esFecha(data.fecha_inicio) && esFecha(data.fecha_fin)
-            ? { fecha_inicio: data.fecha_inicio, fecha_fin: data.fecha_fin }
-            : null;
+    const fechaFin = esFecha(data.fecha_inicio) ? calcularFechaFin(data.fecha_inicio, salida.duracion) : '';
+    const periodo = fechaFin ? { fecha_inicio: data.fecha_inicio, fecha_fin: fechaFin } : null;
     const guias = useListado(
         periodo && route('salidas.modificar.empleados', { salida: salida.id, categoria: 'GUIA', ...periodo }),
         'empleados',
@@ -61,7 +64,7 @@ export default function Modificar({ salida }) {
     );
 
     // Pasos 11 a 13: se confirma la modificación. Si algo no es válido, el formulario
-    // conserva lo ingresado y muestra el error (alternativos 4.1, 4.2, 5.1, 6.1 y 8.1).
+    // conserva lo ingresado y muestra el error (alternativos 4.1, 5.1, 6.1 y 8.1).
     const confirmar = (e) => {
         e.preventDefault();
         put(route('salidas.actualizar', salida.id));
@@ -117,9 +120,17 @@ export default function Modificar({ salida }) {
                     <div className="space-y-6 border border-trekk-borde bg-trekk-tarjeta p-6 rounded-2xl">
                         <div className="grid gap-6 sm:grid-cols-3">
                             {campo('fecha_inicio', 'Fecha de inicio *', { type: 'date' })}
-                            {campo('fecha_fin', 'Fecha de fin *', { type: 'date' })}
+                            {campo('fecha_fin', 'Fecha de fin', {
+                                type: 'date',
+                                value: fechaFin,
+                                disabled: true,
+                                className: 'mt-1 block w-full cursor-not-allowed opacity-60',
+                            })}
                             {campo('hora_de_salida', 'Hora de salida *', { type: 'time' })}
                         </div>
+                        <p className="text-xs text-gray-500">
+                            La fecha de fin se calcula a partir de la fecha de inicio y la duración de la excursión.
+                        </p>
                         <div className="grid gap-6 sm:grid-cols-2">
                             {campo('cupo_maximo', 'Cupo máximo *', { type: 'number', min: '1' })}
                             {campo('precio_base', 'Precio base (ARS) *', { type: 'number', min: '0', step: '0.01' })}

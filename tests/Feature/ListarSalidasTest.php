@@ -39,6 +39,15 @@ class ListarSalidasTest extends TestCase
         ]);
     }
 
+    /** Salida con un paquete disponible: la que puede ver el cliente. */
+    private function salidaConPaquete(string $fecha, string $hora, string $estado = 'PROGRAMADA', ?Excursion $excursion = null): SalidaProgramada
+    {
+        $salida = $this->salida($fecha, $hora, $estado, $excursion);
+        Paquete::factory()->create(['salida_programada_id' => $salida->id, 'estado' => 'DISPONIBLE']);
+
+        return $salida;
+    }
+
     private function administrativo(): User
     {
         return User::factory()->create(['rol' => 'admin']);
@@ -53,11 +62,11 @@ class ListarSalidasTest extends TestCase
 
     public function test_cliente_ve_solo_las_salidas_reservables_de_la_excursion(): void
     {
-        $dentroDe5Dias = $this->salida('2026-10-25', '08:00:00');
-        $dentroDe49Hs = $this->salida('2026-10-22', '11:00:00');
-        $this->salida('2026-10-22', '09:00:00');                // 47 hs: no se puede reservar
-        $this->salida('2026-10-25', '08:00:00', 'CANCELADA');   // RN-01: no está PROGRAMADA
-        $this->salida('2026-10-25', '08:00:00', 'PROGRAMADA', Excursion::factory()->create()); // otra excursión
+        $dentroDe5Dias = $this->salidaConPaquete('2026-10-25', '08:00:00');
+        $dentroDe49Hs = $this->salidaConPaquete('2026-10-22', '11:00:00');
+        $this->salidaConPaquete('2026-10-22', '09:00:00');                // 47 hs: no se puede reservar
+        $this->salidaConPaquete('2026-10-25', '08:00:00', 'CANCELADA');   // RN-01: no está PROGRAMADA
+        $this->salidaConPaquete('2026-10-25', '08:00:00', 'PROGRAMADA', Excursion::factory()->create()); // otra excursión
 
         $this->actingAs($this->cliente())
             ->get(route('salidas.listar', ['excursion' => $this->excursion->id]))
@@ -68,6 +77,31 @@ class ListarSalidasTest extends TestCase
                 ->has('salidas', 2)
                 ->where('salidas.0.id', $dentroDe49Hs->id)   // ordenadas por fecha y hora
                 ->where('salidas.1.id', $dentroDe5Dias->id));
+    }
+
+    public function test_cliente_no_ve_las_salidas_sin_paquetes_disponibles(): void
+    {
+        $conPaquete = $this->salidaConPaquete('2026-10-25', '08:00:00');
+        $this->salida('2026-10-26', '08:00:00');    // sin paquetes
+        $soloCancelados = $this->salida('2026-10-27', '08:00:00');
+        Paquete::factory()->create(['salida_programada_id' => $soloCancelados->id, 'estado' => 'CANCELADO']);
+
+        $this->actingAs($this->cliente())
+            ->get(route('salidas.listar', ['excursion' => $this->excursion->id]))
+            ->assertInertia(fn (Pagina $pagina) => $pagina
+                ->has('salidas', 1)
+                ->where('salidas.0.id', $conPaquete->id));
+    }
+
+    public function test_administrativo_sigue_viendo_las_salidas_sin_paquetes(): void
+    {
+        $this->salida('2026-10-25', '08:00:00');
+
+        $this->actingAs($this->administrativo())
+            ->get(route('salidas.listar'))
+            ->assertInertia(fn (Pagina $pagina) => $pagina
+                ->has('salidas', 1)
+                ->where('salidas.0.cantidad_paquetes', 0));
     }
 
     public function test_cliente_recibe_la_ficha_de_la_excursion_y_los_paquetes_disponibles_de_cada_salida(): void

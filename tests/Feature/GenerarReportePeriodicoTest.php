@@ -103,9 +103,9 @@ class GenerarReportePeriodicoTest extends TestCase
             ->assertInertia(fn (Pagina $pagina) => $pagina
                 ->component('Admin/Reportes/Periodico')
                 ->where('reporte.total_reservas', 3)
-                // RN-02: Ana hizo 2 excursiones, Beto 1
+                // RN-02: Ana tiene 2 reservas realizadas, Beto 1
                 ->where('reporte.clientes_frecuentes.0', [
-                    'nombre' => 'Ana', 'apellido' => 'Paz', 'dni' => '30111222', 'excursiones' => 2,
+                    'nombre' => 'Ana', 'apellido' => 'Paz', 'dni' => '30111222', 'reservas' => 2,
                 ])
                 ->where('reporte.clientes_frecuentes.1.nombre', 'Beto')
                 // RN-03: Laguna 2 + 3 = 5 participantes, Cerro 1
@@ -136,7 +136,7 @@ class GenerarReportePeriodicoTest extends TestCase
         $this->generar('2026-03-01', '2026-03-31')
             ->assertInertia(fn (Pagina $pagina) => $pagina
                 ->where('reporte.total_reservas', 2)
-                ->where('reporte.clientes_frecuentes.0.excursiones', 2));
+                ->where('reporte.clientes_frecuentes.0.reservas', 2));
     }
 
     public function test_rn_04_las_reservas_sin_conformidad_no_cuentan_en_el_promedio(): void
@@ -163,6 +163,7 @@ class GenerarReportePeriodicoTest extends TestCase
 
         $csv = $respuesta->streamedContent();
         $this->assertStringContainsString('Reporte de clientes frecuentes', $csv);
+        $this->assertStringContainsString('Reservas realizadas', $csv);
         $this->assertStringContainsString('Ana', $csv);
         $this->assertStringContainsString('Laguna Esmeralda', $csv);
     }

@@ -324,28 +324,6 @@ class ControladorReservas extends Controller
         return $participante;
     }
 
-
-    // CU 25 - Listar equipamientos
-    public function listarEquipamientos(Request $request)
-    {
-        $equipamientos = Equipamiento::where('stock', '>', 0)->get();
-        $esAdministrativo = $request->user()->esAdministrativo();
-
-        if ($esAdministrativo) {
-            $salidas = SalidaProgramada::where('estado', 'PROGRAMADA')->get();
-            return Inertia::render('Equipamiento/Listar', [
-                'equipamientos' => $equipamientos,
-                'salidas' => $salidas,
-                'esAdministrativo' => true,
-            ]);
-        }
-
-        return Inertia::render('Equipamiento/Listar', [
-            'equipamientos' => $equipamientos,
-            'esAdministrativo' => false,
-        ]);
-    }
-
     // ========== CU 14 - REGISTRAR RESERVA ==========
 
     public const MENSAJE_RESERVA_VENCIDA =

@@ -234,10 +234,4 @@ Route::middleware('auth')->group(function () {
     });
     });
 });
-
-// CU 25 - Listar equipamientos (cliente y Administrativo)
-Route::get('/equipamientos', [ControladorReservas::class, 'listarEquipamientos'])
-    ->middleware('auth')
-    ->name('equipamientos.listar');
-
 require __DIR__.'/auth.php';

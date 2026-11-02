@@ -46,6 +46,16 @@ export default function VerificarCertificadoModal({ certificado: { reserva_id, d
     // Vista previa de la vigencia (RN-01). La verificación definitiva la hace el servidor.
     const vigencia = datos && fecha ? sumarDias(fecha, datos.dias_de_vigencia) : '';
     const cubre = vigencia && vigencia >= datos.fecha_fin;
+    const fechaFutura = datos && fecha && fecha > datos.fecha_actual;
+
+    const motivoFechaFutura = `La fecha de emisión del certificado (${formatFecha(fecha)}) es posterior a la fecha actual.`;
+
+    // 5.1 -> paso 3 -> 3.1: la fecha futura figura en el certificado, así que el administrativo lo marca inválido
+    const marcarInvalidoPorFechaFutura = () => {
+        setDecision('INVALIDO');
+        setMotivo(motivoFechaFutura);
+        setError('');
+    };
 
     // Paso 3: el administrativo decide. Válido -> pasos 4 a 9; inválido -> 3.1
     const confirmar = (e) => {
@@ -151,6 +161,10 @@ export default function VerificarCertificadoModal({ certificado: { reserva_id, d
                                             onClick={() => {
                                                 setDecision(valor);
                                                 setError('');
+                                                // Si vuelve a "válido", el motivo automático deja de aplicar (uno escrito a mano se conserva)
+                                                if (valor === 'VALIDO' && motivo === motivoFechaFutura) {
+                                                    setMotivo('');
+                                                }
                                             }}
                                             className={
                                                 'flex items-start gap-3 rounded-xl border p-3 text-left transition-colors hover:border-trekk-primario/50 ' +
@@ -187,7 +201,7 @@ export default function VerificarCertificadoModal({ certificado: { reserva_id, d
                                                 id="cm-fecha"
                                                 type="date"
                                                 value={fecha}
-                                                aria-invalid={error ? true : undefined}
+                                                aria-invalid={error || fechaFutura ? true : undefined}
                                                 onChange={(e) => {
                                                     setFecha(e.target.value);
                                                     setError('');
@@ -195,7 +209,26 @@ export default function VerificarCertificadoModal({ certificado: { reserva_id, d
                                                 className="rounded-lg border-gray-200 text-sm aria-[invalid=true]:border-red-300"
                                             />
                                         </div>
-                                        {vigencia && (
+                                        {/* 5.1: una fecha futura no se puede registrar, y la vigencia no se calcula */}
+                                        {fechaFutura ? (
+                                            <div
+                                                role="alert"
+                                                className="flex flex-col gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+                                            >
+                                                <p>
+                                                    La fecha de emisión no puede ser posterior a hoy (
+                                                    {formatFecha(datos.fecha_actual)}). Si hubo un error al ingresarla,
+                                                    corregila. Si es la que figura en el certificado, marcalo como inválido.
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={marcarInvalidoPorFechaFutura}
+                                                    className="self-start rounded-lg bg-red-600/10 px-3 py-1.5 font-medium text-red-600 hover:bg-red-600/20"
+                                                >
+                                                    Marcar como inválido
+                                                </button>
+                                            </div>
+                                        ) : vigencia && (
                                             <p
                                                 className={
                                                     'rounded-lg px-3 py-2 text-sm ' +
@@ -255,7 +288,7 @@ export default function VerificarCertificadoModal({ certificado: { reserva_id, d
                     </button>
                     <button
                         type="submit"
-                        disabled={!decision || enviando}
+                        disabled={!decision || enviando || (decision === 'VALIDO' && fechaFutura)}
                         className={
                             'inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 ' +
                             (decision === 'INVALIDO'

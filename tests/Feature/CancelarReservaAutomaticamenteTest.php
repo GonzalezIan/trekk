@@ -14,9 +14,13 @@ use App\Models\Refugio;
 use App\Models\Reserva;
 use App\Models\SalidaProgramada;
 use App\Notifications\ReservaCancelada;
+use App\Services\Notificador;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Notification;
+use RuntimeException;
 use Tests\TestCase;
 
 /**
@@ -263,6 +267,60 @@ class CancelarReservaAutomaticamenteTest extends TestCase
         $this->correrProceso();
 
         $this->assertSame(7, $this->salida->fresh()->cupo_disponible);
+    }
+
+    public function test_la_reserva_en_curso_que_avanzo_mientras_corria_el_proceso_no_se_cuenta_como_cancelada(): void
+    {
+        $reserva = $this->reserva(Reserva::ESTADO_EN_CURSO, vencimiento: now()->subMinute());
+
+        // El cliente termina de registrarla justo después de que el proceso armó la lista
+        $yaCambio = false;
+        Reserva::retrieved(function (Reserva $leida) use (&$yaCambio) {
+            if (! $yaCambio) {
+                $yaCambio = true;
+                DB::table('reservas')->where('id', $leida->id)->update([
+                    'estado' => Reserva::ESTADO_PENDIENTE,
+                    'situacion_de_pago' => Reserva::PAGO_COMPLETO,
+                    'fecha_hora_vencimiento' => null,
+                ]);
+            }
+        });
+
+        $canceladas = app(ControladorReservas::class)->cancelarReservasAutomaticamente(app(Notificador::class));
+        Reserva::flushEventListeners();
+
+        $this->assertSame(0, $canceladas);
+        $this->assertSame(Reserva::ESTADO_PENDIENTE, $reserva->fresh()->estado);
+        $this->assertSame(4, $this->salida->fresh()->cupo_disponible);
+    }
+
+    public function test_una_falla_en_una_reserva_se_registra_y_no_frena_a_las_demas(): void
+    {
+        Exceptions::fake();
+        $conFalla = $this->reserva(vencimiento: now()->subMinute());
+        $siguiente = $this->reserva(vencimiento: now()->subMinute());
+
+        $notificador = new class($conFalla->id) extends Notificador {
+            public function __construct(private int $idQueFalla)
+            {
+            }
+
+            public function notificarCancelacion(Reserva $reserva, string $origen): void
+            {
+                if ($reserva->id === $this->idQueFalla) {
+                    throw new RuntimeException('Falla forzada al notificar');
+                }
+            }
+        };
+
+        $canceladas = app(ControladorReservas::class)->cancelarReservasAutomaticamente($notificador);
+
+        $this->assertSame(1, $canceladas);
+        // Se deshace por completo: en la próxima corrida se vuelve a intentar
+        $this->assertSame(Reserva::ESTADO_PENDIENTE, $conFalla->fresh()->estado);
+        $this->assertCancelada($siguiente, Reserva::MOTIVO_SALDO_NO_ABONADO);
+        $this->assertSame(7, $this->salida->fresh()->cupo_disponible);
+        Exceptions::assertReported(RuntimeException::class);
     }
 
     // ---------- RF Notificar eventualidades ----------

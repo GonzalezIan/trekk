@@ -21,6 +21,7 @@ use App\Services\Notificador;
 use App\Notifications\ReservaCancelada;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class ControladorReservas extends Controller
 {
@@ -607,16 +608,20 @@ class ControladorReservas extends Controller
 
     /**
      * CU 14 - 17.1 / *a. Se vuelve a leer bloqueada, para no liberar dos veces
-     * si llegan dos pedidos a la vez.
+     * si llegan dos pedidos a la vez. Devuelve si la anuló.
      */
-    private function anularRegistroEnCurso(Reserva $reserva): void
+    private function anularRegistroEnCurso(Reserva $reserva): bool
     {
-        DB::transaction(function () use ($reserva) {
+        return DB::transaction(function () use ($reserva) {
             $reserva = Reserva::lockForUpdate()->find($reserva->id);
 
-            if ($reserva?->estaEnCurso()) {
-                $reserva->anularRegistro();
+            if (! $reserva?->estaEnCurso()) {
+                return false;
             }
+
+            $reserva->anularRegistro();
+
+            return true;
         });
     }
 
@@ -662,17 +667,30 @@ class ControladorReservas extends Controller
         $canceladas = 0;
 
         foreach (Reserva::enCursoVencidas() as $reserva) {
-            $this->anularRegistroEnCurso($reserva);
-            $canceladas++;
+            if ($this->procesarSinFrenar(fn () => $this->anularRegistroEnCurso($reserva))) {
+                $canceladas++;
+            }
         }
 
         foreach (Reserva::candidatasACancelacionAutomatica() as $reserva) {
-            if ($this->cancelarAutomaticamente($reserva, $notificador)) {
+            if ($this->procesarSinFrenar(fn () => $this->cancelarAutomaticamente($reserva, $notificador))) {
                 $canceladas++;
             }
         }
 
         return $canceladas;
+    }
+
+    /** RF-17. Una falla en una reserva se registra y no frena a las demás. */
+    private function procesarSinFrenar(callable $procesar): bool
+    {
+        try {
+            return $procesar();
+        } catch (Throwable $falla) {
+            report($falla);
+
+            return false;
+        }
     }
 
     /**

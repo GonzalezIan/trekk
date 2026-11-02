@@ -157,6 +157,22 @@ class RegistrarSalidaProgramadaTest extends TestCase
             ]);
     }
 
+    public function test_fecha_con_formato_invalido_informa_solo_el_error_de_formato(): void
+    {
+        // TP7 PE-03: "10/11/2026" se interpretaba como mes/día y además decía que no era futura
+        $this->ingresarDatos(['fecha_inicio' => '10/11/2026'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.fecha_inicio', ['El formato ingresado no es válido.']);
+    }
+
+    public function test_precio_no_numerico_informa_solo_que_debe_ser_un_numero(): void
+    {
+        // TP7 PE-18: además decía que debía ser mayor a cero
+        $this->ingresarDatos(['precio_base' => 'abc'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.precio_base', ['El precio base debe ser un número.']);
+    }
+
     // ---------- Paso 5: CU 23 - Listar empleados ----------
 
     public function test_lista_solo_empleados_activos_de_la_categoria_y_sin_otra_salida_en_el_periodo(): void

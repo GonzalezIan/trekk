@@ -220,10 +220,10 @@ class Excursion extends Model
         $noPositivos = 'El cupo máximo y el precio base deben ser mayores a cero.';
 
         $datosValidos = Validator::make($datosSalida, [
-            'fecha_inicio' => ['required', 'date_format:Y-m-d', 'after:today'],
+            'fecha_inicio' => ['bail', 'required', 'date_format:Y-m-d', 'after:today'],
             'hora_de_salida' => ['required', 'date_format:H:i'],
             'cupo_maximo' => ['required', 'integer', 'min:1', 'max:1000'],
-            'precio_base' => ['required', 'numeric', 'gt:0', 'max:99999999'],
+            'precio_base' => ['bail', 'required', 'numeric', 'gt:0', 'max:99999999'],
         ], [
             'required' => 'Este campo es obligatorio.',
             'date_format' => 'El formato ingresado no es válido.',

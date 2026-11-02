@@ -99,6 +99,8 @@ class CertificadoMedico extends Model
             'fecha_fin' => $salida->fecha_fin->toDateString(),
             'fecha_de_carga' => $this->fecha_de_carga?->toDateString(),
             'dias_de_vigencia' => self::DIAS_DE_VIGENCIA,
+            // 5.1: la pantalla usa la misma fecha que el servidor para detectar una emisión futura
+            'fecha_actual' => now()->toDateString(),
         ];
     }
 

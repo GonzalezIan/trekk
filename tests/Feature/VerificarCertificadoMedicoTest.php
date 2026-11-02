@@ -108,6 +108,7 @@ class VerificarCertificadoMedicoTest extends TestCase
             ->assertJsonPath('certificado.reserva_id', $this->reserva->id)
             ->assertJsonPath('certificado.archivo.es_pdf', true)
             ->assertJsonPath('certificado.dias_de_vigencia', 30)
+            ->assertJsonPath('certificado.fecha_actual', now()->toDateString())
             ->assertJsonStructure(['certificado' => ['excursion', 'paquete', 'fecha_inicio', 'fecha_fin', 'fecha_de_carga', 'url_archivo']]);
     }
 
@@ -211,6 +212,28 @@ class VerificarCertificadoMedicoTest extends TestCase
         }
 
         $this->assertTrue($this->certificado()->estaPendienteDeVerificacion());
+    }
+
+    public function test_5_1_con_fecha_futura_vuelve_al_paso_3_y_se_puede_marcar_invalido(): void
+    {
+        Notification::fake();
+
+        // Emitido dentro de 5 días: vencería en 35 y cubriría la salida, pero la fecha es futura
+        $this->ingresarFecha($this->participante, now()->addDays(5)->toDateString())
+            ->assertUnprocessable();
+
+        $certificado = $this->certificado();
+        $this->assertTrue($certificado->estaPendienteDeVerificacion());
+        $this->assertNull($certificado->fecha_emision);
+        $this->assertSame(Participante::REQUISITO_PENDIENTE, $this->participante->fresh()->estado_requisito_medico);
+
+        // Vuelve al paso 3: el administrativo sigue por el 3.1
+        $this->actingAs($this->administrativo)
+            ->postJson(route('reservas.certificado.invalidez', [$this->reserva, '30111222']), ['motivo' => 'La fecha de emisión es posterior a la fecha actual.'])
+            ->assertOk()
+            ->assertJsonPath('estado', CertificadoMedico::ESTADO_INVALIDO);
+
+        Notification::assertSentTo($this->reserva->cliente->user, CertificadoInvalido::class);
     }
 
     public function test_7_1_la_vigencia_no_cubre_la_salida_y_queda_invalido(): void

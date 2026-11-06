@@ -1,4 +1,5 @@
 import Modal from '@/Components/Modal';
+import BarraListado, { CheckInactivos, useBusquedaYOrden } from '@/Components/Trekk/BarraListado';
 import { fotoExcursion } from '@/Components/Trekk/fotos';
 import { IconoEstetoscopio, IconoFlecha, IconoReloj, IconoTendencia, IconoUbicacion } from '@/Components/Trekk/Iconos';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -7,6 +8,16 @@ import { useState } from 'react';
 
 const botonOscuro =
     'rounded-lg bg-trekk-primario px-4 py-2 text-sm font-medium text-trekk-primario-texto hover:bg-trekk-primario-hover disabled:cursor-not-allowed disabled:opacity-50';
+// Búsqueda y orden del listado del Administrativo
+const buscarEn = (e) => [e.nombre, e.recorrido, e.dificultad, e.estado];
+const columnas = {
+    nombre: { etiqueta: 'Nombre', valor: (e) => e.nombre },
+    recorrido: { etiqueta: 'Recorrido', valor: (e) => e.recorrido },
+    dificultad: { etiqueta: 'Dificultad', valor: (e) => ['BAJA', 'MEDIO', 'ALTA'].indexOf(e.dificultad) },
+    duracion: { etiqueta: 'Duración', valor: (e) => e.duracion },
+    estado: { etiqueta: 'Estado', valor: (e) => e.estado },
+};
+
 const botonClaro =
     'rounded-lg border border-trekk-borde bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-trekk-texto hover:bg-trekk-suave disabled:cursor-not-allowed disabled:opacity-50';
 
@@ -17,6 +28,11 @@ export default function Listar({ excursiones, esAdministrativo }) {
     // Excursión elegida por el Administrativo para operar sobre ella
     const [seleccionada, setSeleccionada] = useState(null);
     const excursionSeleccionada = excursiones.find((e) => e.id === seleccionada);
+
+    // Las excursiones inactivas no se muestran, salvo que el Administrativo lo pida
+    const [mostrarInactivas, setMostrarInactivas] = useState(false);
+    const visibles = mostrarInactivas ? excursiones : excursiones.filter((e) => e.estado === 'ACTIVA');
+    const listado = useBusquedaYOrden(visibles, { buscarEn, columnas, inicial: 'nombre' });
 
     // Alternativo 4.3: confirmar la baja de la excursión seleccionada (CU 2)
     const [confirmarBaja, setConfirmarBaja] = useState(false);
@@ -57,6 +73,16 @@ export default function Listar({ excursiones, esAdministrativo }) {
                     )}
 
                     {esAdministrativo && excursiones.length > 0 && (
+                        <BarraListado listado={listado} placeholder="Buscar por nombre, recorrido o dificultad">
+                            <CheckInactivos
+                                checked={mostrarInactivas}
+                                onChange={setMostrarInactivas}
+                                etiqueta="Mostrar inactivas"
+                            />
+                        </BarraListado>
+                    )}
+
+                    {esAdministrativo && excursiones.length > 0 && (
                         <BarraAcciones
                             excursion={excursionSeleccionada}
                             onDarDeBaja={() => setConfirmarBaja(true)}
@@ -69,6 +95,8 @@ export default function Listar({ excursiones, esAdministrativo }) {
                     <div className="overflow-x-auto bg-trekk-tarjeta shadow-sm sm:rounded-lg">
                         {excursiones.length === 0 ? (
                             <p className="p-6 text-gray-600">No hay excursiones registradas.</p>
+                        ) : listado.resultado.length === 0 ? (
+                            <p className="p-6 text-gray-600">No se encontraron excursiones.</p>
                         ) : (
                             <table className="min-w-full divide-y divide-gray-200 text-sm">
                                 <thead className="bg-gray-50 text-left text-gray-600">
@@ -82,7 +110,7 @@ export default function Listar({ excursiones, esAdministrativo }) {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {excursiones.map((e) => (
+                                    {listado.resultado.map((e) => (
                                         <tr
                                             key={e.id}
                                             onClick={() => setSeleccionada(e.id)}

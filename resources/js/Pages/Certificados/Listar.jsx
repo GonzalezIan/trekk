@@ -3,10 +3,22 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 // Importamos el modal de Carolina
 import VerificarCertificadoModal from '@/Components/VerificarCertificadoModal'; 
+import BarraListado, { useBusquedaYOrden } from '@/Components/Trekk/BarraListado';
+
+const codigo = (id) => `R-${String(id).padStart(4, '0')}`;
+
+// Búsqueda y orden del listado
+const buscarEn = (c) => [c.participante.nombre, c.participante.apellido, c.participante.dni, codigo(c.participante.reserva_id)];
+const columnas = {
+    participante: { etiqueta: 'Participante', valor: (c) => `${c.participante.apellido} ${c.participante.nombre}` },
+    dni: { etiqueta: 'DNI', valor: (c) => c.participante.dni },
+    reserva: { etiqueta: 'Reserva', valor: (c) => c.participante.reserva_id },
+};
 
 export default function ListarPendientes({ auth, certificados }) {
     const [seleccionado, setSeleccionado] = useState(null);
     const [mensajeExito, setMensajeExito] = useState('');
+    const listado = useBusquedaYOrden(certificados, { buscarEn, columnas, inicial: 'reserva' });
 
     return (
         <AuthenticatedLayout user={auth.user}>
@@ -32,6 +44,13 @@ export default function ListarPendientes({ auth, certificados }) {
                         <p className="text-gray-500">No hay certificados pendientes de verificación.</p>
                     </div>
                 ) : (
+                    <div className="space-y-4">
+                    <BarraListado listado={listado} placeholder="Buscar por participante, DNI o reserva" />
+                    {listado.resultado.length === 0 ? (
+                        <p className="rounded-2xl border border-dashed border-gray-300 p-6 text-center text-gray-500">
+                            No se encontraron certificados.
+                        </p>
+                    ) : (
                     <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-trekk-tarjeta">
                         <table className="w-full text-sm">
                             <thead className="border-b border-gray-200 text-left text-gray-500">
@@ -43,13 +62,13 @@ export default function ListarPendientes({ auth, certificados }) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 [&_td]:px-4 [&_td]:py-3">
-                                {certificados.map((cert) => (
+                                {listado.resultado.map((cert) => (
                                     <tr key={cert.id}>
                                         <td className="font-medium text-gray-900">
                                             {cert.participante.nombre} {cert.participante.apellido}
                                         </td>
                                         <td>{cert.participante.dni}</td>
-                                        <td className="font-mono text-xs">R-{String(cert.participante.reserva_id).padStart(4, '0')}</td>
+                                        <td className="font-mono text-xs">{codigo(cert.participante.reserva_id)}</td>
                                         <td>
                                             {/* Botón que abre el modal */}
                                             <button
@@ -66,6 +85,8 @@ export default function ListarPendientes({ auth, certificados }) {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                    )}
                     </div>
                 )}
             </main>

@@ -1,5 +1,7 @@
 import Modal from '@/Components/Modal';
 import { useEffect, useState } from 'react';
+import CampoFecha from '@/Components/Trekk/CampoFecha';
+import { formatearFecha } from '@/Components/Trekk/fechas';
 
 // CU 19 - Verificar certificado médico (vista del Administrativo).
 // Se abre desde el CU 18 - Listar certificados médicos pendientes, por ejemplo:
@@ -9,12 +11,8 @@ import { useEffect, useState } from 'react';
 //       onVerificado={(mensaje) => ...}   // por ejemplo, recargar la lista y mostrar el mensaje
 //   />
 
-const formatFecha = (fecha) =>
-    new Date(`${fecha}T12:00:00`).toLocaleDateString('es-AR', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
+// dd/mm/aaaa
+const formatFecha = formatearFecha;
 
 const sumarDias = (fecha, dias) => {
     const d = new Date(`${fecha}T12:00:00`);
@@ -197,16 +195,15 @@ export default function VerificarCertificadoModal({ certificado: { reserva_id, d
                                             <label htmlFor="cm-fecha" className="text-sm font-medium text-gray-900">
                                                 Fecha de emisión
                                             </label>
-                                            <input
+                                            <CampoFecha
                                                 id="cm-fecha"
-                                                type="date"
                                                 value={fecha}
                                                 aria-invalid={error || fechaFutura ? true : undefined}
                                                 onChange={(e) => {
                                                     setFecha(e.target.value);
                                                     setError('');
                                                 }}
-                                                className="rounded-lg border-gray-200 text-sm aria-[invalid=true]:border-red-300"
+                                                className="w-full rounded-lg border-gray-200 text-sm aria-[invalid=true]:border-red-300"
                                             />
                                         </div>
                                         {/* 5.1: una fecha futura no se puede registrar, y la vigencia no se calcula */}

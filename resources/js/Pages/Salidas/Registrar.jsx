@@ -2,6 +2,8 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import CampoFecha from '@/Components/Trekk/CampoFecha';
+import { normalizar } from '@/Components/Trekk/BarraListado';
 import EncabezadoFormulario from '@/Components/Trekk/EncabezadoFormulario';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
@@ -109,14 +111,25 @@ function FormularioDatos({ datos, fechaFin, errores, procesando, onCambiar, onCo
     const campo = (nombre, etiqueta, props = {}) => (
         <div>
             <InputLabel htmlFor={nombre} value={etiqueta} />
-            <TextInput
-                id={nombre}
-                name={nombre}
-                className="mt-1 block w-full"
-                value={datos[nombre]}
-                onChange={onCambiar}
-                {...props}
-            />
+            {props.type === 'date' ? (
+                <CampoFecha
+                    id={nombre}
+                    name={nombre}
+                    value={datos[nombre]}
+                    onChange={onCambiar}
+                    {...props}
+                    className={'rounded-lg border-trekk-borde bg-trekk-tarjeta shadow-sm focus:border-trekk-primario focus:ring-trekk-primario ' + (props.className ?? 'mt-1 block w-full')}
+                />
+            ) : (
+                <TextInput
+                    id={nombre}
+                    name={nombre}
+                    className="mt-1 block w-full"
+                    value={datos[nombre]}
+                    onChange={onCambiar}
+                    {...props}
+                />
+            )}
             <InputError message={errores[nombre]} className="mt-2" />
         </div>
     );
@@ -426,9 +439,28 @@ function ListaEmpleados({ listado, tipo, seleccion, onElegir }) {
 
 // CU 25 (perfil Administrativo): elementos con stock disponible en el período
 function ListaEquipamiento({ listado, seleccion, onElegir }) {
+    const [busqueda, setBusqueda] = useState('');
     if (!listado.items) return <Cargando listado={listado} />;
 
+    // Búsqueda por nombre o descripción. Lo ya seleccionado queda incluido aunque no se vea.
+    const termino = normalizar(busqueda.trim());
+    const items = termino
+        ? listado.items.filter((eq) => normalizar(`${eq.nombre} ${eq.descripcion ?? ''}`).includes(termino))
+        : listado.items;
+
     return (
+        <div className="space-y-3">
+            <input
+                type="search"
+                aria-label="Buscar equipamiento"
+                placeholder="Buscar equipamiento por nombre o descripción"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-96"
+            />
+            {items.length === 0 ? (
+                <p className="text-sm text-gray-500">No se encontró equipamiento con esa búsqueda.</p>
+            ) : (
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50 text-left text-gray-600">
@@ -439,7 +471,7 @@ function ListaEquipamiento({ listado, seleccion, onElegir }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                    {listado.items.map((eq) => (
+                    {items.map((eq) => (
                         <tr
                             key={eq.id}
                             onClick={() => onElegir(eq.id)}
@@ -469,6 +501,8 @@ function ListaEquipamiento({ listado, seleccion, onElegir }) {
                     ))}
                 </tbody>
             </table>
+        </div>
+            )}
         </div>
     );
 }

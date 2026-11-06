@@ -1,14 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
+import CampoFecha from '@/Components/Trekk/CampoFecha';
+import { formatearFecha } from '@/Components/Trekk/fechas';
 
 // CU 27 - Generar reporte periódico (RN-01 a RN-04)
 
-const formatFecha = (fecha) =>
-    new Date(`${fecha}T12:00:00`).toLocaleDateString('es-AR', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
+// dd/mm/aaaa
+const formatFecha = formatearFecha;
 
 const botonSecundario =
     'inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-trekk-tarjeta px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100';
@@ -56,20 +54,20 @@ export default function Periodico({ reporte = null, error = null }) {
                 >
                     <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-900">
                         Fecha de inicio
-                        <input
-                            type="date"
+                        <CampoFecha
                             value={form.data.fecha_inicio}
                             onChange={(e) => form.setData('fecha_inicio', e.target.value)}
-                            className="w-44 rounded-lg border-gray-200 text-sm focus:border-trekk-primario focus:ring-trekk-primario"
+                            classNameContenedor="relative w-44"
+                            className="w-full rounded-lg border-gray-200 text-sm font-normal focus:border-trekk-primario focus:ring-trekk-primario"
                         />
                     </label>
                     <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-900">
                         Fecha de fin
-                        <input
-                            type="date"
+                        <CampoFecha
                             value={form.data.fecha_fin}
                             onChange={(e) => form.setData('fecha_fin', e.target.value)}
-                            className="w-44 rounded-lg border-gray-200 text-sm focus:border-trekk-primario focus:ring-trekk-primario"
+                            classNameContenedor="relative w-44"
+                            className="w-full rounded-lg border-gray-200 text-sm font-normal focus:border-trekk-primario focus:ring-trekk-primario"
                         />
                     </label>
                     <button

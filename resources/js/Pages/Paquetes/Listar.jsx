@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import Cancelar from '@/Components/Cancelar';
+import BarraListado, { CheckInactivos, useBusquedaYOrden } from '@/Components/Trekk/BarraListado';
 import { IconoVolver } from '@/Components/Trekk/Iconos';
 import TarjetasPaquetes from '@/Components/Trekk/TarjetasPaquetes';
 
@@ -10,10 +11,25 @@ const fecha = (valor) => valor.split('-').reverse().join('/');
 const precio = (valor) =>
     Number(valor).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
 
+// Búsqueda y orden del listado del Administrativo
+const buscarEn = (p) => [p.nombre, p.descripcion, p.refugio, ...p.servicios, p.estado];
+const columnas = {
+    nombre: { etiqueta: 'Paquete', valor: (p) => p.nombre },
+    refugio: { etiqueta: 'Refugio', valor: (p) => p.refugio },
+    precio: { etiqueta: 'Precio', valor: (p) => Number(p.precio) },
+    reservas_activas: { etiqueta: 'Reservas activas', valor: (p) => p.reservas_activas },
+    estado: { etiqueta: 'Estado', valor: (p) => p.estado },
+};
+
 // CU 7 - Listar paquetes
 export default function Listar({ paquetes, salida, esAdministrativo }) {
     const { flash } = usePage().props;
     const [paqueteACancelar, setPaqueteACancelar] = useState(null);
+
+    // Los paquetes cancelados no se muestran, salvo que el Administrativo lo pida
+    const [mostrarCancelados, setMostrarCancelados] = useState(false);
+    const visibles = mostrarCancelados ? paquetes : paquetes.filter((p) => p.estado !== 'CANCELADO');
+    const listado = useBusquedaYOrden(visibles, { buscarEn, columnas, inicial: 'nombre' });
 
     return (
         <AuthenticatedLayout
@@ -75,6 +91,16 @@ export default function Listar({ paquetes, salida, esAdministrativo }) {
                         </div>
                     )}
 
+                    {esAdministrativo && paquetes.length > 0 && (
+                        <BarraListado listado={listado} placeholder="Buscar por nombre, refugio o servicio">
+                            <CheckInactivos
+                                checked={mostrarCancelados}
+                                onChange={setMostrarCancelados}
+                                etiqueta="Mostrar cancelados"
+                            />
+                        </BarraListado>
+                    )}
+
                     {!esAdministrativo ? (
                         <TarjetasPaquetes paquetes={paquetes} />
                     ) : (
@@ -83,8 +109,10 @@ export default function Listar({ paquetes, salida, esAdministrativo }) {
                             <p className="p-6 text-gray-600">
                                 La Salida Programada no tiene paquetes registrados.
                             </p>
+                        ) : listado.resultado.length === 0 ? (
+                            <p className="p-6 text-gray-600">No se encontraron paquetes.</p>
                         ) : (
-                            <TablaAdministrativo paquetes={paquetes} onCancelar={setPaqueteACancelar} />
+                            <TablaAdministrativo paquetes={listado.resultado} onCancelar={setPaqueteACancelar} />
                         )}
                     </div>
                     )}

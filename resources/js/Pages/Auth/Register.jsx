@@ -1,6 +1,10 @@
 import InputError from '@/Components/InputError';
+import CampoFecha from '@/Components/Trekk/CampoFecha';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+
+// Las fechas usan CampoFecha (dd/mm/aaaa); el resto, un input común
+const Entrada = ({ tipo, ...props }) => (tipo === 'date' ? <CampoFecha {...props} /> : <input {...props} />);
 
 // RF-12: hay que ser mayor de 18 años (fecha más reciente que se puede elegir)
 const hace18Anios = () => {
@@ -36,7 +40,8 @@ export default function Register() {
             <label htmlFor={nombre} className="block text-sm font-medium text-trekk-texto">
                 {etiqueta}
             </label>
-            <input
+            <Entrada
+                tipo={props.type}
                 id={nombre}
                 name={nombre}
                 value={data[nombre]}

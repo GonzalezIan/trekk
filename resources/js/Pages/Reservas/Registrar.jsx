@@ -4,6 +4,8 @@ import { PanelRegistrarPago } from '@/Components/RegistrarPago';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import CampoFecha from '@/Components/Trekk/CampoFecha';
+import { formatearFecha } from '@/Components/Trekk/fechas';
 
 // CU 14 - Registrar reserva. Se abre desde el CU 7 al elegir un paquete.
 // El servidor decide cupos, validaciones, stock e importe; la pantalla solo guía los pasos.
@@ -15,12 +17,8 @@ const codigo = (id) => `R-${String(id).padStart(4, '0')}`;
 const usd = (monto) =>
     `USD ${Number(monto).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-const formatFecha = (fecha) =>
-    new Date(`${fecha}T12:00:00`).toLocaleDateString('es-AR', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
+// dd/mm/aaaa
+const formatFecha = formatearFecha;
 
 // El equipamiento obligatorio es un texto libre de la excursión (CU 1): se muestra como lista
 const listarObligatorio = (texto) =>
@@ -524,8 +522,7 @@ function PasoDatos({ participantes, onCambiar, errores }) {
                     </label>
                     <label className="text-sm font-medium text-gray-900">
                         Nacimiento
-                        <input
-                            type="date"
+                        <CampoFecha
                             value={p.fecha_nacimiento}
                             onChange={(e) => onCambiar(i, 'fecha_nacimiento', e.target.value)}
                             className={campo}

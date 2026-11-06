@@ -2,6 +2,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
 import ParticipantesSalidaModal from '@/Components/ParticipantesSalidaModal';
+import CampoFecha from '@/Components/Trekk/CampoFecha';
+import BarraListado, { CheckInactivos, useBusquedaYOrden } from '@/Components/Trekk/BarraListado';
 import {
     IconoCalendario,
     IconoCheck,
@@ -20,6 +22,22 @@ const fecha = (valor) => valor.split('-').reverse().join('/');
 const precio = (valor) =>
     Number(valor).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
 
+// Búsqueda y orden del listado del Administrativo
+const buscarEn = (s) => [s.excursion, s.guia, ...s.asistentes, ...s.equipamiento, s.estado, fecha(s.fecha_inicio), fecha(s.fecha_fin)];
+const columnas = {
+    fecha_inicio: { etiqueta: 'Fecha de inicio', valor: (s) => s.fecha_inicio },
+    fecha_fin: { etiqueta: 'Fecha de fin', valor: (s) => s.fecha_fin },
+    excursion: { etiqueta: 'Excursión', valor: (s) => s.excursion },
+    guia: { etiqueta: 'Guía', valor: (s) => s.guia },
+    cupo_disponible: { etiqueta: 'Cupo disponible', valor: (s) => s.cupo_disponible },
+    precio_base: { etiqueta: 'Precio base', valor: (s) => Number(s.precio_base) },
+    cantidad_paquetes: { etiqueta: 'Paquetes', valor: (s) => s.cantidad_paquetes },
+    estado: { etiqueta: 'Estado', valor: (s) => s.estado },
+};
+
+// Las salidas canceladas o finalizadas no se muestran, salvo que el Administrativo lo pida
+const ESTADOS_INACTIVOS = ['CANCELADA', 'FINALIZADA'];
+
 // CU 9 - Listar Salidas Programadas
 export default function Listar(props) {
     return props.esAdministrativo ? <ListarAdministrativo {...props} /> : <FichaExcursion {...props} />;
@@ -32,6 +50,14 @@ function ListarAdministrativo({ salidas, excursiones, estados, filtros }) {
     // Salida elegida por el Administrativo para operar sobre ella
     const [seleccionada, setSeleccionada] = useState(null);
     const salidaSeleccionada = salidas.find((s) => s.id === seleccionada);
+
+    // Si se filtró por un estado, se muestran las salidas de ese estado aunque estén inactivas
+    const [mostrarInactivas, setMostrarInactivas] = useState(false);
+    const visibles =
+        mostrarInactivas || filtros.estado
+            ? salidas
+            : salidas.filter((s) => !ESTADOS_INACTIVOS.includes(s.estado));
+    const listado = useBusquedaYOrden(visibles, { buscarEn, columnas, inicial: 'fecha_inicio' });
 
     // Alternativo 4.8: ver los participantes de la salida seleccionada (CU 21)
     const [verParticipantes, setVerParticipantes] = useState(false);
@@ -79,6 +105,18 @@ function ListarAdministrativo({ salidas, excursiones, estados, filtros }) {
                     <Filtros filtros={filtros} excursiones={excursiones} estados={estados} />
 
                     {salidas.length > 0 && (
+                        <BarraListado listado={listado} placeholder="Buscar por excursión, guía o equipamiento">
+                            {!filtros.estado && (
+                                <CheckInactivos
+                                    checked={mostrarInactivas}
+                                    onChange={setMostrarInactivas}
+                                    etiqueta="Mostrar canceladas y finalizadas"
+                                />
+                            )}
+                        </BarraListado>
+                    )}
+
+                    {salidas.length > 0 && (
                         <BarraAcciones
                             salida={salidaSeleccionada}
                             onListarParticipantes={() => setVerParticipantes(true)}
@@ -91,14 +129,14 @@ function ListarAdministrativo({ salidas, excursiones, estados, filtros }) {
                     )}
 
                     <div className="overflow-x-auto bg-trekk-tarjeta shadow-sm sm:rounded-lg">
-                        {salidas.length === 0 ? (
+                        {listado.resultado.length === 0 ? (
                             // Alternativo 3.3
                             <p className="p-6 text-gray-600">
                                 No existen Salidas Programadas que cumplan los filtros.
                             </p>
                         ) : (
                             <TablaAdministrativo
-                                salidas={salidas}
+                                salidas={listado.resultado}
                                 seleccionada={seleccionada}
                                 onSeleccionar={setSeleccionada}
                             />
@@ -215,11 +253,11 @@ function Filtros({ filtros, excursiones, estados }) {
             </label>
             <label className="text-sm text-gray-700">
                 Desde
-                <input type="date" name="desde" value={valores.desde} onChange={cambiar} className={campo} />
+                <CampoFecha name="desde" value={valores.desde} onChange={cambiar} className={campo} />
             </label>
             <label className="text-sm text-gray-700">
                 Hasta
-                <input type="date" name="hasta" value={valores.hasta} onChange={cambiar} className={campo} />
+                <CampoFecha name="hasta" value={valores.hasta} onChange={cambiar} className={campo} />
             </label>
             <div className="flex items-end gap-2">
                 <button

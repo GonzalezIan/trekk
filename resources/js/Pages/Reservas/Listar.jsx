@@ -4,6 +4,7 @@ import EstadoBadge, { etiquetaEstado } from '@/Components/EstadoBadge';
 import ParticipantesReserva from '@/Components/ParticipantesReserva';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import RegistrarConformidadModal from '@/Components/RegistrarConformidadModal';
+import BarraListado, { useBusquedaYOrden } from '@/Components/Trekk/BarraListado';
 import {
     IconoAlerta,
     IconoCancelar,
@@ -14,6 +15,7 @@ import {
 } from '@/Components/Trekk/Iconos';
 import { Head, Link } from '@inertiajs/react';
 import { useState,useEffect } from 'react';
+import { formatearFecha } from '@/Components/Trekk/fechas';
 
 // CU 15 - Listar reservas, extendido por el CU 16 - Cancelar reserva
 
@@ -21,12 +23,8 @@ const codigo = (id) => `R-${String(id).padStart(4, '0')}`;
 
 const usd = (monto) => `USD ${monto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-const formatFecha = (fecha) =>
-    new Date(`${fecha}T12:00:00`).toLocaleDateString('es-AR', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
+// dd/mm/aaaa
+const formatFecha = formatearFecha;
 
 export default function Listar({ reservas, esAdministrativo, notificacion_cancelacion }) {
     const [mostrarPopUp, setMostrarPopUp] = useState(false);
@@ -324,20 +322,27 @@ function TarjetaReserva({ reserva: r, onAviso,onCalificar }) {
 
 const filtros = ['TODAS', 'PENDIENTE', 'CONFIRMADA', 'REALIZADA', 'CANCELADA'];
 
+// Búsqueda y orden del listado del Administrativo
+const buscarEn = (r) => [codigo(r.id), r.cliente.dni, r.cliente.nombre, r.cliente.apellido, r.excursion, r.paquete];
+const columnas = {
+    codigo: { etiqueta: 'Código', valor: (r) => r.id },
+    cliente: { etiqueta: 'Cliente', valor: (r) => `${r.cliente.apellido} ${r.cliente.nombre}` },
+    excursion: { etiqueta: 'Excursión', valor: (r) => r.excursion },
+    fecha_inicio: { etiqueta: 'Fecha de salida', valor: (r) => r.fecha_inicio },
+    pax: { etiqueta: 'Pax', valor: (r) => r.cantidad_participantes },
+    importe: { etiqueta: 'Importe', valor: (r) => Number(r.importe_total) },
+    estado: { etiqueta: 'Estado', valor: (r) => r.estado },
+};
+
 function ReservasAdministrativo({ reservas }) {
     const [filtro, setFiltro] = useState('TODAS');
-    const [busqueda, setBusqueda] = useState('');
     const [seleccionada, setSeleccionada] = useState(null);
     const [cancelando, setCancelando] = useState(false);
     const [aviso, setAviso] = useState('');
 
-    const lista = reservas.filter((r) => {
-        if (filtro !== 'TODAS' && r.estado !== filtro) return false;
-        if (!busqueda) return true;
-        const texto =
-            `${codigo(r.id)} ${r.cliente.dni} ${r.cliente.nombre} ${r.cliente.apellido} ${r.excursion}`.toLowerCase();
-        return texto.includes(busqueda.toLowerCase());
-    });
+    const delEstado = filtro === 'TODAS' ? reservas : reservas.filter((r) => r.estado === filtro);
+    const listado = useBusquedaYOrden(delEstado, { buscarEn, columnas, inicial: 'codigo' });
+    const lista = listado.resultado;
     const reserva = reservas.find((r) => r.id === seleccionada);
 
     return (
@@ -348,7 +353,7 @@ function ReservasAdministrativo({ reservas }) {
                 descripcion="Consultá todas las reservas registradas y su situación de pago."
             />
 
-            <div className="flex flex-col gap-3 pb-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3 pb-4">
                 <div role="tablist" aria-label="Filtrar por estado" className="flex flex-wrap gap-1">
                     {filtros.map((f) => (
                         <button
@@ -367,14 +372,7 @@ function ReservasAdministrativo({ reservas }) {
                         </button>
                     ))}
                 </div>
-                <input
-                    type="search"
-                    aria-label="Buscar"
-                    placeholder="Buscar por código, cliente o excursión"
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                    className="rounded-lg border-gray-200 text-sm md:w-72"
-                />
+                <BarraListado listado={listado} placeholder="Buscar por código, cliente o excursión" />
             </div>
 
             <AvisoExito mensaje={aviso} onCerrar={() => setAviso('')} />

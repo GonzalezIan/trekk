@@ -503,6 +503,9 @@ class ControladorReservas extends Controller
             if ($sinStock) {
                 throw ValidationException::withMessages($sinStock);
             }
+
+            // 12.1 paso 5: el importe total incluye el equipamiento elegido
+            $reserva->update(['importe_total' => $reserva->calcularImporteTotal()]);
         });
 
         // confirmarEquipamientoAgregado()
@@ -533,6 +536,7 @@ class ControladorReservas extends Controller
     public function confirmarReserva(Request $request, Reserva $reserva)
     {
         $this->verificarReservaEnCurso($request, $reserva);
+        $this->verificarParticipantesCargados($reserva);
 
         return response()->json([
             'reserva' => $this->datosReservaEnCurso($reserva),
@@ -603,6 +607,14 @@ class ControladorReservas extends Controller
         if (! $reserva->temporizadorVigente()) {
             $this->anularRegistroEnCurso($reserva);
             abort(410, self::MENSAJE_RESERVA_VENCIDA);
+        }
+    }
+
+    /** CU 14 - RN-01: no se confirma ni se paga una reserva en curso sin sus participantes cargados (pasos 7 a 10). */
+    private function verificarParticipantesCargados(Reserva $reserva): void
+    {
+        if ($reserva->estaEnCurso() && ! $reserva->tieneParticipantesCargados()) {
+            abort(422, 'Cargá los datos de los participantes antes de confirmar la reserva.');
         }
     }
 
@@ -835,6 +847,8 @@ class ControladorReservas extends Controller
         if (! $reserva->admitePago()) {
             abort(403, 'Esta reserva no tiene pagos pendientes.');
         }
+
+        $this->verificarParticipantesCargados($reserva);
     }
 
     private function mensajePagoRegistrado(Reserva $reserva, bool $confirmada): string

@@ -433,6 +433,12 @@ class Reserva extends Model
         return $this->estado === self::ESTADO_EN_CURSO;
     }
 
+    /** RN-01: un participante cargado por cada cupo retenido (paso 7). */
+    public function tieneParticipantesCargados(): bool
+    {
+        return $this->participantes()->count() === $this->cantidad_participantes;
+    }
+
     /**
      * CU 14 - paso 8. Valida el formulario de participantes y devuelve los datos limpios.
      *  8.1: todos los datos son obligatorios.

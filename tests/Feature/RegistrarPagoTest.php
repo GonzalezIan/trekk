@@ -52,6 +52,7 @@ class RegistrarPagoTest extends TestCase
             'estado' => $estado,
             'situacion_de_pago' => Reserva::PAGO_PENDIENTE_DE_PAGO_TOTAL,
             'importe_total' => 1200,
+            'cantidad_participantes' => 2,
             'motivo_cancelacion' => null,
         ]);
 

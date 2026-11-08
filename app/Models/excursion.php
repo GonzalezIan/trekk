@@ -109,7 +109,7 @@ class Excursion extends Model
     {
         return Validator::make($datosExcursion, [
             'nombre' => [
-                'required', 'string', 'max:120',
+                'required', 'string', 'max:120','regex:/^[\pL\s\-]+$/u',
                 function ($atributo, $valor, $fallar) use ($idExcluido) {
                     if (self::existeNombre($valor, $idExcluido)) {
                         $fallar('Ya existe una excursión registrada con ese nombre.');
@@ -133,6 +133,7 @@ class Excursion extends Model
             'duracion.min' => 'La duración de la excursión debe ser de al menos un día.',
             'duracion.max' => 'La duración no puede superar los 365 días.',
             'nombre.max' => 'El nombre no puede superar los 120 caracteres.',
+            'nombre.regex' => 'El nombre de la excursión solo puede contener letras, espacios y guiones.',
             'punto_de_encuentro.max' => 'El punto de encuentro no puede superar los 255 caracteres.',
             'in' => 'El valor seleccionado no es válido.',
         ])->validate();
@@ -218,16 +219,20 @@ class Excursion extends Model
     public function validarDatosSalida(array $datosSalida): array
     {
         $noPositivos = 'El cupo máximo y el precio base deben ser mayores a cero.';
+        
+        // 1. Calculamos la antelación mínima según la excursión
+        $diasMinimos = $this->requiere_certificado_medico ? 20 : 7;
+        $fechaMinima = now()->addDays($diasMinimos)->format('Y-m-d');
 
         $datosValidos = Validator::make($datosSalida, [
-            'fecha_inicio' => ['bail', 'required', 'date_format:Y-m-d', 'after:today'],
+            'fecha_inicio' => ['bail', 'required', 'date_format:Y-m-d', 'after_or_equal:today'.$fechaMinima],
             'hora_de_salida' => ['required', 'date_format:H:i'],
             'cupo_maximo' => ['required', 'integer', 'min:1', 'max:1000'],
             'precio_base' => ['bail', 'required', 'numeric', 'gt:0', 'max:99999999'],
         ], [
             'required' => 'Este campo es obligatorio.',
             'date_format' => 'El formato ingresado no es válido.',
-            'fecha_inicio.after' => 'El período ingresado no es válido. La fecha de inicio debe ser futura.',
+            'fecha_inicio.after_or_equal' => "La fecha ingresada no es válida. Por seguridad la fecha de inicio debe ser al menos {$diasMinimos} dias a partir de hoy",
             'cupo_maximo.integer' => 'El cupo máximo debe ser un número entero.',
             'cupo_maximo.min' => $noPositivos,
             'cupo_maximo.max' => 'El cupo máximo no puede superar las 1000 personas.',

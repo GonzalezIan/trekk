@@ -149,7 +149,7 @@ export default function Editar({ cliente }) {
                                     className="mt-1 block w-full"
                                     value={data.telefono}
                                     onChange={(e) =>
-                                        setData('telefono', e.target.value)
+                                        setData('telefono', e.target.value.replace(/\D/g, ''))
                                     }
                                     required
                                     autoComplete="tel"

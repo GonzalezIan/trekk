@@ -33,8 +33,8 @@ class ModificarDatosPersonalesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre' => ['required', 'string', 'max:80'],
-            'apellido' => ['required', 'string', 'max:80'],
+            'nombre' => ['required', 'string', 'max:80','regex:/^[\pL\s\-]+$/u'],
+            'apellido' => ['required', 'string', 'max:80','regex:/^[\pL\s\-]+$/u'],
             'email' => [
                 'required',
                 'string',
@@ -43,7 +43,7 @@ class ModificarDatosPersonalesRequest extends FormRequest
                 Rule::unique(User::class, 'email')->ignore($this->user()->id),
             ],
             // Misma regla que en el registro (CU 12)
-            'telefono' => ['required', 'string', 'regex:/^[0-9 +()-]{6,30}$/'],
+            'telefono' => ['required', 'string', 'regex:/^[0-9]+$/'],
         ];
     }
 
@@ -69,6 +69,8 @@ class ModificarDatosPersonalesRequest extends FormRequest
             'email.email' => 'Ingresá un correo electrónico válido.',
             'telefono.regex' => 'El teléfono solo puede tener números, espacios, +, - y paréntesis.',
             'email.unique' => 'Ese correo electrónico ya está en uso por otra cuenta.',
+            'nombre.regex'=>'El nombre no puede contener números ni símbolos',
+            'apellido.regex'=>'El apellido no puede contener números ni símbolos'
         ];
     }
 

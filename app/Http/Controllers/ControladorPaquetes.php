@@ -100,7 +100,7 @@ class ControladorPaquetes extends Controller
 
         $datos = $request->validate([
             'nombre' => [
-                'required', 'string', 'max:100',
+                'required', 'string', 'max:100','regex:/^[\pL\s\-]+$/u',
                 function ($atributo, $valor, $fallar) use ($salida) {
                     // Alternativo 4.2 (RN-06)
                     if ($salida->existePaquete($valor)) {
@@ -115,6 +115,7 @@ class ControladorPaquetes extends Controller
         ], [
             'required' => 'Este campo es obligatorio.',
             'nombre.max' => 'El nombre no puede superar los 100 caracteres.',
+            'nombre.regex'=>'El nombre del paquete no puede contener simbolos',
             'descripcion.max' => 'La descripción no puede superar los 2000 caracteres.',
         ]);
 

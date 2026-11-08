@@ -132,6 +132,18 @@ class SalidaProgramada extends Model
      */
     public function getPaquetes(): Collection
     {
+        {
+        // 🧹 LIMPIEZA SEGURA
+        $user = auth()->user();
+        if ($user && $user->cliente) {
+            $reservasAbandonadas = Reserva::where('cliente_id', $user->cliente->id)
+                ->where('estado', 'EN_CURSO')
+                ->get();
+
+            foreach ($reservasAbandonadas as $reserva) {
+                $reserva->anularRegistro(); 
+            }
+        }
         return $this->paquetes()
             ->with(['refugio:id,nombre', 'servicios'])
             ->orderBy('nombre')
@@ -141,13 +153,25 @@ class SalidaProgramada extends Model
                 'reservas_activas' => $paquete->cantidadReservasActivas(),
             ]);
     }
-
+    }
     /**
      * DS CU 7 (Cliente): getPaquetesDisponibles().
      * Solo los paquetes en estado DISPONIBLE, con su precio y disponibilidad.
      */
     public function getPaquetesDisponibles(): Collection
-    {
+        {
+        // 🧹 LIMPIEZA SEGURA
+        $user = auth()->user();
+        if ($user && $user->cliente) {
+            $reservasAbandonadas = Reserva::where('cliente_id', $user->cliente->id)
+                ->where('estado', 'EN_CURSO')
+                ->get();
+
+            foreach ($reservasAbandonadas as $reserva) {
+                $reserva->anularRegistro(); 
+            }
+        }
+
         return $this->paquetes()
             ->with(['refugio.convenios', 'servicios'])
             ->orderBy('nombre')

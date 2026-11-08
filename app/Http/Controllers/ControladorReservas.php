@@ -341,6 +341,16 @@ class ControladorReservas extends Controller
         $this->clienteAutenticado($request);
         $this->verificarQueSePuedeReservar($paquete);
 
+      // Limpieza automática de reservas vencidas de este cliente
+        $reservasVencidas = Reserva::where('cliente_id', $request->user()->cliente->id)
+            ->where('estado', 'EN_CURSO')
+            ->where('fecha_hora_vencimiento', '<', now())
+            ->get();
+
+        foreach ($reservasVencidas as $reservaVencida) {
+            $this->anularRegistroEnCurso($reservaVencida); 
+        }
+
         $salida = $paquete->salidaProgramada;
         $excursion = $salida->getExcursion();
 

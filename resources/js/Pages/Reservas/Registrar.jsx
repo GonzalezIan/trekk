@@ -67,12 +67,29 @@ export default function Registrar({ paquete, salida, excursion, minutosRetencion
     }, [restante, registrada]);
 
     // Avisa antes de salir de la página con lugares retenidos
+    // Avisa antes de salir de la página con lugares retenidos
     useEffect(() => {
         if (!enCurso) return;
-        const avisar = (e) => e.preventDefault();
-        window.addEventListener('beforeunload', avisar);
-        return () => window.removeEventListener('beforeunload', avisar);
-    }, [enCurso]);
+        
+        // 1. Función que se ejecuta si el usuario cierra la pestaña o aprieta 'Atrás'
+        const manejarSalida = (evento) => {
+            // Previene que la página se cierre de golpe (muestra el cartel nativo)
+            evento.preventDefault();
+            evento.returnValue = 'Si salís ahora, perderás los cupos reservados temporalmente.';
+            
+            // 🪄 MAGIA: Avisa al servidor silenciosamente que cancele la reserva
+            // Usamos el mismo endpoint que el botón de cancelar
+            navigator.sendBeacon(route('reservas.registrar.cancelar', reserva.id));
+            
+            return evento.returnValue;
+        };
+
+        window.addEventListener('beforeunload', manejarSalida);
+
+        return () => {
+            window.removeEventListener('beforeunload', manejarSalida);
+        };
+    }, [enCurso, reserva?.id]);
 
     // Respuesta de error del servidor: 422 con errores por campo, 410 si la reserva venció (*a)
     const manejarError = (e, porDefecto) => {

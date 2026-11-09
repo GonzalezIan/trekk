@@ -171,4 +171,44 @@ class ListarParticipantesTest extends TestCase
             ->getJson(route('salidas.participantes', $this->salida))
             ->assertForbidden();
     }
+
+    // ---------- Lista de asistencia en PDF ----------
+
+    public function test_el_administrativo_descarga_la_lista_de_asistencia_en_pdf(): void
+    {
+        $this->participante($this->reserva(Cliente::factory()->create(), Reserva::ESTADO_CONFIRMADA), '30111222');
+
+        $respuesta = $this->actingAs($this->administrativo())
+            ->get(route('salidas.participantes.pdf', $this->salida))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertDownload("asistencia-salida-{$this->salida->id}-{$this->salida->fecha_inicio->format('Y-m-d')}.pdf");
+
+        $this->assertStringStartsWith('%PDF', $respuesta->getContent());
+    }
+
+    public function test_la_lista_de_asistencia_muestra_los_datos_de_la_salida_y_los_participantes(): void
+    {
+        $confirmada = $this->reserva(Cliente::factory()->create(), Reserva::ESTADO_CONFIRMADA);
+        $this->participante($confirmada, '30111222', Participante::REQUISITO_CUMPLIDO);
+
+        $this->view('pdf.lista-asistencia', [
+            'salida' => $this->salida->load('excursion'),
+            'participantes' => Participante::listarConfirmadosDeSalida($this->salida->id),
+        ])
+            ->assertSee($this->salida->excursion->nombre)
+            ->assertSee($this->salida->fecha_inicio->format('d/m/Y'))
+            ->assertSee('Apellido 30111222')
+            ->assertSee('Nombre 30111222')
+            ->assertSee('R-'.str_pad($confirmada->id, 4, '0', STR_PAD_LEFT))
+            ->assertSee('Cumplido')
+            ->assertSee('Presente');
+    }
+
+    public function test_el_cliente_no_puede_descargar_la_lista_de_asistencia(): void
+    {
+        $this->actingAs(Cliente::factory()->create()->user)
+            ->get(route('salidas.participantes.pdf', $this->salida))
+            ->assertForbidden();
+    }
 }

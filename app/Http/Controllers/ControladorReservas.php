@@ -19,6 +19,7 @@ use App\Models\Pago;
 use App\Services\PasarelaDePagos;
 use App\Services\Notificador;
 use App\Notifications\ReservaCancelada;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -79,6 +80,18 @@ class ControladorReservas extends Controller
             'participantes' => Participante::listarConfirmadosDeSalida($salida->id)
                 ->map(fn (Participante $participante) => $participante->datosParaListado()),
         ]);
+    }
+
+    /**
+     * CU 21 - Listar participantes (Administrativo).
+     * Descarga la nómina de la salida en PDF, para imprimirla y tomar asistencia a mano.
+     */
+    public function descargarListaDeAsistencia(SalidaProgramada $salida)
+    {
+        return Pdf::loadView('pdf.lista-asistencia', [
+            'salida' => $salida->load('excursion'),
+            'participantes' => Participante::listarConfirmadosDeSalida($salida->id),
+        ])->download("asistencia-salida-{$salida->id}-{$salida->fecha_inicio->format('Y-m-d')}.pdf");
     }
 
     /**

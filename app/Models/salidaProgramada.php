@@ -133,7 +133,7 @@ class SalidaProgramada extends Model
     public function getPaquetes(): Collection
     {
         {
-        // 🧹 LIMPIEZA SEGURA
+        // Se anulan las reservas "En curso" que el cliente autenticado dejó sin terminar
         $user = auth()->user();
         if ($user && $user->cliente) {
             $reservasAbandonadas = Reserva::where('cliente_id', $user->cliente->id)
@@ -160,7 +160,7 @@ class SalidaProgramada extends Model
      */
     public function getPaquetesDisponibles(): Collection
         {
-        // 🧹 LIMPIEZA SEGURA
+        // Se anulan las reservas "En curso" que el cliente autenticado dejó sin terminar
         $user = auth()->user();
         if ($user && $user->cliente) {
             $reservasAbandonadas = Reserva::where('cliente_id', $user->cliente->id)

@@ -8,7 +8,7 @@ class ConformidadSeeder extends Seeder
 {
     public function run(): void
     {
-        // Agarramos solo 15 reservas para dejar algunas sin reseñas
+        // Se toman solo 15 reservas para dejar algunas sin reseñas
         $reservas = Reserva::take(15)->get(); 
         
         foreach ($reservas as $reserva) {

@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
             ConvenioSeeder::class,          // 30 convenios (dependen de Refugio)
             SalidaProgramadaSeeder::class,  // 30 salidas (dependen de Excursión y Empleado)
 
-            // 3. El Nudo (Dependen de los anteriores)
+            // 3. Segundo nivel de dependencias
             PaqueteSeeder::class,           // 30 paquetes (dependen de Salida y Refugio)
             ReservaSeeder::class,           // 30 reservas (dependen de Cliente y Paquete)
 

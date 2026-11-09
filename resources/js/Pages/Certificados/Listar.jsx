@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-// Importamos el modal de Carolina
+// CU 19 - Verificar certificado médico
 import VerificarCertificadoModal from '@/Components/VerificarCertificadoModal'; 
 import BarraListado, { useBusquedaYOrden } from '@/Components/Trekk/BarraListado';
 
@@ -91,7 +91,7 @@ export default function ListarPendientes({ auth, certificados }) {
                 )}
             </main>
 
-            {/* Conexión con el Modal de Carolina */}
+            {/* CU 19 - Verificar certificado médico del participante seleccionado */}
             {seleccionado && (
                 <VerificarCertificadoModal
                     certificado={{ 

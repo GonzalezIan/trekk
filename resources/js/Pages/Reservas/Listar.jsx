@@ -194,7 +194,7 @@ function ReservasCliente({ reservas,onCalificar }) {
                             key={r.id} 
                             reserva={r} 
                             onAviso={setAviso} 
-                            onCalificar={onCalificar} // 👈 ACÁ LE PASAMOS LA FUNCIÓN
+                            onCalificar={onCalificar} // CU 20 - Registrar conformidad
                         />
                     ))}
                 </div>

@@ -17,7 +17,7 @@ class ExcursionFactory extends Factory
             'duracion' => $this->faker->numberBetween(1, 7), // en días (RN-02 del CU 1)
             'recorrido' => $this->faker->sentence(),
             'etapas' => $this->faker->sentence(),
-            'experiencia_requerida' => $this->faker->randomElement(['SI', 'NO']), // Lo dejamos string como pediste
+            'experiencia_requerida' => $this->faker->randomElement(['SI', 'NO']), // Se guarda como texto
             'acepta_menores' => $this->faker->boolean(),
             'equipamiento_obligatorio' => $this->faker->sentence(),
             'punto_de_encuentro' => $this->faker->streetAddress(),

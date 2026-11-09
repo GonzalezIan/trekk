@@ -1,5 +1,6 @@
 import InputError from '@/Components/InputError';
 import CampoFecha from '@/Components/Trekk/CampoFecha';
+import CampoTelefono from '@/Components/Trekk/CampoTelefono';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
@@ -71,7 +72,13 @@ export default function Register() {
                     {campo('fecha_nacimiento', 'Fecha de nacimiento', { type: 'date', max: hace18Anios() })}
                 </div>
 
-                {campo('telefono', 'Teléfono', { type: 'tel', autoComplete: 'tel', maxLength: 30 })}
+                <div>
+                    <label htmlFor="telefono" className="block text-sm font-medium text-trekk-texto">
+                        Teléfono
+                    </label>
+                    <CampoTelefono value={data.telefono} onChange={(telefono) => setData('telefono', telefono)} />
+                    <InputError message={errors.telefono} className="mt-2" />
+                </div>
 
                 <h2 className="pt-2 font-display text-lg font-semibold text-trekk-texto">Datos de acceso</h2>
 

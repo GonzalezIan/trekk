@@ -62,7 +62,7 @@ class RegistrarClienteTest extends TestCase
         $this->assertSame('Ana', $cliente->nombre);
         $this->assertSame('Gómez', $cliente->apellido);
         $this->assertSame('1990-05-15', $cliente->fecha_nacimiento->format('Y-m-d'));
-        $this->assertSame('2804 123456', $cliente->telefono);
+        $this->assertSame('2804123456', $cliente->telefono);
     }
 
     public function test_el_cliente_registrado_puede_ver_sus_reservas(): void
@@ -131,7 +131,23 @@ class RegistrarClienteTest extends TestCase
     public function test_el_telefono_debe_ser_valido(): void
     {
         $this->registrar(['telefono' => 'llamame'])
-            ->assertSessionHasErrors(['telefono' => 'El teléfono solo puede tener números, espacios, +, - y paréntesis.']);
+            ->assertSessionHasErrors(['telefono' => Cliente::MENSAJE_TELEFONO]);
+    }
+
+    public function test_el_telefono_argentino_debe_tener_10_numeros(): void
+    {
+        foreach (['2974', '297428000', '29742800001', '+54297428'] as $telefono) {
+            $this->registrar(['telefono' => $telefono])->assertSessionHasErrors('telefono');
+        }
+
+        $this->assertSame(0, Cliente::count());
+    }
+
+    public function test_un_telefono_de_otro_pais_se_ingresa_con_su_caracteristica(): void
+    {
+        $this->registrar(['telefono' => '+34 612 345 678'])->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('clientes', ['telefono' => '+34612345678']);
     }
 
     public function test_las_contrasenas_deben_coincidir(): void

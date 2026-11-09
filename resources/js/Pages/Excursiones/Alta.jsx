@@ -2,6 +2,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import CampoImagen from '@/Components/Trekk/CampoImagen';
 import EncabezadoFormulario from '@/Components/Trekk/EncabezadoFormulario';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -45,6 +46,7 @@ export default function Alta({ dificultades }) {
         acepta_menores: '',
         equipamiento_obligatorio: '',
         punto_de_encuentro: '',
+        imagen: null,
         requiere_certificado_medico: '',
     });
 
@@ -237,6 +239,12 @@ export default function Alta({ dificultades }) {
                                 className="mt-2"
                             />
                         </div>
+
+                        <CampoImagen
+                            archivo={data.imagen}
+                            onChange={(archivo) => setData('imagen', archivo)}
+                            error={errors.imagen}
+                        />
 
                         <div className="flex items-center justify-end gap-4 border-t border-trekk-borde pt-6">
                             {/* Flujo alternativo: cancelar sin registrar nada */}

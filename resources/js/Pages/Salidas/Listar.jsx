@@ -352,7 +352,7 @@ function FichaExcursion({ excursion, salidas, paquetes }) {
             <Head title={excursion.nombre} />
 
             <section className="relative h-64 md:h-80">
-                <img src={fotoExcursion(excursion.id)} alt="" className="h-full w-full object-cover" />
+                <img src={fotoExcursion(excursion)} alt="" className="h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-trekk-fondo via-trekk-fondo/30 to-transparent" />
             </section>
 

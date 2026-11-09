@@ -32,11 +32,12 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         // Se normaliza antes de validar: usuario y correo en minúsculas (como se buscan en el login),
-        // y el DNI solo con números (acepta "12.345.678")
+        // el DNI solo con números (acepta "12.345.678") y el teléfono sin separadores
         $request->merge([
             'usuario' => Str::lower(trim((string) $request->usuario)),
             'email' => Str::lower(trim((string) $request->email)),
             'dni' => preg_replace('/\D/', '', (string) $request->dni),
+            'telefono' => Cliente::normalizarTelefono($request->telefono),
         ]);
 
         $mayorDeEdad = now()->subYears(Cliente::EDAD_MINIMA)->toDateString();
@@ -47,7 +48,7 @@ class RegisteredUserController extends Controller
             'nombre' => ['required', 'string', 'max:80'],
             'apellido' => ['required', 'string', 'max:80'],
             'fecha_nacimiento' => ['required', 'date_format:Y-m-d', 'after:1900-01-01', 'before_or_equal:' . $mayorDeEdad],
-            'telefono' => ['required', 'string', 'regex:/^[0-9 +()-]{6,30}$/'],
+            'telefono' => ['required', 'string', 'regex:' . Cliente::REGEX_TELEFONO],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:' . User::class],
             'usuario' => ['required', 'string', 'min:3', 'max:30', 'regex:/^[a-z0-9._-]+$/', 'unique:' . User::class],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
@@ -60,7 +61,7 @@ class RegisteredUserController extends Controller
             'fecha_nacimiento.date_format' => 'La fecha de nacimiento no es válida.',
             'fecha_nacimiento.after' => 'La fecha de nacimiento no es válida.',
             'fecha_nacimiento.before_or_equal' => 'Tenés que ser mayor de 18 años para registrarte.',
-            'telefono.regex' => 'El teléfono solo puede tener números, espacios, +, - y paréntesis.',
+            'telefono.regex' => Cliente::MENSAJE_TELEFONO,
             'email.email' => 'El correo electrónico no es válido.',
             'email.unique' => 'Ya existe una cuenta con ese correo electrónico.',
             'usuario.min' => 'El nombre de usuario debe tener al menos 3 caracteres.',

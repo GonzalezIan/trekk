@@ -56,7 +56,7 @@ class ControladorSalidas extends Controller
             'excursion' => $excursion->only([
                 'id', 'nombre', 'descripcion', 'recorrido', 'etapas', 'dificultad', 'duracion',
                 'experiencia_requerida', 'acepta_menores', 'requiere_certificado_medico',
-                'equipamiento_obligatorio', 'punto_de_encuentro',
+                'equipamiento_obligatorio', 'punto_de_encuentro', 'imagen',
             ]),
             // CU 7: los paquetes de cada salida, para elegirlos en la misma pantalla
             'paquetes' => $salidas->mapWithKeys(fn (array $salida) => [

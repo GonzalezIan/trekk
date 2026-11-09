@@ -2,6 +2,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import CampoTelefono from '@/Components/Trekk/CampoTelefono';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import UpdatePasswordForm from '@/Pages/Profile/Partials/UpdatePasswordForm';
 import { Transition } from '@headlessui/react';
@@ -143,16 +144,9 @@ export default function Editar({ cliente }) {
                                     htmlFor="telefono"
                                     value="Teléfono"
                                 />
-                                <TextInput
-                                    id="telefono"
-                                    type="tel"
-                                    className="mt-1 block w-full"
+                                <CampoTelefono
                                     value={data.telefono}
-                                    onChange={(e) =>
-                                        setData('telefono', e.target.value.replace(/\D/g, ''))
-                                    }
-                                    required
-                                    autoComplete="tel"
+                                    onChange={(telefono) => setData('telefono', telefono)}
                                 />
                                 <InputError
                                     className="mt-2"

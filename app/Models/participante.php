@@ -102,6 +102,16 @@ class Participante extends Model
         ];
     }
 
+    /** CU 21 - Situación del requisito médico en la lista de asistencia en PDF. */
+    public function etiquetaRequisitoMedico(): string
+    {
+        return match ($this->estado_requisito_medico) {
+            self::REQUISITO_PENDIENTE => 'Pendiente',
+            self::REQUISITO_CUMPLIDO => 'Cumplido',
+            default => 'No requerido',
+        };
+    }
+
     /**
      * CU 19 - DS paso 16: setRequisitoMedico(CUMPLIDO).
      */

@@ -110,6 +110,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/salidas/{salida}/participantes', [ControladorReservas::class, 'listarParticipantesDeSalida'])
         ->middleware('administrativo')
         ->name('salidas.participantes');
+
+    // CU 21 - Descargar en PDF la lista de asistencia de una Salida Programada (solo Administrativo)
+    Route::get('/salidas/{salida}/participantes/pdf', [ControladorReservas::class, 'descargarListaDeAsistencia'])
+        ->middleware('administrativo')
+        ->name('salidas.participantes.pdf');
 });
 
 Route::middleware('auth')->group(function () {

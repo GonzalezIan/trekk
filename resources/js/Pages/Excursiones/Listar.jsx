@@ -279,7 +279,7 @@ function Catalogo({ excursiones }) {
                 >
                     <div className="relative aspect-[16/10] overflow-hidden">
                         <img
-                            src={fotoExcursion(e.id)}
+                            src={fotoExcursion(e)}
                             alt=""
                             loading="lazy"
                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"

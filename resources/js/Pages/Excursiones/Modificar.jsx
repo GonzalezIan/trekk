@@ -2,7 +2,9 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import CampoImagen from '@/Components/Trekk/CampoImagen';
 import EncabezadoFormulario from '@/Components/Trekk/EncabezadoFormulario';
+import { fotoExcursion } from '@/Components/Trekk/fotos';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
@@ -35,7 +37,7 @@ function SiNo({ nombre, valor, onChange, valorSi = true, valorNo = false }) {
 // CU 3 - Modificar excursión
 export default function Modificar({ excursion, dificultades }) {
     // Paso 3: el formulario arranca con los datos actuales de la excursión
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, post, transform, processing, errors } = useForm({
         nombre: excursion.nombre,
         descripcion: excursion.descripcion,
         recorrido: excursion.recorrido,
@@ -46,12 +48,15 @@ export default function Modificar({ excursion, dificultades }) {
         acepta_menores: excursion.acepta_menores,
         equipamiento_obligatorio: excursion.equipamiento_obligatorio ?? '',
         punto_de_encuentro: excursion.punto_de_encuentro ?? '',
+        imagen: null,
         requiere_certificado_medico: excursion.requiere_certificado_medico,
     });
 
     const confirmar = (e) => {
         e.preventDefault();
-        put(route('excursiones.actualizar', excursion.id));
+        // PHP solo recibe archivos por POST: el PUT se indica dentro del formulario
+        transform((datos) => ({ ...datos, _method: 'put' }));
+        post(route('excursiones.actualizar', excursion.id), { forceFormData: true });
     };
 
     return (
@@ -238,6 +243,13 @@ export default function Modificar({ excursion, dificultades }) {
                                 className="mt-2"
                             />
                         </div>
+
+                        <CampoImagen
+                            archivo={data.imagen}
+                            actual={excursion.imagen ? fotoExcursion(excursion) : null}
+                            onChange={(archivo) => setData('imagen', archivo)}
+                            error={errors.imagen}
+                        />
 
                         <div className="flex items-center justify-end gap-4 border-t border-trekk-borde pt-6">
                             {/* Flujo alternativo: cancelar sin registrar nada */}

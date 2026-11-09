@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Excursion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ControladorExcursiones extends Controller
@@ -23,10 +24,21 @@ class ControladorExcursiones extends Controller
 
         return Inertia::render('Excursiones/Listar', [
             'excursiones' => $consulta->get([
-                'id', 'nombre', 'recorrido', 'dificultad', 'duracion', 'estado', 'requiere_certificado_medico',
+                'id', 'nombre', 'recorrido', 'dificultad', 'duracion', 'estado', 'requiere_certificado_medico', 'imagen',
             ]),
             'esAdministrativo' => $request->user()->esAdministrativo(),
         ]);
+    }
+
+    /**
+     * Devuelve la imagen cargada en el CU 1 o el CU 3 para mostrarla en el navegador.
+     * Las imágenes se guardan en el disco privado, igual que los certificados.
+     */
+    public function mostrarImagen(Excursion $excursion)
+    {
+        abort_if(! $excursion->imagen || ! Storage::exists($excursion->imagen), 404);
+
+        return Storage::response($excursion->imagen);
     }
 
     /**
@@ -70,7 +82,7 @@ class ControladorExcursiones extends Controller
             'excursion' => $excursion->only([
                 'id', 'nombre', 'descripcion', 'recorrido', 'etapas', 'dificultad', 'duracion',
                 'experiencia_requerida', 'acepta_menores', 'equipamiento_obligatorio',
-                'punto_de_encuentro', 'requiere_certificado_medico',
+                'punto_de_encuentro', 'requiere_certificado_medico', 'imagen',
             ]),
             'dificultades' => Excursion::DIFICULTADES,
         ]);

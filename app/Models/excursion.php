@@ -4,6 +4,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Collection;
@@ -26,6 +28,7 @@ class Excursion extends Model
         'acepta_menores',
         'equipamiento_obligatorio',
         'punto_de_encuentro',
+        'imagen',
         'requiere_certificado_medico',
         'estado',
     ];
@@ -83,10 +86,14 @@ class Excursion extends Model
     public const ESTADO_INACTIVA = 'INACTIVA';
     public const DIFICULTADES = ['BAJA', 'MEDIO', 'ALTA'];
 
+    // CU 1 y CU 3: formatos y tamaño máximo (en KB) de la imagen de la excursión
+    public const FORMATOS_IMAGEN = ['jpg', 'jpeg', 'png', 'webp'];
+    public const TAMANO_MAXIMO_IMAGEN = 2048;
+
      /**
      * CU 1 - paso 4. Valida los datos del alta y devuelve los datos limpios.
      * Si algo falla, lanza una ValidationException y Laravel vuelve al formulario.
-     *  RN-01: todo es obligatorio salvo el equipamiento obligatorio (y el punto de encuentro).
+     *  RN-01: todo es obligatorio salvo el equipamiento obligatorio (y el punto de encuentro y la imagen).
      *  RN-02: la duración no puede ser menor a un día.
      *  RN-03: el nombre debe ser único.
      */
@@ -126,6 +133,7 @@ class Excursion extends Model
             'equipamiento_obligatorio' => ['nullable', 'string'],
             // Se informa en el recordatorio de salida (RF Notificar eventualidades)
             'punto_de_encuentro' => ['nullable', 'string', 'max:255'],
+            'imagen' => ['nullable', 'file', 'mimes:' . implode(',', self::FORMATOS_IMAGEN), 'max:' . self::TAMANO_MAXIMO_IMAGEN],
             'requiere_certificado_medico' => ['required', 'boolean'],
         ], [
             'required' => 'Este campo es obligatorio.',
@@ -135,6 +143,10 @@ class Excursion extends Model
             'nombre.max' => 'El nombre no puede superar los 120 caracteres.',
             'nombre.regex' => 'El nombre de la excursión solo puede contener letras, espacios y guiones.',
             'punto_de_encuentro.max' => 'El punto de encuentro no puede superar los 255 caracteres.',
+            'imagen.file' => 'El archivo seleccionado no es válido.',
+            'imagen.uploaded' => 'No se pudo subir la imagen.',
+            'imagen.mimes' => 'La imagen debe estar en formato JPG, PNG o WEBP.',
+            'imagen.max' => 'La imagen no puede superar los 2 MB.',
             'in' => 'El valor seleccionado no es válido.',
         ])->validate();
     }
@@ -157,8 +169,15 @@ class Excursion extends Model
         return self::create([
             ...$datosExcursion,
             'nombre' => trim($datosExcursion['nombre']),
+            'imagen' => self::guardarImagen($datosExcursion['imagen'] ?? null),
             'estado' => self::ESTADO_ACTIVA,
         ]);
+    }
+
+    /** Guarda el archivo en el disco privado y devuelve su ruta, o null si no se eligió ninguno. */
+    private static function guardarImagen(?UploadedFile $imagen): ?string
+    {
+        return $imagen?->store('excursiones');
     }
 
     // ========== CU 3 - MODIFICAR EXCURSIÓN y CU 2 - BAJA DE EXCURSIÓN ==========
@@ -183,13 +202,24 @@ class Excursion extends Model
             ->exists();
     }
 
-    /** CU 3 - paso 6. Guarda los datos actualizados de la excursión. */
+    /**
+     * CU 3 - paso 6. Guarda los datos actualizados de la excursión.
+     * Si se eligió una imagen nueva reemplaza a la anterior; si no, se conserva la que tenía.
+     */
     public function modificar(array $datosExcursion): void
     {
+        $imagenAnterior = $this->imagen;
+        $imagenNueva = self::guardarImagen($datosExcursion['imagen'] ?? null);
+
         $this->update([
             ...$datosExcursion,
             'nombre' => trim($datosExcursion['nombre']),
+            'imagen' => $imagenNueva ?? $imagenAnterior,
         ]);
+
+        if ($imagenNueva && $imagenAnterior) {
+            Storage::delete($imagenAnterior);
+        }
     }
 
     /**

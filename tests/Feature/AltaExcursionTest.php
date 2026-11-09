@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Excursion;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -18,6 +20,7 @@ class AltaExcursionTest extends TestCase
     {
         parent::setUp();
         $this->withoutVite(); // las pruebas no necesitan el frontend compilado
+        Storage::fake();
     }
 
     private function administrativo(): User
@@ -102,6 +105,60 @@ class AltaExcursionTest extends TestCase
             ->assertSessionHasErrors('nombre');
 
         $this->assertDatabaseCount('excursiones', 1);
+    }
+
+    // ---------- Imagen de la excursión ----------
+
+    public function test_la_imagen_se_guarda_y_se_puede_ver(): void
+    {
+        $this->actingAs($this->administrativo())
+            ->post(route('excursiones.registrar'), $this->datosValidos([
+                'imagen' => UploadedFile::fake()->create('laguna.jpg', 200, 'image/jpeg'),
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $excursion = Excursion::where('nombre', 'Laguna de los Témpanos')->first();
+        $this->assertNotNull($excursion->imagen);
+        Storage::assertExists($excursion->imagen);
+
+        $cliente = User::factory()->create(['rol' => 'cliente']);
+        $this->actingAs($cliente)->get(route('excursiones.imagen', $excursion->id))->assertOk();
+    }
+
+    public function test_la_imagen_es_opcional(): void
+    {
+        $this->actingAs($this->administrativo())
+            ->post(route('excursiones.registrar'), $this->datosValidos())
+            ->assertSessionHasNoErrors();
+
+        $excursion = Excursion::where('nombre', 'Laguna de los Témpanos')->first();
+        $this->assertNull($excursion->imagen);
+
+        $this->actingAs($this->administrativo())
+            ->get(route('excursiones.imagen', $excursion->id))
+            ->assertNotFound();
+    }
+
+    public function test_la_imagen_debe_tener_un_formato_permitido(): void
+    {
+        $this->actingAs($this->administrativo())
+            ->post(route('excursiones.registrar'), $this->datosValidos([
+                'imagen' => UploadedFile::fake()->create('programa.pdf', 200, 'application/pdf'),
+            ]))
+            ->assertSessionHasErrors('imagen');
+
+        $this->assertDatabaseCount('excursiones', 0);
+    }
+
+    public function test_la_imagen_no_puede_superar_los_2_mb(): void
+    {
+        $this->actingAs($this->administrativo())
+            ->post(route('excursiones.registrar'), $this->datosValidos([
+                'imagen' => UploadedFile::fake()->create('laguna.jpg', 2049, 'image/jpeg'),
+            ]))
+            ->assertSessionHasErrors('imagen');
+
+        $this->assertDatabaseCount('excursiones', 0);
     }
 
     public function test_un_cliente_no_puede_dar_de_alta_excursiones(): void

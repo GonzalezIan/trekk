@@ -9,6 +9,8 @@ use App\Models\Reserva;
 use App\Models\SalidaProgramada;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Pagina;
 use Tests\TestCase;
 
@@ -26,6 +28,7 @@ class ModificarBajaExcursionTest extends TestCase
     {
         parent::setUp();
         $this->withoutVite(); // las pruebas no necesitan el frontend compilado
+        Storage::fake();
 
         $this->excursion = Excursion::factory()->create([
             'nombre' => 'Laguna de los Témpanos',
@@ -171,6 +174,59 @@ class ModificarBajaExcursionTest extends TestCase
             ->get(route('excursiones.modificar', $this->excursion->id))
             ->assertRedirect(route('excursiones.listar'))
             ->assertSessionHas('error');
+    }
+
+    // ---------- Imagen de la excursión ----------
+
+    public function test_una_imagen_nueva_reemplaza_a_la_anterior(): void
+    {
+        $anterior = UploadedFile::fake()->create('anterior.jpg', 100, 'image/jpeg')->store('excursiones');
+        $this->excursion->update(['imagen' => $anterior]);
+
+        // El formulario envía la modificación por POST, con el PUT indicado en _method
+        $this->actingAs($this->administrativo())
+            ->post(route('excursiones.actualizar', $this->excursion->id), $this->datosValidos([
+                '_method' => 'put',
+                'imagen' => UploadedFile::fake()->create('nueva.png', 100, 'image/png'),
+            ]))
+            ->assertRedirect(route('excursiones.listar'))
+            ->assertSessionHasNoErrors();
+
+        $nueva = $this->excursion->refresh()->imagen;
+        $this->assertNotSame($anterior, $nueva);
+        Storage::assertExists($nueva);
+        Storage::assertMissing($anterior);
+    }
+
+    public function test_sin_imagen_nueva_se_conserva_la_actual(): void
+    {
+        $actual = UploadedFile::fake()->create('actual.jpg', 100, 'image/jpeg')->store('excursiones');
+        $this->excursion->update(['imagen' => $actual]);
+
+        $this->actingAs($this->administrativo())
+            ->post(route('excursiones.actualizar', $this->excursion->id), $this->datosValidos([
+                '_method' => 'put',
+                'imagen' => '',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame($actual, $this->excursion->refresh()->imagen);
+        Storage::assertExists($actual);
+    }
+
+    public function test_5_1_una_imagen_no_valida_vuelve_al_formulario_y_conserva_la_actual(): void
+    {
+        $actual = UploadedFile::fake()->create('actual.jpg', 100, 'image/jpeg')->store('excursiones');
+        $this->excursion->update(['imagen' => $actual]);
+
+        $this->actingAs($this->administrativo())
+            ->post(route('excursiones.actualizar', $this->excursion->id), $this->datosValidos([
+                '_method' => 'put',
+                'imagen' => UploadedFile::fake()->create('programa.pdf', 100, 'application/pdf'),
+            ]))
+            ->assertSessionHasErrors('imagen');
+
+        $this->assertSame($actual, $this->excursion->refresh()->imagen);
     }
 
     // ---------- CU 2 - Baja de excursión ----------

@@ -89,7 +89,7 @@ class ModificarDatosPersonalesTest extends TestCase
         $cliente->refresh();
         $this->assertSame('Carolina', $cliente->nombre);
         $this->assertSame('Méndez Soto', $cliente->apellido);
-        $this->assertSame('+54 280 555-0000', $cliente->telefono);
+        $this->assertSame('+542805550000', $cliente->telefono);
         $this->assertSame('carolina.mendez@mail.com', $cliente->user->email);
     }
 
@@ -184,9 +184,41 @@ class ModificarDatosPersonalesTest extends TestCase
 
         $this->actingAs($cliente->user)
             ->patch(route('perfil.update'), $this->datosValidos(['telefono' => 'llamame']))
-            ->assertSessionHasErrors(['telefono' => 'El teléfono solo puede tener números, espacios, +, - y paréntesis.']);
+            ->assertSessionHasErrors(['telefono' => Cliente::MENSAJE_TELEFONO]);
 
         $this->assertSame('+54 280 455-1234', $cliente->refresh()->telefono);
+    }
+
+    public function test_el_telefono_argentino_debe_tener_10_numeros(): void
+    {
+        $cliente = Cliente::factory()->create(['telefono' => '2974280000']);
+
+        foreach (['2974', '297428000', '29742800001', '+54297428'] as $telefono) {
+            $this->actingAs($cliente->user)
+                ->patch(route('perfil.update'), $this->datosValidos(['telefono' => $telefono]))
+                ->assertSessionHasErrors('telefono');
+        }
+
+        $this->assertSame('2974280000', $cliente->refresh()->telefono);
+    }
+
+    public function test_acepta_telefonos_con_caracteristica_y_los_guarda_sin_separadores(): void
+    {
+        $cliente = Cliente::factory()->create();
+
+        foreach ([
+            '2974280000' => '2974280000',
+            '(297) 428-0000' => '2974280000',
+            '+54 9 297 428-0000' => '+5492974280000',
+            '+34 612 345 678' => '+34612345678',
+            '+1 (202) 555-0147' => '+12025550147',
+        ] as $ingresado => $guardado) {
+            $this->actingAs($cliente->user)
+                ->patch(route('perfil.update'), $this->datosValidos(['telefono' => $ingresado]))
+                ->assertSessionHasNoErrors();
+
+            $this->assertSame($guardado, $cliente->refresh()->telefono);
+        }
     }
 
     public function test_solo_modifica_los_datos_del_cliente_autenticado(): void

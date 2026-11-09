@@ -133,6 +133,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/excursiones', [ControladorExcursiones::class, 'listarExcursiones'])
         ->name('excursiones.listar');
 
+    // Imagen de la excursión cargada en el CU 1 o el CU 3 (Cliente y Administrativo)
+    Route::get('/excursiones/{excursion}/imagen', [ControladorExcursiones::class, 'mostrarImagen'])
+        ->whereNumber('excursion')
+        ->name('excursiones.imagen');
+
     // Solo Administrativo
     Route::middleware('administrativo')->group(function () {
         // CU 1 - Alta de excursión

@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
             'usuario' => 'admin',
             'email' => 'admin@trekk.com',
             'password' => Hash::make('admin123'), // Contraseña: admin123
-            'rol' => 'admin', // Asegurate de tener esta columna en la migración de users
+            'rol' => 'admin', // Columna agregada en add_rol_to_users_table
         ]);
     }
 }

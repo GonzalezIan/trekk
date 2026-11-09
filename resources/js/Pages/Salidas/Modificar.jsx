@@ -228,7 +228,7 @@ export default function Modificar({ salida }) {
     );
 }
 
-// Consulta un listado JSON cada vez que cambia la URL (o sea, el período). Sin URL no consulta.
+// Consulta un listado JSON cada vez que cambia la URL (es decir, el período). Sin URL no consulta.
 function useListado(url, clave) {
     const [estado, setEstado] = useState({ items: null, error: '' });
 

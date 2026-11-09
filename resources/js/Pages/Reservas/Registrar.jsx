@@ -77,8 +77,8 @@ export default function Registrar({ paquete, salida, excursion, minutosRetencion
             evento.preventDefault();
             evento.returnValue = 'Si salís ahora, perderás los cupos reservados temporalmente.';
             
-            // 🪄 MAGIA: Avisa al servidor silenciosamente que cancele la reserva
-            // Usamos el mismo endpoint que el botón de cancelar
+            // Solicita al servidor, en segundo plano, la cancelación de la reserva en curso
+            // Se usa el mismo endpoint que el botón de cancelar
             navigator.sendBeacon(route('reservas.registrar.cancelar', reserva.id));
             
             return evento.returnValue;

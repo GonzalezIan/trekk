@@ -157,7 +157,7 @@ class ModificarSalidaProgramadaTest extends TestCase
         $this->assertSame('40000.00', $this->salida->fresh()->precio_base);
     }
 
-    // ---------- Pasos 3 a 13: caso feliz ----------
+    // ---------- Pasos 3 a 13: flujo normal ----------
 
     public function test_modifica_la_salida_y_recalcula_cupo_y_precios(): void
     {

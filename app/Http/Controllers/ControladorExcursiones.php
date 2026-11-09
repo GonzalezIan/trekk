@@ -96,7 +96,7 @@ class ControladorExcursiones extends Controller
 
     /**
      * CU 2 - Baja de excursión: si no tiene reservas activas, queda INACTIVA
-     * y se cancelan sus salidas programadas y paquetes ewe.
+     * y se cancelan sus salidas programadas y paquetes.
      */
     public function darDeBajaExcursion(Excursion $excursion)
     {
@@ -117,7 +117,7 @@ class ControladorExcursiones extends Controller
             ->with('exito', 'La excursión fue dada de baja. Sus salidas programadas y paquetes quedaron cancelados.');
     }
 
-    /** CU 3 - RN-03 y RN-01. Devuelve el motivo por el que no se puede modificar, o null :/ . */
+    /** CU 3 - RN-03 y RN-01. Devuelve el motivo por el que no se puede modificar, o null. */
     private function impedimentoParaModificar(Excursion $excursion): ?string
     {
         if (! $excursion->estaActiva()) {

@@ -44,7 +44,7 @@ class ControladorReservas extends Controller
         return Inertia::render('Reservas/Listar', [
             'reservas' => $reservas,
             'esAdministrativo' => $request->user()->esAdministrativo(),
-            'notificacion_cancelacion' => $reservaCancelada, // ✅ Le pasamos la reserva (o null)
+            'notificacion_cancelacion' => $reservaCancelada, // Reserva cancelada a informar, o null
         ]);
     }
 
@@ -930,7 +930,7 @@ class ControladorReservas extends Controller
      */
     public function guardarConformidad(Request $request, Reserva $reserva)
     {
-        // 🛡️ VERIFICACIÓN DE SEGURIDAD
+        // Solo el cliente responsable puede registrar la conformidad de su reserva
         if (! $reserva->perteneceA($request->user())) {
             return redirect()->back()->with('error', 'No tenés permiso para calificar esta reserva.');
         }

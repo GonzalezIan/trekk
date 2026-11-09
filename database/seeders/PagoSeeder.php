@@ -12,7 +12,7 @@ class PagoSeeder extends Seeder
     {
         $reservas = Reserva::all();
         foreach ($reservas as $reserva) {
-            // A cada reserva le damos 1 pago
+            // Se registra 1 pago por cada reserva
             Pago::create([
                 'reserva_id' => $reserva->id,
                 'monto' => $reserva->importe_total,

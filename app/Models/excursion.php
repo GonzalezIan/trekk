@@ -161,7 +161,7 @@ class Excursion extends Model
         ]);
     }
 
-    // ========== CU 3 - MODIFICAR EXCURSIÓN y CU 2 - BAJA DE EXCURSIÓN >:3 ==========
+    // ========== CU 3 - MODIFICAR EXCURSIÓN y CU 2 - BAJA DE EXCURSIÓN ==========
  
     public const MOTIVO_BAJA = 'Baja de la excursión';
 
@@ -173,7 +173,7 @@ class Excursion extends Model
 
     /**
      * CU 3 (RN-01) y CU 2: ¿alguna de sus salidas tiene paquetes con reservas activas
-     * (PENDIENTE o CONFIRMADA) 7u7?
+     * (PENDIENTE o CONFIRMADA)?
      */
     public function tieneReservasActivas(): bool
     {
@@ -183,7 +183,7 @@ class Excursion extends Model
             ->exists();
     }
 
-    /** CU 3 - paso 6. Guarda los datos actualizados de la excursión uwu. */
+    /** CU 3 - paso 6. Guarda los datos actualizados de la excursión. */
     public function modificar(array $datosExcursion): void
     {
         $this->update([
@@ -194,7 +194,7 @@ class Excursion extends Model
 
     /**
      * CU 2. La excursión pasa a INACTIVA y se cancelan sus salidas PROGRAMADAS
-     * junto con los paquetes de esas salidas. Todo o nada (transacción) owo.
+     * junto con los paquetes de esas salidas. Todo o nada (transacción).
      */
     public function darDeBaja(): void
     {

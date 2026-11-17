@@ -116,7 +116,7 @@ class RegistrarPaqueteTest extends TestCase
         // RN-09
         $this->registrar([])
             ->assertRedirect(route('paquetes.listar', $this->salida->id))
-            ->assertSessionHas('exito', 'El paquete “Clásico” fue registrado correctamente con un precio de $ 40.000,00.');
+            ->assertSessionHas('exito', 'El paquete “Clásico” fue registrado correctamente con un precio de USD 40.000,00.');
 
         $paquete = $this->salida->paquetes()->sole();
         $this->assertSame('Clásico', $paquete->nombre);

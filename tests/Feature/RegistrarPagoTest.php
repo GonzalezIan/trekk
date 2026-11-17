@@ -37,7 +37,7 @@ class RegistrarPagoTest extends TestCase
             'fecha_inicio' => now()->addDays(10)->toDateString(),
             'fecha_fin' => now()->addDays(12)->toDateString(),
         ]);
-        $this->paquete = Paquete::factory()->create(['salida_programada_id' => $salida->id]);
+        $this->paquete = Paquete::factory()->create(['salida_programada_id' => $salida->id, 'estado' => 'DISPONIBLE']);
     }
 
     /** Reserva de USD 1200 con 2 participantes. */

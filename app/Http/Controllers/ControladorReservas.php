@@ -631,6 +631,26 @@ class ControladorReservas extends Controller
             $this->anularRegistroEnCurso($reserva);
             abort(410, self::MENSAJE_RESERVA_VENCIDA);
         }
+
+        $this->verificarQueSigueReservable($reserva);
+    }
+
+    public const MENSAJE_PAQUETE_YA_NO_DISPONIBLE =
+        'El paquete o la salida que estabas reservando fue cancelado. Se descartó la reserva y no se realizó ningún cobro.';
+
+    /**
+     * CU 14 - Precondición, controlada en cada paso del registro: mientras la reserva está "En curso",
+     * el paquete sigue "Disponible" y su salida "Programada". Si se cancelaron (por ejemplo, por la baja
+     * de la excursión, CU 2), se liberan los recursos retenidos y el caso de uso termina (responde 410).
+     */
+    private function verificarQueSigueReservable(Reserva $reserva): void
+    {
+        $paquete = $reserva->paquete;
+
+        if (! $paquete->estaDisponible() || ! $paquete->salidaProgramada->estaProgramada()) {
+            $this->anularRegistroEnCurso($reserva);
+            abort(410, self::MENSAJE_PAQUETE_YA_NO_DISPONIBLE);
+        }
     }
 
     /** CU 14 - RN-01: no se confirma ni se paga una reserva en curso sin sus participantes cargados (pasos 7 a 10). */
@@ -865,6 +885,10 @@ class ControladorReservas extends Controller
         if ($reserva->estaEnCurso() && ! $reserva->temporizadorVigente()) {
             $this->anularRegistroEnCurso($reserva);
             abort(410, self::MENSAJE_RESERVA_VENCIDA);
+        }
+
+        if ($reserva->estaEnCurso()) {
+            $this->verificarQueSigueReservable($reserva);
         }
 
         if (! $reserva->admitePago()) {

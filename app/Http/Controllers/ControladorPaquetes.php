@@ -140,7 +140,7 @@ class ControladorPaquetes extends Controller
 
         return redirect()
             ->route('paquetes.listar', $salida->id)
-            ->with('exito', "El paquete “{$nombre}” fue registrado correctamente con un precio de $ "
+            ->with('exito', "El paquete “{$nombre}” fue registrado correctamente con un precio de USD "
                 . number_format($precio, 2, ',', '.') . '.');
     }
         // ========== CU - CANCELAR PAQUETE ==========

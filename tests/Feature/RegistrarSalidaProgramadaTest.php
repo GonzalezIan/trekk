@@ -173,6 +173,26 @@ class RegistrarSalidaProgramadaTest extends TestCase
             ->assertJsonPath('errors.precio_base', ['El precio base debe ser un número.']);
     }
 
+    public function test_el_precio_base_admite_como_maximo_dos_decimales(): void
+    {
+        // Antes, 0,001 pasaba la validación y se guardaba como 0,00
+        $this->ingresarDatos(['precio_base' => 0.001])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.precio_base', ['El precio base puede tener como máximo 2 decimales.']);
+
+        $this->ingresarDatos(['precio_base' => 1250.5])->assertOk();
+    }
+
+    public function test_el_precio_base_tiene_un_tope(): void
+    {
+        // Antes, un precio enorme hacía fallar el cálculo del paquete con un error 500
+        $this->ingresarDatos(['precio_base' => 100000.01])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.precio_base', ['El precio base no puede superar USD 100.000.']);
+
+        $this->ingresarDatos(['precio_base' => 100000])->assertOk();
+    }
+
     // ---------- Paso 5: CU 23 - Listar empleados ----------
 
     public function test_lista_solo_empleados_activos_de_la_categoria_y_sin_otra_salida_en_el_periodo(): void

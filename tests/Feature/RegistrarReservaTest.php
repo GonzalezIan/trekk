@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\ControladorReservas;
 use App\Models\Cliente;
 use App\Models\Convenio;
 use App\Models\Equipamiento;
@@ -468,6 +469,30 @@ class RegistrarReservaTest extends TestCase
         $this->pagar($reserva, sena: false)->assertStatus(410);
 
         $this->assertSame(0, Pago::count());
+        $this->assertModelMissing($reserva);
+    }
+
+    public function test_no_se_puede_pagar_si_la_salida_se_cancelo_durante_el_registro(): void
+    {
+        $reserva = $this->reservaListaParaPagar();
+        // Por ejemplo, la baja de la excursión (CU 2) cancela la salida y sus paquetes
+        $this->salida->cancelar('Baja de la excursión');
+
+        $this->pagar($reserva, sena: false)
+            ->assertStatus(410)
+            ->assertJsonPath('message', ControladorReservas::MENSAJE_PAQUETE_YA_NO_DISPONIBLE);
+
+        $this->assertSame(0, Pago::count());
+        $this->assertModelMissing($reserva);
+    }
+
+    public function test_no_se_puede_seguir_registrando_si_el_paquete_se_cancelo(): void
+    {
+        $reserva = $this->reservaEnCurso(1);
+        $this->paquete->update(['estado' => 'CANCELADO']);
+
+        $this->cargarParticipantes($reserva, [$this->participante('30111222')])->assertStatus(410);
+
         $this->assertModelMissing($reserva);
     }
 

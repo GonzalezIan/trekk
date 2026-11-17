@@ -9,7 +9,7 @@ import TarjetasPaquetes from '@/Components/Trekk/TarjetasPaquetes';
 // "2026-10-27" -> "27/10/2026"
 const fecha = (valor) => valor.split('-').reverse().join('/');
 const precio = (valor) =>
-    Number(valor).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+    `USD ${Number(valor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 // Búsqueda y orden del listado del Administrativo
 const buscarEn = (p) => [p.nombre, p.descripcion, p.refugio, ...p.servicios, p.estado];

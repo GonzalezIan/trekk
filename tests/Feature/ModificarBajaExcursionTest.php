@@ -157,6 +157,53 @@ class ModificarBajaExcursionTest extends TestCase
         $this->assertDatabaseMissing('excursiones', ['id' => $this->excursion->id, 'duracion' => 5]);
     }
 
+    public function test_con_reservas_en_curso_no_se_puede_modificar(): void
+    {
+        $this->reserva($this->paquete($this->salida()), 'EN_CURSO');
+
+        $this->actingAs($this->administrativo())
+            ->put(route('excursiones.actualizar', $this->excursion->id),
+                $this->datosValidos(['dificultad' => 'BAJA']))
+            ->assertSessionHas('error', fn ($mensaje) => str_contains($mensaje, 'registrando una reserva'));
+
+        $this->assertDatabaseHas('excursiones', ['id' => $this->excursion->id, 'dificultad' => $this->excursion->dificultad]);
+    }
+
+    public function test_con_salidas_programadas_no_se_puede_cambiar_la_duracion(): void
+    {
+        $this->salida();
+
+        $this->actingAs($this->administrativo())
+            ->put(route('excursiones.actualizar', $this->excursion->id), $this->datosValidos(['duracion' => 5]))
+            ->assertSessionHasErrors(['duracion' => 'No se puede cambiar la duración porque la excursión tiene salidas programadas. '
+                . 'Cancelalas o esperá a que finalicen para modificarla.']);
+
+        $this->assertDatabaseHas('excursiones', ['id' => $this->excursion->id, 'duracion' => 3]);
+    }
+
+    public function test_con_salidas_programadas_se_pueden_cambiar_los_demas_datos(): void
+    {
+        $this->salida();
+
+        $this->actingAs($this->administrativo())
+            ->put(route('excursiones.actualizar', $this->excursion->id), $this->datosValidos(['dificultad' => 'BAJA']))
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('exito');
+
+        $this->assertDatabaseHas('excursiones', ['id' => $this->excursion->id, 'dificultad' => 'BAJA', 'duracion' => 3]);
+    }
+
+    public function test_sin_salidas_programadas_se_puede_cambiar_la_duracion(): void
+    {
+        $this->salida('CANCELADA');
+
+        $this->actingAs($this->administrativo())
+            ->put(route('excursiones.actualizar', $this->excursion->id), $this->datosValidos(['duracion' => 5]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('excursiones', ['id' => $this->excursion->id, 'duracion' => 5]);
+    }
+
     public function test_las_reservas_canceladas_no_impiden_modificar(): void
     {
         $this->reserva($this->paquete($this->salida()), 'CANCELADA');
@@ -261,6 +308,19 @@ class ModificarBajaExcursionTest extends TestCase
         $this->actingAs($this->administrativo())
             ->patch(route('excursiones.baja', $this->excursion->id))
             ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('excursiones', ['id' => $this->excursion->id, 'estado' => 'ACTIVA']);
+        $this->assertDatabaseHas('salidas_programadas', ['id' => $salida->id, 'estado' => 'PROGRAMADA']);
+    }
+
+    public function test_con_reservas_en_curso_no_se_puede_dar_de_baja(): void
+    {
+        $salida = $this->salida();
+        $this->reserva($this->paquete($salida), 'EN_CURSO');
+
+        $this->actingAs($this->administrativo())
+            ->patch(route('excursiones.baja', $this->excursion->id))
+            ->assertSessionHas('error', fn ($mensaje) => str_contains($mensaje, 'registrando una reserva'));
 
         $this->assertDatabaseHas('excursiones', ['id' => $this->excursion->id, 'estado' => 'ACTIVA']);
         $this->assertDatabaseHas('salidas_programadas', ['id' => $salida->id, 'estado' => 'PROGRAMADA']);

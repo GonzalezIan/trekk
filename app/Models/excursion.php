@@ -8,6 +8,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
@@ -105,10 +106,26 @@ class Excursion extends Model
     /**
      * CU 3 - paso 5. Mismas reglas que el alta, pero el nombre actual
      * de la excursión no cuenta como repetido (flujo alternativo 5.1).
+     * La duración no puede cambiar si tiene salidas programadas: su fecha de fin se calculó
+     * con la duración actual (CU 8) y su personal, equipamiento y refugios están asignados a ese período.
      */
     public function validarModificacion(array $datosExcursion): array
     {
-        return self::validar($datosExcursion, $this->id);
+        $datosValidos = self::validar($datosExcursion, $this->id);
+
+        if ((int) $datosValidos['duracion'] !== $this->duracion && $this->tieneSalidasProgramadas()) {
+            throw ValidationException::withMessages([
+                'duracion' => 'No se puede cambiar la duración porque la excursión tiene salidas programadas. '
+                    . 'Cancelalas o esperá a que finalicen para modificarla.',
+            ]);
+        }
+
+        return $datosValidos;
+    }
+
+    private function tieneSalidasProgramadas(): bool
+    {
+        return $this->salidasProgramadas()->where('estado', SalidaProgramada::ESTADO_PROGRAMADA)->exists();
     }
 
     /** Reglas comunes al alta (CU 1) y a la modificación (CU 3). */
@@ -184,6 +201,9 @@ class Excursion extends Model
  
     public const MOTIVO_BAJA = 'Baja de la excursión';
 
+    // CU 8 y CU 10: precio base máximo de una salida, en USD
+    public const PRECIO_BASE_MAXIMO = 100000;
+
     /** CU 3 (RN-03) y CU 2: solo se opera sobre excursiones activas. */
     public function estaActiva(): bool
     {
@@ -197,6 +217,18 @@ class Excursion extends Model
     public function tieneReservasActivas(): bool
     {
         return Reserva::whereIn('estado', Paquete::ESTADOS_RESERVA_ACTIVA)
+            ->whereHas('paquete.salidaProgramada',
+                fn ($consulta) => $consulta->where('excursion_id', $this->id))
+            ->exists();
+    }
+
+    /**
+     * CU 3 y CU 2: ¿algún cliente está registrando una reserva (CU 14, "En curso") en una de sus salidas?
+     * Esas reservas retienen cupos y vencen solas en pocos minutos.
+     */
+    public function tieneReservasEnCurso(): bool
+    {
+        return Reserva::where('estado', Reserva::ESTADO_EN_CURSO)
             ->whereHas('paquete.salidaProgramada',
                 fn ($consulta) => $consulta->where('excursion_id', $this->id))
             ->exists();
@@ -258,7 +290,8 @@ class Excursion extends Model
             'fecha_inicio' => ['bail', 'required', 'date_format:Y-m-d', 'after_or_equal:today'.$fechaMinima],
             'hora_de_salida' => ['required', 'date_format:H:i'],
             'cupo_maximo' => ['required', 'integer', 'min:1', 'max:1000'],
-            'precio_base' => ['bail', 'required', 'numeric', 'gt:0', 'max:99999999'],
+            // Tope en USD: con servicios y alojamiento, el precio del paquete debe entrar en decimal(10,2)
+            'precio_base' => ['bail', 'required', 'numeric', 'gt:0', 'decimal:0,2', 'max:'.self::PRECIO_BASE_MAXIMO],
         ], [
             'required' => 'Este campo es obligatorio.',
             'date_format' => 'El formato ingresado no es válido.',
@@ -268,7 +301,8 @@ class Excursion extends Model
             'cupo_maximo.max' => 'El cupo máximo no puede superar las 1000 personas.',
             'precio_base.numeric' => 'El precio base debe ser un número.',
             'precio_base.gt' => $noPositivos,
-            'precio_base.max' => 'El precio base ingresado es demasiado alto.',
+            'precio_base.decimal' => 'El precio base puede tener como máximo 2 decimales.',
+            'precio_base.max' => 'El precio base no puede superar USD 100.000.',
         ])->validate();
 
         return [...$datosValidos, 'fecha_fin' => $this->calcularFechaFin($datosValidos['fecha_inicio'])];

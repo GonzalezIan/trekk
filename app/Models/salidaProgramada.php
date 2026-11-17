@@ -436,16 +436,24 @@ class SalidaProgramada extends Model
             // Paso 12
             $this->save();
 
-            $this->empleados()->sync([
-                $guia->id => ['rol' => self::ROL_GUIA],
-                ...$asistentes->mapWithKeys(fn (Empleado $asistente) =>
-                    [$asistente->id => ['rol' => self::ROL_ASISTENTE]])->all(),
-            ]);
+            // Se une con + y no con spread (...): el spread renumera las claves numéricas y
+            // cambiaría los ids de los asistentes por "id del guía + 1, + 2..."
+            $this->empleados()->sync(
+                [$guia->id => ['rol' => self::ROL_GUIA]]
+                + $asistentes->mapWithKeys(fn (Empleado $asistente) =>
+                    [$asistente->id => ['rol' => self::ROL_ASISTENTE]])->all()
+            );
             $this->equipoPrestado()->sync($equipamientos->mapWithKeys(fn (Equipamiento $equipamiento) =>
                 [$equipamiento->id => ['cantidad' => $this->cupo_maximo]])->all());
 
             // Paso 10 (RN-05)
             $this->recalcularPreciosDePaquetes();
+
+            // RN-01 del CU 19: si la salida se reprogramó, los certificados ya verificados
+            // tienen que seguir cubriendo el período completo
+            $certificadosInvalidados = $cambioPeriodo
+                ? $this->invalidarCertificadosQueNoCubrenElPeriodo()
+                : collect();
 
             // *a (RN-06 / RN-08): qué cambió de lo que se notifica
             $this->unsetRelation('empleados')->unsetRelation('equipoPrestado');
@@ -457,8 +465,43 @@ class SalidaProgramada extends Model
                 ->values()
                 ->all();
 
-            return ['cupoMaximo' => $this->cupo_maximo, 'cambios' => $cambios];
+            return [
+                'cupoMaximo' => $this->cupo_maximo,
+                'cambios' => $cambios,
+                'certificadosInvalidados' => $certificadosInvalidados,
+            ];
         });
+    }
+
+    public const MOTIVO_CERTIFICADO_NO_CUBRE_REPROGRAMACION =
+        'La salida fue reprogramada y la vigencia del certificado no cubre el nuevo período. Cargá un certificado nuevo.';
+
+    /**
+     * CU 10 - Reprogramación. Los certificados "Válido" de las reservas activas que ya no cubren
+     * el nuevo período (RN-01 del CU 19: emisión + 30 días hasta la fecha de fin) pasan a "Inválido",
+     * el requisito médico del participante vuelve a "Pendiente" y la reserva confirmada vuelve a
+     * "Pendiente", para que el cliente pueda cargar otro certificado (CU 17). Si no lo hace a tiempo,
+     * la reserva se cancela automáticamente (RF-17).
+     * Devuelve los certificados invalidados, para notificar a sus clientes.
+     */
+    private function invalidarCertificadosQueNoCubrenElPeriodo(): Collection
+    {
+        $certificados = CertificadoMedico::where('estado', CertificadoMedico::ESTADO_VALIDO)
+            ->whereHas('participante.reserva', fn ($consulta) => $consulta
+                ->whereIn('estado', Paquete::ESTADOS_RESERVA_ACTIVA)
+                ->whereHas('paquete', fn ($consulta) => $consulta->where('salida_programada_id', $this->id)))
+            ->with('participante.reserva')
+            ->get()
+            ->reject(fn (CertificadoMedico $certificado) => $certificado->fecha_de_vencimiento
+                && $certificado->cubrePeriodo($this));
+
+        $certificados->each(function (CertificadoMedico $certificado) {
+            $certificado->setEstado(CertificadoMedico::ESTADO_INVALIDO, self::MOTIVO_CERTIFICADO_NO_CUBRE_REPROGRAMACION);
+            $certificado->participante->setRequisitoMedico(Participante::REQUISITO_PENDIENTE);
+            $certificado->participante->reserva->volverAPendiente();
+        });
+
+        return $certificados->values();
     }
 
     /**

@@ -2,18 +2,22 @@
 
 namespace Tests\Feature;
 
+use App\Models\CertificadoMedico;
 use App\Models\Cliente;
 use App\Models\Convenio;
 use App\Models\Empleado;
 use App\Models\Equipamiento;
 use App\Models\Excursion;
 use App\Models\Paquete;
+use App\Models\Participante;
 use App\Models\Refugio;
 use App\Models\Reserva;
 use App\Models\SalidaProgramada;
 use App\Models\User;
+use App\Notifications\CertificadoInvalido;
 use App\Notifications\SalidaModificada;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Pagina;
 use Tests\TestCase;
@@ -200,6 +204,26 @@ class ModificarSalidaProgramadaTest extends TestCase
 
         $asignados = $this->salida->empleados()->get()->mapWithKeys(fn ($e) => [$e->id => $e->pivot->rol]);
         $this->assertEquals([$nuevoGuia->id => 'GUIA', $asistente->id => 'ASISTENTE'], $asignados->all());
+    }
+
+    public function test_guardar_sin_cambios_conserva_los_asistentes_con_ids_no_consecutivos(): void
+    {
+        Notification::fake();
+        // Entre el guía y el asistente hay otro empleado, así sus ids no quedan seguidos
+        $otroGuia = $this->empleado('GUIA');
+        $asistente = $this->empleado('ASISTENTE');
+        $this->salida->empleados()->attach($asistente->id, ['rol' => 'ASISTENTE']);
+        $reserva = $this->reserva($this->paquete(), 'PENDIENTE');
+
+        $this->modificar(['ids_asistentes' => [$asistente->id]])->assertSessionHasNoErrors();
+        // Un segundo guardado tampoco debe fallar por personal no disponible
+        $this->modificar(['ids_asistentes' => [$asistente->id]])->assertSessionHasNoErrors();
+
+        $asignados = $this->salida->empleados()->get()->mapWithKeys(fn ($e) => [$e->id => $e->pivot->rol]);
+        $this->assertEquals([$this->guia->id => 'GUIA', $asistente->id => 'ASISTENTE'], $asignados->all());
+        $this->assertArrayNotHasKey($otroGuia->id, $asignados->all());
+        // Sin cambios, no se avisa a los clientes
+        Notification::assertNotSentTo($reserva->cliente->user, SalidaModificada::class);
     }
 
     // ---------- La salida que se modifica no se cuenta a sí misma ----------
@@ -470,6 +494,92 @@ class ModificarSalidaProgramadaTest extends TestCase
         $this->modificar(['precio_base' => 45000])
             ->assertSessionHas('exito', fn ($mensaje) => ! str_contains($mensaje, 'notificó'));
 
+        Notification::assertNothingSent();
+    }
+
+    // ---------- Reprogramación y certificados médicos (RN-01 del CU 19) ----------
+
+    /** Certificado "Válido" del participante, con esa fecha de vencimiento (emisión + 30 días). */
+    private function certificadoValido(Participante $participante, string $vencimiento): CertificadoMedico
+    {
+        $participante->update(['estado_requisito_medico' => 'CUMPLIDO']);
+
+        return CertificadoMedico::create([
+            'participante_id' => $participante->id,
+            'estado' => 'VALIDO',
+            'archivo' => 'certificados/prueba.pdf',
+            'fecha_de_carga' => '2026-10-15 09:00:00',
+            'fecha_emision' => Carbon::parse($vencimiento)->subDays(30)->toDateString(),
+            'fecha_de_vencimiento' => $vencimiento,
+        ]);
+    }
+
+    public function test_la_reprogramacion_invalida_los_certificados_que_no_cubren_el_nuevo_periodo(): void
+    {
+        Notification::fake();
+        $reserva = $this->reserva($this->paquete(), 'CONFIRMADA', 2);
+        [$primero, $segundo] = $reserva->participantes->all();
+        // La salida termina el 12/11: los dos certificados la cubren
+        $noCubre = $this->certificadoValido($primero, '2026-11-13');
+        $cubre = $this->certificadoValido($segundo, '2026-11-20');
+
+        // Se reprograma del 15/11 al 17/11
+        $this->modificar(['fecha_inicio' => '2026-11-15'])
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('exito', fn ($mensaje) =>
+                str_contains($mensaje, '1 certificado médico dejó de cubrir el nuevo período'));
+
+        $noCubre->refresh();
+        $this->assertSame('INVALIDO', $noCubre->estado);
+        $this->assertSame(SalidaProgramada::MOTIVO_CERTIFICADO_NO_CUBRE_REPROGRAMACION, $noCubre->motivo_de_invalidez);
+        $this->assertSame('PENDIENTE', $primero->fresh()->estado_requisito_medico);
+        $this->assertTrue($primero->fresh()->admiteCargaDeCertificado()); // puede cargar otro (CU 17)
+
+        $this->assertSame('VALIDO', $cubre->fresh()->estado);
+        $this->assertSame('CUMPLIDO', $segundo->fresh()->estado_requisito_medico);
+
+        $this->assertSame('PENDIENTE', $reserva->fresh()->estado);
+        Notification::assertSentTo($reserva->cliente->user, CertificadoInvalido::class,
+            fn (CertificadoInvalido $aviso) => $aviso->certificado->is($noCubre));
+        Notification::assertSentTo($reserva->cliente->user, SalidaModificada::class);
+    }
+
+    public function test_si_los_certificados_cubren_el_nuevo_periodo_la_reserva_sigue_confirmada(): void
+    {
+        Notification::fake();
+        $reserva = $this->reserva($this->paquete(), 'CONFIRMADA');
+        $certificado = $this->certificadoValido($reserva->participantes->first(), '2026-11-17');
+
+        $this->modificar(['fecha_inicio' => '2026-11-15'])
+            ->assertSessionHas('exito', fn ($mensaje) => ! str_contains($mensaje, 'certificado'));
+
+        $this->assertSame('VALIDO', $certificado->fresh()->estado);
+        $this->assertSame('CONFIRMADA', $reserva->fresh()->estado);
+        Notification::assertNotSentTo($reserva->cliente->user, CertificadoInvalido::class);
+    }
+
+    public function test_si_no_cambia_el_periodo_no_se_revisan_los_certificados(): void
+    {
+        Notification::fake();
+        $reserva = $this->reserva($this->paquete(), 'CONFIRMADA');
+        $certificado = $this->certificadoValido($reserva->participantes->first(), '2026-11-12');
+
+        $this->modificar(['hora_de_salida' => '10:00'])->assertSessionHasNoErrors();
+
+        $this->assertSame('VALIDO', $certificado->fresh()->estado);
+        $this->assertSame('CONFIRMADA', $reserva->fresh()->estado);
+    }
+
+    public function test_no_se_tocan_los_certificados_de_reservas_canceladas(): void
+    {
+        Notification::fake();
+        $reserva = $this->reserva($this->paquete(), 'CANCELADA');
+        $certificado = $this->certificadoValido($reserva->participantes->first(), '2026-11-13');
+
+        $this->modificar(['fecha_inicio' => '2026-11-15'])->assertSessionHasNoErrors();
+
+        $this->assertSame('VALIDO', $certificado->fresh()->estado);
+        $this->assertSame('CANCELADA', $reserva->fresh()->estado);
         Notification::assertNothingSent();
     }
 }

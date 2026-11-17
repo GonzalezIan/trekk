@@ -249,6 +249,17 @@ class Reserva extends Model
         return true;
     }
 
+    /**
+     * CU 10 - Reprogramación: si un certificado deja de cubrir el nuevo período, la reserva
+     * confirmada vuelve a "Pendiente" hasta que se verifique un certificado nuevo (CU 17 y CU 19).
+     */
+    public function volverAPendiente(): void
+    {
+        if ($this->estado === self::ESTADO_CONFIRMADA) {
+            $this->update(['estado' => self::ESTADO_PENDIENTE]);
+        }
+    }
+
     /** RF Finalizar Salida Programada: la reserva confirmada de una salida finalizada queda "Realizada". */
     public function marcarRealizada(): void
     {

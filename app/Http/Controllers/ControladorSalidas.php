@@ -257,10 +257,11 @@ class ControladorSalidas extends Controller
 
         $this->verificarSeleccion($datosSalida, $guia, $asistentes, $equipamientos, $salida->id);
 
-        ['cupoMaximo' => $cupoMaximo, 'cambios' => $cambios] =
+        ['cupoMaximo' => $cupoMaximo, 'cambios' => $cambios, 'certificadosInvalidados' => $certificadosInvalidados] =
             $salida->modificar($datosSalida, $guia, $asistentes, $equipamientos);
         // *a (RN-06 / RN-08) -> RF Notificar eventualidades
         $clientesNotificados = $notificador->notificarModificacion($salida, $cambios);
+        $certificadosInvalidados->each(fn ($certificado) => $notificador->notificarCertificadoInvalido($certificado));
 
         $mensaje = 'La modificación de la Salida Programada fue registrada correctamente. Cupo máximo: '
             . $cupoMaximo . ($cupoMaximo === 1 ? ' persona.' : ' personas.');
@@ -270,6 +271,13 @@ class ControladorSalidas extends Controller
         if ($clientesNotificados > 0) {
             $mensaje .= " Se notificó el cambio a {$clientesNotificados} "
                 . ($clientesNotificados === 1 ? 'cliente' : 'clientes') . ' con reservas activas.';
+        }
+        if ($certificadosInvalidados->isNotEmpty()) {
+            $cantidad = $certificadosInvalidados->count();
+            $mensaje .= ' ' . ($cantidad === 1
+                ? '1 certificado médico dejó de cubrir el nuevo período: quedó inválido'
+                : "{$cantidad} certificados médicos dejaron de cubrir el nuevo período: quedaron inválidos")
+                . ' y se pidió uno nuevo.';
         }
 
         return redirect()->route('salidas.listar')->with('exito', $mensaje);

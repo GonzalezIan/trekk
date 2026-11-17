@@ -15,7 +15,7 @@ const botonClaro =
 // "2026-10-27" -> "27/10/2026"
 const fecha = (valor) => valor.split('-').reverse().join('/');
 const precio = (valor) =>
-    Number(valor).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+    `USD ${Number(valor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 // Se cuentan ambos extremos: una excursión de 1 día empieza y termina el mismo día
 const calcularFechaFin = (inicio, duracion) => {
     const fin = new Date(`${inicio}T00:00:00Z`);
@@ -158,7 +158,7 @@ function FormularioDatos({ datos, fechaFin, errores, procesando, onCambiar, onCo
 
             <div className="grid gap-6 sm:grid-cols-2">
                 {campo('cupo_maximo', 'Cupo máximo *', { type: 'number', min: '1' })}
-                {campo('precio_base', 'Precio base (ARS) *', { type: 'number', min: '0', step: '0.01' })}
+                {campo('precio_base', 'Precio base (USD) *', { type: 'number', min: '0', max: '100000', step: '0.01' })}
             </div>
 
             <div className="flex items-center justify-end gap-4 border-t border-trekk-borde pt-6">

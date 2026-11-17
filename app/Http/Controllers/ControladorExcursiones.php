@@ -9,6 +9,10 @@ use Inertia\Inertia;
 
 class ControladorExcursiones extends Controller
 {
+    // CU 2 y CU 3: un cliente está registrando una reserva (CU 14) en alguna de sus salidas
+    private const ERROR_RESERVAS_EN_CURSO =
+        'Hay clientes registrando una reserva en esta excursión en este momento. Volvé a intentarlo en unos minutos.';
+
     /**
      * CU 4 - Listar excursiones.
      * Cliente: solo las excursiones en estado ACTIVA (RN-01).
@@ -122,6 +126,11 @@ class ControladorExcursiones extends Controller
                 ->with('error', 'La excursión no puede darse de baja porque tiene paquetes con reservas activas.');
         }
 
+        if ($excursion->tieneReservasEnCurso()) {
+            return redirect()->route('excursiones.listar')
+                ->with('error', self::ERROR_RESERVAS_EN_CURSO);
+        }
+
         $excursion->darDeBaja();
 
         return redirect()
@@ -138,6 +147,10 @@ class ControladorExcursiones extends Controller
 
         if ($excursion->tieneReservasActivas()) {
             return 'La excursión seleccionada no puede ser modificada ya que está asociada a paquetes con reservas activas.';
+        }
+
+        if ($excursion->tieneReservasEnCurso()) {
+            return self::ERROR_RESERVAS_EN_CURSO;
         }
 
         return null;

@@ -14,7 +14,7 @@ const textarea =
 // "2026-10-27" -> "27/10/2026"
 const fecha = (valor) => valor.split('-').reverse().join('/');
 const precio = (valor) =>
-    Number(valor).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+    `USD ${Number(valor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 // CU 5 - Registrar paquete
 export default function Registrar({ salida }) {

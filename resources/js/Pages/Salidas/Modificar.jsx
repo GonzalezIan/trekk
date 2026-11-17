@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 // "2026-10-27" -> "27/10/2026"
 const fecha = (valor) => valor.split('-').reverse().join('/');
 const precio = (valor) =>
-    Number(valor).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+    `USD ${Number(valor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const esFecha = (valor) => /^\d{4}-\d{2}-\d{2}$/.test(valor);
 // Se cuentan ambos extremos: una excursión de 1 día empieza y termina el mismo día
 const calcularFechaFin = (inicio, duracion) => {
@@ -146,7 +146,7 @@ export default function Modificar({ salida }) {
                         </p>
                         <div className="grid gap-6 sm:grid-cols-2">
                             {campo('cupo_maximo', 'Cupo máximo *', { type: 'number', min: '1' })}
-                            {campo('precio_base', 'Precio base (ARS) *', { type: 'number', min: '0', step: '0.01' })}
+                            {campo('precio_base', 'Precio base (USD) *', { type: 'number', min: '0', max: '100000', step: '0.01' })}
                         </div>
                         <p className="text-xs text-gray-500">
                             El nuevo precio base recalcula el precio de los paquetes y rige solo para las

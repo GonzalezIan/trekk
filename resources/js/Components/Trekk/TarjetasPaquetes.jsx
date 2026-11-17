@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { IconoCasa, IconoCheck, IconoPersonas } from './Iconos';
 
 const precio = (valor) =>
-    Number(valor).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+    `USD ${Number(valor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 // Lo que ve el Cliente: solo paquetes DISPONIBLE, con precio y disponibilidad (prototipo: salidas-explorer.tsx)
 export default function TarjetasPaquetes({ paquetes }) {

@@ -246,6 +246,7 @@ export default function Registrar({ paquete, salida, excursion, minutosRetencion
                         <Temporizador
                             restante={restante}
                             expirado={expirado}
+                            motivo={vencida ? error : ''}
                             conCamas={paquete.camas_disponibles !== null}
                             conEquipamiento={seleccion.length > 0}
                         />
@@ -414,14 +415,14 @@ export default function Registrar({ paquete, salida, excursion, minutosRetencion
     );
 }
 
-function Temporizador({ restante, expirado, conCamas, conEquipamiento }) {
+// motivo: mensaje del servidor cuando la reserva dejó de estar en curso (410); si no, venció el tiempo
+function Temporizador({ restante, expirado, motivo, conCamas, conEquipamiento }) {
     if (expirado) {
         return (
             <div role="status" className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 <IconoReloj />
                 <span>
-                    El tiempo para completar la reserva venció. Los cupos y el equipamiento retenidos se liberan: volvé a
-                    iniciar la reserva.
+                    {motivo || 'El tiempo para completar la reserva venció. Los cupos y el equipamiento retenidos se liberan: volvé a iniciar la reserva.'}
                 </span>
             </div>
         );
